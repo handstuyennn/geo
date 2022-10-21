@@ -2,31 +2,31 @@
 
 using namespace duckdb;
 
-int main() {
-	DuckDB db(nullptr);
+int main()
+{
+	DBConfig default_config;
+	default_config.options.allow_unsigned_extensions = true;
+
+	DuckDB db(nullptr, &default_config);
 
 	Connection con(db);
 
-	// auto extrv1 = con.Query("INSTALL 'fts';");
-	// extrv1->Print();
-	// auto extrv2 = con.Query("LOAD 'fts';");
-	// extrv2->Print();
-
 	// auto rv_ext = con.Query("select * From duckdb_extensions();");
 	// rv_ext->Print();
+	con.Query("LOAD '../../build/release/extension/geo/geo.duckdb_extension';");
 
-	auto rv1 = con.Query("CREATE TABLE integers(i1 INTEGER, i2 INET, g Geometry)");
+	auto rv1 = con.Query("CREATE TABLE integers(i INTEGER, g Geometry)");
 	rv1->Print();
-	con.Query("INSERT INTO integers VALUES (1, '127.0.0000.2', 'POINT(100 0 100)')");
-	con.Query("INSERT INTO integers VALUES (2, '127.0.0000.3', 'LINE(1 0)')");
-	auto rv2 = con.Query("INSERT INTO integers VALUES (3, '127.0.0000.1', 'POINT(0 1)')");
+	con.Query("INSERT INTO integers VALUES (1, 'POINT(100 0 100)')");
+	con.Query("INSERT INTO integers VALUES (2, 'LINE(1 0)')");
+	auto rv2 = con.Query("INSERT INTO integers VALUES (3, 'POINT(0 1)')");
 	rv2->Print();
-	con.Query("INSERT INTO integers VALUES (4, '127.0.0000.3', '{\"type\":\"Point\",\"coordinates\":[0,5]}')");
-	con.Query("INSERT INTO integers VALUES (5, '127.0.0000.4', '010100000000000000000000000000000000004940')");
-	con.Query("INSERT INTO integers VALUES (6, '127.0.0000.4', 'LINESTRING(0 0, 1 1, 2 1, 2 2)')");
-	con.Query("INSERT INTO integers VALUES (7, '127.0.0000.4', 'SRID=4326;POINT(-72.1235 42.3521)')");
-	// auto result = con.Query("SELECT i1, i2, ST_ASTEXT(g) FROM integers");
-	auto result = con.Query("SELECT i1, i2, g FROM integers");
+	con.Query("INSERT INTO integers VALUES (4, '{\"type\":\"Point\",\"coordinates\":[0,5]}')");
+	con.Query("INSERT INTO integers VALUES (5, '010100000000000000000000000000000000004940')");
+	con.Query("INSERT INTO integers VALUES (6, 'LINESTRING(0 0, 1 1, 2 1, 2 2)')");
+	con.Query("INSERT INTO integers VALUES (7, 'SRID=4326;POINT(-72.1235 42.3521)')");
+	// auto result = con.Query("SELECT i, ST_ASTEXT(g) FROM integers");
+	auto result = con.Query("SELECT i, g FROM integers");
 	result->Print();
 
 	// auto rv3 = con.Query("SELECT ST_DISTANCE(ST_MakePoint(-7.1043443253471, 43.3150676015829), ST_MakePoint(-70.1043443253471, 42.3150676015829), true);");
@@ -49,8 +49,6 @@ int main() {
 	// // con.Query("INSERT INTO geometries VALUES(''::GEOMETRY), (NULL::GEOMETRY), ('POINT(10 54)');");
 	// auto rv8 = con.Query("SELECT g::VARCHAR FROM geometries;");
 	// rv8->Print();
-
-
 
 	// auto rv9 = con.Query("SELECT ''::GEOMETRY;");
 	// rv9->Print();

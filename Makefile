@@ -50,10 +50,10 @@ release: pull
 	cmake --build build/release
 
 test_release:
-	./build/release/duckdb/test/unittest --test-dir . "[sql]"
+	./build/release/test/unittest --test-dir . "[sql]"
 
 test_debug:
-	./build/debug/duckdb/test/unittest --test-dir . "[sql]"
+	./build/debug/test/unittest --test-dir . "[sql]"
 
 format:
 	clang-format --sort-includes=0 -style=file -i geo/geo_extension.cpp

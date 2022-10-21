@@ -3,7 +3,7 @@ project(example-c++)
 
 set(CMAKE_CXX_STANDARD 11)
 
-# include_directories(../../src/include)
+include_directories(../../duckdb/src/include)
 link_directories(../../build/release/src)
 
 add_executable(example main.cpp)

@@ -13,7 +13,7 @@ cmake_policy(SET CMP0079 NEW)
 include_directories(${TARGET_NAME}/include)
 add_compile_definitions(DUCKDB_OUT_OF_TREE)
 add_compile_definitions(DUCKDB_EXTENSION_CLASS=${EXTENSION_CLASS}Extension)
-add_compile_definitions(DUCKDB_EXTENSION_HEADER="${TARGET_NAME}_extension.hpp")
+add_compile_definitions(DUCKDB_EXTENSION_HEADER="${TARGET_NAME}-extension.hpp")
 
 set(EXTERNAL_EXTENSION_DIRECTORIES ../${TARGET_NAME})
 
