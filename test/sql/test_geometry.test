@@ -3,9 +3,6 @@
 # group: [sql]
 
 statement ok
-LOAD 'build/release/extension/geo/geo.duckdb_extension'
-
-statement ok
 PRAGMA enable_verification
 
 statement ok
