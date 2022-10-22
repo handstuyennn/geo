@@ -49,11 +49,14 @@ release: pull
 	cmake $(GENERATOR) $(FORCE_COLOR) ./duckdb/CMakeLists.txt -DEXTERNAL_EXTENSION_DIRECTORIES=../geo -DCMAKE_BUILD_TYPE=RelWithDebInfo ${BUILD_FLAGS}  -B build/release   && \
 	cmake --build build/release
 
-test_release:
+test:
 	./build/release/test/unittest --test-dir . "[sql]"
 
+test_release:
+	./build/release/duckdb/test/unittest --test-dir . "[sql]"
+
 test_debug:
-	./build/debug/test/unittest --test-dir . "[sql]"
+	./build/debug/duckdb/test/unittest --test-dir . "[sql]"
 
 format:
 	clang-format --sort-includes=0 -style=file -i geo/geo_extension.cpp
