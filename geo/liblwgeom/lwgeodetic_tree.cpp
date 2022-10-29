@@ -60,6 +60,28 @@ static CIRC_NODE *circ_node_leaf_point_new(const POINTARRAY *pa) {
 }
 
 /**
+ * Comparing on geohash ensures that nearby nodes will be close
+ * to each other in the list.
+ */
+static int circ_node_compare(const void *v1, const void *v2) {
+	POINT2D p1, p2;
+	unsigned int u1, u2;
+	CIRC_NODE *c1 = *((CIRC_NODE **)v1);
+	CIRC_NODE *c2 = *((CIRC_NODE **)v2);
+	p1.x = rad2deg((c1->center).lon);
+	p1.y = rad2deg((c1->center).lat);
+	p2.x = rad2deg((c2->center).lon);
+	p2.y = rad2deg((c2->center).lat);
+	u1 = geohash_point_as_int(&p1);
+	u2 = geohash_point_as_int(&p2);
+	if (u1 < u2)
+		return -1;
+	if (u1 > u2)
+		return 1;
+	return 0;
+}
+
+/**
  * Create a new leaf node, storing pointers back to the end points for later.
  */
 static CIRC_NODE *circ_node_leaf_new(const POINTARRAY *pa, int i) {
@@ -119,7 +141,7 @@ static int circ_center_spherical(const GEOGRAPHIC_POINT *c1, const GEOGRAPHIC_PO
 	double dir = sphere_direction(c1, c2, distance);
 
 	/* Catch sphere_direction when it barfs */
-	if (isnan(dir))
+	if (std::isnan(dir))
 		return LW_FAILURE;
 
 	/* Center of new circle is projection from start point, using offset distance*/
@@ -198,24 +220,18 @@ static CIRC_NODE *circ_node_internal_new(CIRC_NODE **c, uint32_t num_nodes) {
 			new_geom_type = c[i]->geom_type;
 		}
 		/* Promote singleton to a multi-type */
-		// Need to do with postgis
-		// else if ( ! lwtype_is_collection(new_geom_type) )
-		// {
-		// 	/* Anonymous collection if types differ */
-		// 	if ( new_geom_type != c[i]->geom_type )
-		// 	{
-		// 		new_geom_type = COLLECTIONTYPE;
-		// 	}
-		// 	else
-		// 	{
-		// 		new_geom_type = lwtype_get_collectiontype(new_geom_type);
-		// 	}
-		// }
-		// /* If we can't add next feature to this collection cleanly, promote again to anonymous collection */
-		// else if ( new_geom_type != lwtype_get_collectiontype(c[i]->geom_type) )
-		// {
-		// 	new_geom_type = COLLECTIONTYPE;
-		// }
+		else if (!lwtype_is_collection(new_geom_type)) {
+			/* Anonymous collection if types differ */
+			if (new_geom_type != c[i]->geom_type) {
+				new_geom_type = COLLECTIONTYPE;
+			} else {
+				new_geom_type = lwtype_get_collectiontype(new_geom_type);
+			}
+		}
+		/* If we can't add next feature to this collection cleanly, promote again to anonymous collection */
+		else if (new_geom_type != lwtype_get_collectiontype(c[i]->geom_type)) {
+			new_geom_type = COLLECTIONTYPE;
+		}
 
 		if (FP_EQUALS(dist, 0)) {
 			new_radius = r1 + 2 * dist;
@@ -264,6 +280,15 @@ static CIRC_NODE *circ_node_internal_new(CIRC_NODE **c, uint32_t num_nodes) {
 	node->pt_outside.x = 0.0;
 	node->pt_outside.y = 0.0;
 	return node;
+}
+
+/**
+ * Given a list of nodes, sort them into a spatially consistent
+ * order, then pairwise merge them up into a tree. Should make
+ * handling multipoints and other collections more efficient
+ */
+static void circ_nodes_sort(CIRC_NODE **nodes, int num_nodes) {
+	qsort(nodes, num_nodes, sizeof(CIRC_NODE *), circ_node_compare);
 }
 
 static CIRC_NODE *circ_nodes_merge(CIRC_NODE **nodes, int num_nodes) {
@@ -358,6 +383,71 @@ static CIRC_NODE *lwpoint_calculate_circ_tree(const LWPOINT *lwpoint) {
 	return node;
 }
 
+static CIRC_NODE *lwline_calculate_circ_tree(const LWLINE *lwline) {
+	CIRC_NODE *node;
+	node = circ_tree_new(lwline->points);
+	node->geom_type = lwgeom_get_type((LWGEOM *)lwline);
+	return node;
+}
+
+static CIRC_NODE *lwpoly_calculate_circ_tree(const LWPOLY *lwpoly) {
+	uint32_t i = 0, j = 0;
+	CIRC_NODE **nodes;
+	CIRC_NODE *node;
+
+	/* One ring? Handle it like a line. */
+	if (lwpoly->nrings == 1) {
+		node = circ_tree_new(lwpoly->rings[0]);
+	} else {
+		/* Calculate a tree for each non-trivial ring of the polygon */
+		nodes = (CIRC_NODE **)lwalloc(lwpoly->nrings * sizeof(CIRC_NODE *));
+		for (i = 0; i < lwpoly->nrings; i++) {
+			node = circ_tree_new(lwpoly->rings[i]);
+			if (node)
+				nodes[j++] = node;
+		}
+		/* Put the trees into a spatially correlated order */
+		circ_nodes_sort(nodes, j);
+		/* Merge the trees pairwise up to a parent node and return */
+		node = circ_nodes_merge(nodes, j);
+		/* Don't need the working list any more */
+		lwfree(nodes);
+	}
+
+	/* Metadata about polygons, we need this to apply P-i-P tests */
+	/* selectively when doing distance calculations */
+	node->geom_type = lwgeom_get_type((LWGEOM *)lwpoly);
+	lwpoly_pt_outside(lwpoly, &(node->pt_outside));
+
+	return node;
+}
+
+static CIRC_NODE *lwcollection_calculate_circ_tree(const LWCOLLECTION *lwcol) {
+	uint32_t i = 0, j = 0;
+	CIRC_NODE **nodes;
+	CIRC_NODE *node;
+
+	/* One geometry? Done! */
+	if (lwcol->ngeoms == 1)
+		return lwgeom_calculate_circ_tree(lwcol->geoms[0]);
+
+	/* Calculate a tree for each sub-geometry*/
+	nodes = (CIRC_NODE **)lwalloc(lwcol->ngeoms * sizeof(CIRC_NODE *));
+	for (i = 0; i < lwcol->ngeoms; i++) {
+		node = lwgeom_calculate_circ_tree(lwcol->geoms[i]);
+		if (node)
+			nodes[j++] = node;
+	}
+	/* Put the trees into a spatially correlated order */
+	circ_nodes_sort(nodes, j);
+	/* Merge the trees pairwise up to a parent node and return */
+	node = circ_nodes_merge(nodes, j);
+	/* Don't need the working list any more */
+	lwfree(nodes);
+	node->geom_type = lwgeom_get_type((LWGEOM *)lwcol);
+	return node;
+}
+
 CIRC_NODE *lwgeom_calculate_circ_tree(const LWGEOM *lwgeom) {
 	if (lwgeom_is_empty(lwgeom))
 		return NULL;
@@ -365,6 +455,15 @@ CIRC_NODE *lwgeom_calculate_circ_tree(const LWGEOM *lwgeom) {
 	switch (lwgeom->type) {
 	case POINTTYPE:
 		return lwpoint_calculate_circ_tree((LWPOINT *)lwgeom);
+	case LINETYPE:
+		return lwline_calculate_circ_tree((LWLINE *)lwgeom);
+	case POLYGONTYPE:
+		return lwpoly_calculate_circ_tree((LWPOLY *)lwgeom);
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COLLECTIONTYPE:
+		return lwcollection_calculate_circ_tree((LWCOLLECTION *)lwgeom);
 
 		// Need to do with postgis
 

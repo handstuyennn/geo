@@ -40,6 +40,28 @@ float next_float_up(double d) {
 }
 
 /*
+ * Copy a point from the point array into the parameter point
+ * z value (if present) is not returned.
+ *
+ * NOTE: this will modify the point2d pointed to by 'point'.
+ */
+int getPoint2d_p(const POINTARRAY *pa, uint32_t n, POINT2D *point) {
+	if (!pa) {
+		// lwerror("%s [%d] NULL POINTARRAY input", __FILE__, __LINE__);
+		return 0;
+	}
+
+	if (n >= pa->npoints) {
+		// lwnotice("%s [%d] called with n=%d and npoints=%d", __FILE__, __LINE__, n, pa->npoints);
+		return 0;
+	}
+
+	/* this does x,y */
+	memcpy(point, getPoint_internal(pa, n), sizeof(POINT2D));
+	return 1;
+}
+
+/*
  * set point N to the given value
  * NOTE that the pointarray can be of any
  * dimension, the appropriate ordinate values

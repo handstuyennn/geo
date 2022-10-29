@@ -97,6 +97,69 @@ static void normalize2d(POINT2D *p) {
 }
 
 /**
+ * Check to see if this geocentric gbox is wrapped around a pole.
+ * Only makes sense if this gbox originated from a polygon, as it's assuming
+ * the box is generated from external edges and there's an "interior" which
+ * contains the pole.
+ *
+ * This function is overdetermined, for very large polygons it might add an
+ * unwarranted pole. STILL NEEDS WORK!
+ */
+static int gbox_check_poles(GBOX *gbox) {
+	int rv = LW_FALSE;
+#if POSTGIS_DEBUG_LEVEL >= 4
+	char *gbox_str = gbox_to_string(gbox);
+	lwfree(gbox_str);
+#endif
+	/* Z axis */
+	if (gbox->xmin < 0.0 && gbox->xmax > 0.0 && gbox->ymin < 0.0 && gbox->ymax > 0.0) {
+		/* Extrema lean positive */
+		if ((gbox->zmin > 0.0) && (gbox->zmax > 0.0)) {
+			gbox->zmax = 1.0;
+		}
+		/* Extrema lean negative */
+		else if ((gbox->zmin < 0.0) && (gbox->zmax < 0.0)) {
+			gbox->zmin = -1.0;
+		}
+		/* Extrema both sides! */
+		else {
+			gbox->zmin = -1.0;
+			gbox->zmax = 1.0;
+		}
+		rv = LW_TRUE;
+	}
+
+	/* Y axis */
+	if (gbox->xmin < 0.0 && gbox->xmax > 0.0 && gbox->zmin < 0.0 && gbox->zmax > 0.0) {
+		if ((gbox->ymin > 0.0) && (gbox->ymax > 0.0)) {
+			gbox->ymax = 1.0;
+		} else if ((gbox->ymin < 0.0) && (gbox->ymax < 0.0)) {
+			gbox->ymin = -1.0;
+		} else {
+			gbox->ymax = 1.0;
+			gbox->ymin = -1.0;
+		}
+		rv = LW_TRUE;
+	}
+
+	/* X axis */
+	if (gbox->ymin < 0.0 && gbox->ymax > 0.0 && gbox->zmin < 0.0 && gbox->zmax > 0.0) {
+		if ((gbox->xmin > 0.0) && (gbox->xmax > 0.0)) {
+			gbox->xmax = 1.0;
+		} else if ((gbox->xmin < 0.0) && (gbox->xmax < 0.0)) {
+			gbox->xmin = -1.0;
+		} else {
+			gbox->xmax = 1.0;
+			gbox->xmin = -1.0;
+		}
+
+		rv = LW_TRUE;
+	}
+
+	return rv;
+}
+
+/**
  * Convert spherical coordinates to cartesian coordinates on unit sphere
  */
 void geog2cart(const GEOGRAPHIC_POINT *g, POINT3D *p) {
@@ -482,6 +545,71 @@ static int lwpoint_calculate_gbox_geodetic(const LWPOINT *point, GBOX *gbox) {
 	assert(point);
 	return ptarray_calculate_gbox_geodetic(point->point, gbox);
 }
+
+static int lwline_calculate_gbox_geodetic(const LWLINE *line, GBOX *gbox) {
+	assert(line);
+	return ptarray_calculate_gbox_geodetic(line->points, gbox);
+}
+
+static int lwpolygon_calculate_gbox_geodetic(const LWPOLY *poly, GBOX *gbox) {
+	GBOX ringbox;
+	uint32_t i;
+	int first = LW_TRUE;
+	assert(poly);
+	if (poly->nrings == 0)
+		return LW_FAILURE;
+	ringbox.flags = gbox->flags;
+	for (i = 0; i < poly->nrings; i++) {
+		if (ptarray_calculate_gbox_geodetic(poly->rings[i], &ringbox) == LW_FAILURE)
+			return LW_FAILURE;
+		if (first) {
+			gbox_duplicate(&ringbox, gbox);
+			first = LW_FALSE;
+		} else {
+			gbox_merge(&ringbox, gbox);
+		}
+	}
+
+	/* If the box wraps a poly, push that axis to the absolute min/max as appropriate */
+	gbox_check_poles(gbox);
+
+	return LW_SUCCESS;
+}
+
+static int lwtriangle_calculate_gbox_geodetic(const LWTRIANGLE *triangle, GBOX *gbox) {
+	assert(triangle);
+	return ptarray_calculate_gbox_geodetic(triangle->points, gbox);
+}
+
+static int lwcollection_calculate_gbox_geodetic(const LWCOLLECTION *coll, GBOX *gbox) {
+	GBOX subbox = {0};
+	uint32_t i;
+	int result = LW_FAILURE;
+	int first = LW_TRUE;
+	assert(coll);
+	if (coll->ngeoms == 0)
+		return LW_FAILURE;
+
+	subbox.flags = gbox->flags;
+
+	for (i = 0; i < coll->ngeoms; i++) {
+		if (lwgeom_calculate_gbox_geodetic((LWGEOM *)(coll->geoms[i]), &subbox) == LW_SUCCESS) {
+			/* Keep a copy of the sub-bounding box for later */
+			if (coll->geoms[i]->bbox)
+				lwfree(coll->geoms[i]->bbox);
+			coll->geoms[i]->bbox = gbox_copy(&subbox);
+			if (first) {
+				gbox_duplicate(&subbox, gbox);
+				first = LW_FALSE;
+			} else {
+				gbox_merge(&subbox, gbox);
+			}
+			result = LW_SUCCESS;
+		}
+	}
+	return result;
+}
+
 int lwgeom_calculate_gbox_geodetic(const LWGEOM *geom, GBOX *gbox) {
 	int result = LW_FAILURE;
 
@@ -491,6 +619,23 @@ int lwgeom_calculate_gbox_geodetic(const LWGEOM *geom, GBOX *gbox) {
 	switch (geom->type) {
 	case POINTTYPE:
 		result = lwpoint_calculate_gbox_geodetic((LWPOINT *)geom, gbox);
+		break;
+	case LINETYPE:
+		result = lwline_calculate_gbox_geodetic((LWLINE *)geom, gbox);
+		break;
+	case POLYGONTYPE:
+		result = lwpolygon_calculate_gbox_geodetic((LWPOLY *)geom, gbox);
+		break;
+	case TRIANGLETYPE:
+		result = lwtriangle_calculate_gbox_geodetic((LWTRIANGLE *)geom, gbox);
+		break;
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE:
+		result = lwcollection_calculate_gbox_geodetic((LWCOLLECTION *)geom, gbox);
 		break;
 	default:
 		// lwerror("lwgeom_calculate_gbox_geodetic: unsupported input geometry type: %d - %s",
@@ -601,7 +746,7 @@ int sphere_project(const GEOGRAPHIC_POINT *r, double distance, double azimuth, G
 		lon2 = lon1 + atan2(sin(azimuth) * sin(d) * cos(lat1), cos(d) - sin(lat1) * sin(lat2));
 	}
 
-	if (isnan(lat2) || isnan(lon2))
+	if (std::isnan(lat2) || std::isnan(lon2))
 		return LW_FAILURE;
 
 	n->lat = lat2;
@@ -849,6 +994,237 @@ int edge_intersection(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOG
 		if (edge_contains_point(e1, g) && edge_contains_point(e2, g)) {
 			return LW_TRUE;
 		}
+	}
+	return LW_FALSE;
+}
+
+/*
+ * When we have a globe-covering gbox but we still want an outside
+ * point, we do this Very Bad Hack, which is look at the first two points
+ * in the ring and then nudge a point to the left of that arc.
+ * There is an assumption of convexity built in there, as well as that
+ * the shape doesn't have a sharp reversal in it. It's ugly, but
+ * it fixes some common cases (large selection polygons) that users
+ * are generating. At some point all of geodetic needs a clean-room
+ * rewrite.
+ * There is also an assumption of CCW exterior ring, which is how the
+ * GeoJSON spec defined geographic ring orientation.
+ */
+static int lwpoly_pt_outside_hack(const LWPOLY *poly, POINT2D *pt_outside) {
+	GEOGRAPHIC_POINT g1, g2, gSum;
+	POINT4D p1, p2;
+	POINT3D q1, q2, qMid, qCross, qSum;
+	POINTARRAY *pa;
+	if (lwgeom_is_empty((LWGEOM *)poly))
+		return LW_FAILURE;
+	if (poly->nrings < 1)
+		return LW_FAILURE;
+	pa = poly->rings[0];
+	if (pa->npoints < 2)
+		return LW_FAILURE;
+
+	/* First two points of ring */
+	getPoint4d_p(pa, 0, &p1);
+	getPoint4d_p(pa, 1, &p2);
+	/* Convert to XYZ unit vectors */
+	geographic_point_init(p1.x, p1.y, &g1);
+	geographic_point_init(p2.x, p2.y, &g2);
+	geog2cart(&g1, &q1);
+	geog2cart(&g2, &q2);
+	/* Mid-point of first two points */
+	vector_sum(&q1, &q2, &qMid);
+	normalize(&qMid);
+	/* Cross product of first two points (perpendicular) */
+	cross_product(&q1, &q2, &qCross);
+	normalize(&qCross);
+	/* Invert it to put it outside, and scale down */
+	vector_scale(&qCross, -0.2);
+	/* Project midpoint to the right */
+	vector_sum(&qMid, &qCross, &qSum);
+	normalize(&qSum);
+	/* Convert back to lon/lat */
+	cart2geog(&qSum, &gSum);
+	pt_outside->x = rad2deg(gSum.lon);
+	pt_outside->y = rad2deg(gSum.lat);
+	return LW_SUCCESS;
+}
+
+int lwpoly_pt_outside(const LWPOLY *poly, POINT2D *pt_outside) {
+	int rv;
+	/* Make sure we have boxes */
+	if (poly->bbox) {
+		rv = gbox_pt_outside(poly->bbox, pt_outside);
+	} else {
+		GBOX gbox;
+		lwgeom_calculate_gbox_geodetic((LWGEOM *)poly, &gbox);
+		rv = gbox_pt_outside(&gbox, pt_outside);
+	}
+
+	if (rv == LW_FALSE)
+		return lwpoly_pt_outside_hack(poly, pt_outside);
+
+	return rv;
+}
+
+/**
+ * Given a unit geocentric gbox, return a lon/lat (degrees) coordinate point point that is
+ * guaranteed to be outside the box (and therefore anything it contains).
+ */
+int gbox_pt_outside(const GBOX *gbox, POINT2D *pt_outside) {
+	double grow = M_PI / 180.0 / 60.0; /* one arc-minute */
+	int i;
+	GBOX ge;
+	POINT3D corners[8];
+	POINT3D pt;
+	GEOGRAPHIC_POINT g;
+
+	while (grow < M_PI) {
+		/* Assign our box and expand it slightly. */
+		ge = *gbox;
+		if (ge.xmin > -1)
+			ge.xmin -= grow;
+		if (ge.ymin > -1)
+			ge.ymin -= grow;
+		if (ge.zmin > -1)
+			ge.zmin -= grow;
+		if (ge.xmax < 1)
+			ge.xmax += grow;
+		if (ge.ymax < 1)
+			ge.ymax += grow;
+		if (ge.zmax < 1)
+			ge.zmax += grow;
+
+		/* Build our eight corner points */
+		corners[0].x = ge.xmin;
+		corners[0].y = ge.ymin;
+		corners[0].z = ge.zmin;
+
+		corners[1].x = ge.xmin;
+		corners[1].y = ge.ymax;
+		corners[1].z = ge.zmin;
+
+		corners[2].x = ge.xmin;
+		corners[2].y = ge.ymin;
+		corners[2].z = ge.zmax;
+
+		corners[3].x = ge.xmax;
+		corners[3].y = ge.ymin;
+		corners[3].z = ge.zmin;
+
+		corners[4].x = ge.xmax;
+		corners[4].y = ge.ymax;
+		corners[4].z = ge.zmin;
+
+		corners[5].x = ge.xmax;
+		corners[5].y = ge.ymin;
+		corners[5].z = ge.zmax;
+
+		corners[6].x = ge.xmin;
+		corners[6].y = ge.ymax;
+		corners[6].z = ge.zmax;
+
+		corners[7].x = ge.xmax;
+		corners[7].y = ge.ymax;
+		corners[7].z = ge.zmax;
+
+		for (i = 0; i < 8; i++) {
+			normalize(&(corners[i]));
+			if (!gbox_contains_point3d(gbox, &(corners[i]))) {
+				pt = corners[i];
+				normalize(&pt);
+				cart2geog(&pt, &g);
+				pt_outside->x = rad2deg(g.lon);
+				pt_outside->y = rad2deg(g.lat);
+				return LW_SUCCESS;
+			}
+		}
+
+		/* Try a wider growth to push the corners outside the original box. */
+		grow *= 2.0;
+	}
+
+	/* This should never happen! */
+	// lwerror("BOOM! Could not generate outside point!");
+	return LW_FAILURE;
+}
+
+static int ptarray_check_geodetic(const POINTARRAY *pa) {
+	uint32_t t;
+	POINT2D pt;
+
+	assert(pa);
+
+	for (t = 0; t < pa->npoints; t++) {
+		getPoint2d_p(pa, t, &pt);
+		/* printf( "%d (%g, %g)\n", t, pt.x, pt.y); */
+		if (pt.x < -180.0 || pt.y < -90.0 || pt.x > 180.0 || pt.y > 90.0)
+			return LW_FALSE;
+	}
+
+	return LW_TRUE;
+}
+
+static int lwpoint_check_geodetic(const LWPOINT *point) {
+	assert(point);
+	return ptarray_check_geodetic(point->point);
+}
+
+static int lwline_check_geodetic(const LWLINE *line) {
+	assert(line);
+	return ptarray_check_geodetic(line->points);
+}
+
+static int lwpoly_check_geodetic(const LWPOLY *poly) {
+	uint32_t i = 0;
+	assert(poly);
+
+	for (i = 0; i < poly->nrings; i++) {
+		if (ptarray_check_geodetic(poly->rings[i]) == LW_FALSE)
+			return LW_FALSE;
+	}
+	return LW_TRUE;
+}
+
+static int lwtriangle_check_geodetic(const LWTRIANGLE *triangle) {
+	assert(triangle);
+	return ptarray_check_geodetic(triangle->points);
+}
+
+static int lwcollection_check_geodetic(const LWCOLLECTION *col) {
+	uint32_t i = 0;
+	assert(col);
+
+	for (i = 0; i < col->ngeoms; i++) {
+		if (lwgeom_check_geodetic(col->geoms[i]) == LW_FALSE)
+			return LW_FALSE;
+	}
+	return LW_TRUE;
+}
+
+int lwgeom_check_geodetic(const LWGEOM *geom) {
+	if (lwgeom_is_empty(geom))
+		return LW_TRUE;
+
+	switch (geom->type) {
+	case POINTTYPE:
+		return lwpoint_check_geodetic((LWPOINT *)geom);
+	case LINETYPE:
+		return lwline_check_geodetic((LWLINE *)geom);
+	case POLYGONTYPE:
+		return lwpoly_check_geodetic((LWPOLY *)geom);
+	case TRIANGLETYPE:
+		return lwtriangle_check_geodetic((LWTRIANGLE *)geom);
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE:
+		return lwcollection_check_geodetic((LWCOLLECTION *)geom);
+	default:
+		// lwerror("lwgeom_check_geodetic: unsupported input geometry type: %d - %s", geom->type,
+		// lwtype_name(geom->type));
+		return LW_FAILURE;
 	}
 	return LW_FALSE;
 }

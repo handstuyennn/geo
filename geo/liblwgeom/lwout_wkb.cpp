@@ -64,7 +64,48 @@ static uint32_t lwgeom_wkb_type(const LWGEOM *geom, uint8_t variant) {
 	case POINTTYPE:
 		wkb_type = WKB_POINT_TYPE;
 		break;
-		// Need to do with postgis
+	case LINETYPE:
+		wkb_type = WKB_LINESTRING_TYPE;
+		break;
+	case POLYGONTYPE:
+		wkb_type = WKB_POLYGON_TYPE;
+		break;
+	case CIRCSTRINGTYPE:
+		wkb_type = WKB_CIRCULARSTRING_TYPE;
+		break;
+	case MULTIPOINTTYPE:
+		wkb_type = WKB_MULTIPOINT_TYPE;
+		break;
+	case MULTILINETYPE:
+		wkb_type = WKB_MULTILINESTRING_TYPE;
+		break;
+	case MULTIPOLYGONTYPE:
+		wkb_type = WKB_MULTIPOLYGON_TYPE;
+		break;
+	case TRIANGLETYPE:
+		wkb_type = WKB_TRIANGLE_TYPE;
+		break;
+	case COLLECTIONTYPE:
+		wkb_type = WKB_GEOMETRYCOLLECTION_TYPE;
+		break;
+	case COMPOUNDTYPE:
+		wkb_type = WKB_COMPOUNDCURVE_TYPE;
+		break;
+	case CURVEPOLYTYPE:
+		wkb_type = WKB_CURVEPOLYGON_TYPE;
+		break;
+	case MULTICURVETYPE:
+		wkb_type = WKB_MULTICURVE_TYPE;
+		break;
+	case MULTISURFACETYPE:
+		wkb_type = WKB_MULTISURFACE_TYPE;
+		break;
+	case POLYHEDRALSURFACETYPE:
+		wkb_type = WKB_POLYHEDRALSURFACE_TYPE;
+		break;
+	case TINTYPE:
+		wkb_type = WKB_TIN_TYPE;
+		break;
 
 	default:
 		// lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(geom->type));
@@ -374,6 +415,198 @@ static size_t lwpoint_to_wkb_size(const LWPOINT *pt, uint8_t variant) {
 	return size;
 }
 
+static uint8_t *lwpoint_to_wkb_buf(const LWPOINT *pt, uint8_t *buf, uint8_t variant) {
+	/* Only process empty at this level in the EXTENDED case */
+	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)pt))
+		return empty_to_wkb_buf((LWGEOM *)pt, buf, variant);
+
+	/* Set the endian flag */
+	buf = endian_to_wkb_buf(buf, variant);
+	/* Set the geometry type */
+	buf = integer_to_wkb_buf(lwgeom_wkb_type((LWGEOM *)pt, variant), buf, variant);
+	/* Set the optional SRID for extended variant */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)pt, variant)) {
+		buf = integer_to_wkb_buf(pt->srid, buf, variant);
+	}
+	/* Set the coordinates */
+	buf = ptarray_to_wkb_buf(pt->point, buf, variant | WKB_NO_NPOINTS);
+	return buf;
+}
+
+/*
+ * LINESTRING, CIRCULARSTRING
+ */
+static size_t lwline_to_wkb_size(const LWLINE *line, uint8_t variant) {
+	/* Endian flag + type number */
+	size_t size = WKB_BYTE_SIZE + WKB_INT_SIZE;
+
+	/* Only process empty at this level in the EXTENDED case */
+	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)line))
+		return empty_to_wkb_size((LWGEOM *)line, variant);
+
+	/* Extended WKB needs space for optional SRID integer */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)line, variant))
+		size += WKB_INT_SIZE;
+
+	/* Size of point array */
+	size += ptarray_to_wkb_size(line->points, variant);
+	return size;
+}
+
+static uint8_t *lwline_to_wkb_buf(const LWLINE *line, uint8_t *buf, uint8_t variant) {
+	/* Only process empty at this level in the EXTENDED case */
+	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)line))
+		return empty_to_wkb_buf((LWGEOM *)line, buf, variant);
+
+	/* Set the endian flag */
+	buf = endian_to_wkb_buf(buf, variant);
+	/* Set the geometry type */
+	buf = integer_to_wkb_buf(lwgeom_wkb_type((LWGEOM *)line, variant), buf, variant);
+	/* Set the optional SRID for extended variant */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)line, variant))
+		buf = integer_to_wkb_buf(line->srid, buf, variant);
+	/* Set the coordinates */
+	buf = ptarray_to_wkb_buf(line->points, buf, variant);
+	return buf;
+}
+
+/*
+ * TRIANGLE
+ */
+static size_t lwtriangle_to_wkb_size(const LWTRIANGLE *tri, uint8_t variant) {
+	/* endian flag + type number + number of rings */
+	size_t size = WKB_BYTE_SIZE + WKB_INT_SIZE + WKB_INT_SIZE;
+
+	/* Only process empty at this level in the EXTENDED case */
+	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)tri))
+		return empty_to_wkb_size((LWGEOM *)tri, variant);
+
+	/* Extended WKB needs space for optional SRID integer */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)tri, variant))
+		size += WKB_INT_SIZE;
+
+	/* How big is this point array? */
+	size += ptarray_to_wkb_size(tri->points, variant);
+
+	return size;
+}
+
+static uint8_t *lwtriangle_to_wkb_buf(const LWTRIANGLE *tri, uint8_t *buf, uint8_t variant) {
+	/* Only process empty at this level in the EXTENDED case */
+	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)tri))
+		return empty_to_wkb_buf((LWGEOM *)tri, buf, variant);
+
+	/* Set the endian flag */
+	buf = endian_to_wkb_buf(buf, variant);
+
+	/* Set the geometry type */
+	buf = integer_to_wkb_buf(lwgeom_wkb_type((LWGEOM *)tri, variant), buf, variant);
+
+	/* Set the optional SRID for extended variant */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)tri, variant))
+		buf = integer_to_wkb_buf(tri->srid, buf, variant);
+
+	/* Set the number of rings (only one, it's a triangle, buddy) */
+	buf = integer_to_wkb_buf(1, buf, variant);
+
+	/* Write that ring */
+	buf = ptarray_to_wkb_buf(tri->points, buf, variant);
+
+	return buf;
+}
+
+/*
+ * POLYGON
+ */
+static size_t lwpoly_to_wkb_size(const LWPOLY *poly, uint8_t variant) {
+	/* endian flag + type number + number of rings */
+	size_t size = WKB_BYTE_SIZE + WKB_INT_SIZE + WKB_INT_SIZE;
+	uint32_t i = 0;
+
+	/* Only process empty at this level in the EXTENDED case */
+	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)poly))
+		return empty_to_wkb_size((LWGEOM *)poly, variant);
+
+	/* Extended WKB needs space for optional SRID integer */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)poly, variant))
+		size += WKB_INT_SIZE;
+
+	for (i = 0; i < poly->nrings; i++) {
+		/* Size of ring point array */
+		size += ptarray_to_wkb_size(poly->rings[i], variant);
+	}
+
+	return size;
+}
+
+static uint8_t *lwpoly_to_wkb_buf(const LWPOLY *poly, uint8_t *buf, uint8_t variant) {
+	uint32_t i;
+
+	/* Only process empty at this level in the EXTENDED case */
+	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)poly))
+		return empty_to_wkb_buf((LWGEOM *)poly, buf, variant);
+
+	/* Set the endian flag */
+	buf = endian_to_wkb_buf(buf, variant);
+	/* Set the geometry type */
+	buf = integer_to_wkb_buf(lwgeom_wkb_type((LWGEOM *)poly, variant), buf, variant);
+	/* Set the optional SRID for extended variant */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)poly, variant))
+		buf = integer_to_wkb_buf(poly->srid, buf, variant);
+	/* Set the number of rings */
+	buf = integer_to_wkb_buf(poly->nrings, buf, variant);
+
+	for (i = 0; i < poly->nrings; i++) {
+		buf = ptarray_to_wkb_buf(poly->rings[i], buf, variant);
+	}
+
+	return buf;
+}
+
+/*
+ * MULTIPOINT, MULTILINESTRING, MULTIPOLYGON, GEOMETRYCOLLECTION
+ * MULTICURVE, COMPOUNDCURVE, MULTISURFACE, CURVEPOLYGON, TIN,
+ * POLYHEDRALSURFACE
+ */
+static size_t lwcollection_to_wkb_size(const LWCOLLECTION *col, uint8_t variant) {
+	/* Endian flag + type number + number of subgeoms */
+	size_t size = WKB_BYTE_SIZE + WKB_INT_SIZE + WKB_INT_SIZE;
+	uint32_t i = 0;
+
+	/* Extended WKB needs space for optional SRID integer */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)col, variant))
+		size += WKB_INT_SIZE;
+
+	for (i = 0; i < col->ngeoms; i++) {
+		/* size of subgeom */
+		size += lwgeom_to_wkb_size((LWGEOM *)col->geoms[i], variant | WKB_NO_SRID);
+	}
+
+	return size;
+}
+
+static uint8_t *lwcollection_to_wkb_buf(const LWCOLLECTION *col, uint8_t *buf, uint8_t variant) {
+	uint32_t i;
+
+	/* Set the endian flag */
+	buf = endian_to_wkb_buf(buf, variant);
+	/* Set the geometry type */
+	buf = integer_to_wkb_buf(lwgeom_wkb_type((LWGEOM *)col, variant), buf, variant);
+	/* Set the optional SRID for extended variant */
+	if (lwgeom_wkb_needs_srid((LWGEOM *)col, variant))
+		buf = integer_to_wkb_buf(col->srid, buf, variant);
+	/* Set the number of sub-geometries */
+	buf = integer_to_wkb_buf(col->ngeoms, buf, variant);
+
+	/* Write the sub-geometries. Sub-geometries do not get SRIDs, they
+	   inherit from their parents. */
+	for (i = 0; i < col->ngeoms; i++) {
+		buf = lwgeom_to_wkb_buf(col->geoms[i], buf, variant | WKB_NO_SRID);
+	}
+
+	return buf;
+}
+
 /*
  * GEOMETRY
  */
@@ -394,6 +627,32 @@ size_t lwgeom_to_wkb_size(const LWGEOM *geom, uint8_t variant) {
 	case POINTTYPE:
 		size += lwpoint_to_wkb_size((LWPOINT *)geom, variant);
 		break;
+		/* LineString and CircularString both have points elements */
+	case CIRCSTRINGTYPE:
+	case LINETYPE:
+		size += lwline_to_wkb_size((LWLINE *)geom, variant);
+		break;
+		/* Polygon has nrings and rings elements */
+	case POLYGONTYPE:
+		size += lwpoly_to_wkb_size((LWPOLY *)geom, variant);
+		break;
+		/* Triangle has one ring of three points */
+	case TRIANGLETYPE:
+		size += lwtriangle_to_wkb_size((LWTRIANGLE *)geom, variant);
+		break;
+		/* All these Collection types have ngeoms and geoms elements */
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COMPOUNDTYPE:
+	case CURVEPOLYTYPE:
+	case MULTICURVETYPE:
+	case MULTISURFACETYPE:
+	case COLLECTIONTYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+		size += lwcollection_to_wkb_size((LWCOLLECTION *)geom, variant);
+		break;
 	// Need to do with postgis
 
 	/* Unknown type! */
@@ -403,24 +662,6 @@ size_t lwgeom_to_wkb_size(const LWGEOM *geom, uint8_t variant) {
 	}
 
 	return size;
-}
-
-static uint8_t *lwpoint_to_wkb_buf(const LWPOINT *pt, uint8_t *buf, uint8_t variant) {
-	/* Only process empty at this level in the EXTENDED case */
-	if ((variant & WKB_EXTENDED) && lwgeom_is_empty((LWGEOM *)pt))
-		return empty_to_wkb_buf((LWGEOM *)pt, buf, variant);
-
-	/* Set the endian flag */
-	buf = endian_to_wkb_buf(buf, variant);
-	/* Set the geometry type */
-	buf = integer_to_wkb_buf(lwgeom_wkb_type((LWGEOM *)pt, variant), buf, variant);
-	/* Set the optional SRID for extended variant */
-	if (lwgeom_wkb_needs_srid((LWGEOM *)pt, variant)) {
-		buf = integer_to_wkb_buf(pt->srid, buf, variant);
-	}
-	/* Set the coordinates */
-	buf = ptarray_to_wkb_buf(pt->point, buf, variant | WKB_NO_NPOINTS);
-	return buf;
 }
 
 static uint8_t *lwgeom_to_wkb_buf(const LWGEOM *geom, uint8_t *buf, uint8_t variant) {
@@ -433,15 +674,38 @@ static uint8_t *lwgeom_to_wkb_buf(const LWGEOM *geom, uint8_t *buf, uint8_t vari
 	case POINTTYPE:
 		return lwpoint_to_wkb_buf((LWPOINT *)geom, buf, variant);
 
+		/* LineString and CircularString both have 'points' elements */
+	case CIRCSTRINGTYPE:
+	case LINETYPE:
+		return lwline_to_wkb_buf((LWLINE *)geom, buf, variant);
+		/* Polygon has 'nrings' and 'rings' elements */
+	case POLYGONTYPE:
+		return lwpoly_to_wkb_buf((LWPOLY *)geom, buf, variant);
+		/* All these Collection types have 'ngeoms' and 'geoms' elements */
+		/* Triangle has one ring of three points */
+	case TRIANGLETYPE:
+		return lwtriangle_to_wkb_buf((LWTRIANGLE *)geom, buf, variant);
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COMPOUNDTYPE:
+	case CURVEPOLYTYPE:
+	case MULTICURVETYPE:
+	case MULTISURFACETYPE:
+	case COLLECTIONTYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+		return lwcollection_to_wkb_buf((LWCOLLECTION *)geom, buf, variant);
+
 	// Need to do with postgis
 
 	/* Unknown type! */
 	default:
 		// lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(geom->type));
-		return 0;
+		return nullptr;
 	}
 	/* Return value to keep compiler happy. */
-	return 0;
+	return nullptr;
 }
 
 } // namespace duckdb

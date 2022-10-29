@@ -110,7 +110,7 @@ size_t LWGEOM_size(GSERIALIZED *gser) {
 char *LWGEOM_base(GSERIALIZED *gser) {
 	LWGEOM *lwgeom = lwgeom_from_gserialized(gser);
 	if (lwgeom == NULL) {
-		return 0;
+		return nullptr;
 	}
 
 	auto buffer = lwgeom_to_wkb_buffer(lwgeom, WKB_EXTENDED);
@@ -139,6 +139,9 @@ std::string LWGEOM_asGeoJson(const void *base, size_t size) {
 	std::string rstr = "";
 	LWGEOM *lwgeom = lwgeom_from_wkb(static_cast<const uint8_t *>(base), size, LW_PARSER_CHECK_NONE);
 	auto varlen = lwgeom_to_geojson(lwgeom, nullptr, OUT_DEFAULT_DECIMAL_DIGITS, 0);
+	if (!varlen) {
+		return rstr;
+	}
 	rstr = std::string(varlen->data);
 	lwfree(varlen);
 	lwgeom_free(lwgeom);

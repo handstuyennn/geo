@@ -2,6 +2,8 @@
 
 #include "duckdb.hpp"
 
+#include <cmath>
+
 namespace duckdb {
 
 /*

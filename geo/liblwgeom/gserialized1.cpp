@@ -1,5 +1,7 @@
 #include "liblwgeom/gserialized1.hpp"
 
+#include "liblwgeom/liblwgeom_internal.hpp"
+
 #include <cassert>
 #include <cstring>
 
@@ -113,27 +115,22 @@ void gserialized1_set_srid(GSERIALIZED *s, int32_t srid) {
 }
 
 static size_t gserialized1_is_empty_recurse(const uint8_t *p, int *isempty) {
-	// int i;
+	int i;
 	int32_t type, num;
 
 	memcpy(&type, p, 4);
 	memcpy(&num, p + 4, 4);
 
-	// Need to do with postgis
-	// if ( lwtype_is_collection(type) )
-	// {
-	// 	size_t lz = 8;
-	// 	for ( i = 0; i < num; i++ )
-	// 	{
-	// 		lz += gserialized1_is_empty_recurse(p+lz, isempty);
-	// 		if ( ! *isempty )
-	// 			return lz;
-	// 	}
-	// 	*isempty = LW_TRUE;
-	// 	return lz;
-	// }
-	// else
-	{
+	if (lwtype_is_collection(type)) {
+		size_t lz = 8;
+		for (i = 0; i < num; i++) {
+			lz += gserialized1_is_empty_recurse(p + lz, isempty);
+			if (!*isempty)
+				return lz;
+		}
+		*isempty = LW_TRUE;
+		return lz;
+	} else {
 		*isempty = (num == 0 ? LW_TRUE : LW_FALSE);
 		return 8;
 	}
@@ -160,6 +157,12 @@ uint32_t gserialized1_get_type(const GSERIALIZED *g) {
 	}
 	return *ptr;
 }
+
+/***********************************************************************
+ * De-serialize GSERIALIZED into an LWGEOM.
+ */
+
+static LWGEOM *lwgeom_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *size);
 
 static LWPOINT *lwpoint_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *size) {
 	uint8_t *start_ptr = data_ptr;
@@ -191,6 +194,205 @@ static LWPOINT *lwpoint_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lw
 	return point;
 }
 
+static LWLINE *lwline_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *size) {
+	uint8_t *start_ptr = data_ptr;
+	LWLINE *line;
+	uint32_t npoints = 0;
+
+	assert(data_ptr);
+
+	line = (LWLINE *)lwalloc(sizeof(LWLINE));
+	line->srid = SRID_UNKNOWN; /* Default */
+	line->bbox = NULL;
+	line->type = LINETYPE;
+	line->flags = lwflags;
+
+	data_ptr += 4;                                 /* Skip past the type. */
+	npoints = gserialized1_get_uint32_t(data_ptr); /* Zero => empty geometry */
+	data_ptr += 4;                                 /* Skip past the npoints. */
+
+	if (npoints > 0)
+		line->points = ptarray_construct_reference_data(FLAGS_GET_Z(lwflags), FLAGS_GET_M(lwflags), npoints, data_ptr);
+
+	else
+		line->points = ptarray_construct(FLAGS_GET_Z(lwflags), FLAGS_GET_M(lwflags), 0); /* Empty linestring */
+
+	data_ptr += FLAGS_NDIMS(lwflags) * npoints * sizeof(double);
+
+	if (size)
+		*size = data_ptr - start_ptr;
+
+	return line;
+}
+
+static LWPOLY *lwpoly_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *size) {
+	uint8_t *start_ptr = data_ptr;
+	LWPOLY *poly;
+	uint8_t *ordinate_ptr;
+	uint32_t nrings = 0;
+	uint32_t i = 0;
+
+	assert(data_ptr);
+
+	poly = (LWPOLY *)lwalloc(sizeof(LWPOLY));
+	poly->srid = SRID_UNKNOWN; /* Default */
+	poly->bbox = NULL;
+	poly->type = POLYGONTYPE;
+	poly->flags = lwflags;
+
+	data_ptr += 4;                                /* Skip past the polygontype. */
+	nrings = gserialized1_get_uint32_t(data_ptr); /* Zero => empty geometry */
+	poly->nrings = nrings;
+	data_ptr += 4; /* Skip past the nrings. */
+
+	ordinate_ptr = data_ptr; /* Start the ordinate pointer. */
+	if (nrings > 0) {
+		poly->rings = (POINTARRAY **)lwalloc(sizeof(POINTARRAY *) * nrings);
+		poly->maxrings = nrings;
+		ordinate_ptr += nrings * 4; /* Move past all the npoints values. */
+		if (nrings % 2)             /* If there is padding, move past that too. */
+			ordinate_ptr += 4;
+	} else /* Empty polygon */
+	{
+		poly->rings = NULL;
+		poly->maxrings = 0;
+	}
+
+	for (i = 0; i < nrings; i++) {
+		uint32_t npoints = 0;
+
+		/* Read in the number of points. */
+		npoints = gserialized1_get_uint32_t(data_ptr);
+		data_ptr += 4;
+
+		/* Make a point array for the ring, and move the ordinate pointer past the ring ordinates. */
+		poly->rings[i] =
+		    ptarray_construct_reference_data(FLAGS_GET_Z(lwflags), FLAGS_GET_M(lwflags), npoints, ordinate_ptr);
+
+		ordinate_ptr += sizeof(double) * FLAGS_NDIMS(lwflags) * npoints;
+	}
+
+	if (size)
+		*size = ordinate_ptr - start_ptr;
+
+	return poly;
+}
+
+static LWTRIANGLE *lwtriangle_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *size) {
+	uint8_t *start_ptr = data_ptr;
+	LWTRIANGLE *triangle;
+	uint32_t npoints = 0;
+
+	assert(data_ptr);
+
+	triangle = (LWTRIANGLE *)lwalloc(sizeof(LWTRIANGLE));
+	triangle->srid = SRID_UNKNOWN; /* Default */
+	triangle->bbox = NULL;
+	triangle->type = TRIANGLETYPE;
+	triangle->flags = lwflags;
+
+	data_ptr += 4;                                 /* Skip past the type. */
+	npoints = gserialized1_get_uint32_t(data_ptr); /* Zero => empty geometry */
+	data_ptr += 4;                                 /* Skip past the npoints. */
+
+	if (npoints > 0)
+		triangle->points =
+		    ptarray_construct_reference_data(FLAGS_GET_Z(lwflags), FLAGS_GET_M(lwflags), npoints, data_ptr);
+	else
+		triangle->points = ptarray_construct(FLAGS_GET_Z(lwflags), FLAGS_GET_M(lwflags), 0); /* Empty triangle */
+
+	data_ptr += FLAGS_NDIMS(lwflags) * npoints * sizeof(double);
+
+	if (size)
+		*size = data_ptr - start_ptr;
+
+	return triangle;
+}
+
+static LWCIRCSTRING *lwcircstring_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *size) {
+	uint8_t *start_ptr = data_ptr;
+	LWCIRCSTRING *circstring;
+	uint32_t npoints = 0;
+
+	assert(data_ptr);
+
+	circstring = (LWCIRCSTRING *)lwalloc(sizeof(LWCIRCSTRING));
+	circstring->srid = SRID_UNKNOWN; /* Default */
+	circstring->bbox = NULL;
+	circstring->type = CIRCSTRINGTYPE;
+	circstring->flags = lwflags;
+
+	data_ptr += 4;                                 /* Skip past the circstringtype. */
+	npoints = gserialized1_get_uint32_t(data_ptr); /* Zero => empty geometry */
+	data_ptr += 4;                                 /* Skip past the npoints. */
+
+	if (npoints > 0)
+		circstring->points =
+		    ptarray_construct_reference_data(FLAGS_GET_Z(lwflags), FLAGS_GET_M(lwflags), npoints, data_ptr);
+	else
+		circstring->points =
+		    ptarray_construct(FLAGS_GET_Z(lwflags), FLAGS_GET_M(lwflags), 0); /* Empty circularstring */
+
+	data_ptr += FLAGS_NDIMS(lwflags) * npoints * sizeof(double);
+
+	if (size)
+		*size = data_ptr - start_ptr;
+
+	return circstring;
+}
+
+static LWCOLLECTION *lwcollection_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *size) {
+	uint32_t type;
+	uint8_t *start_ptr = data_ptr;
+	LWCOLLECTION *collection;
+	uint32_t ngeoms = 0;
+	uint32_t i = 0;
+
+	assert(data_ptr);
+
+	type = gserialized1_get_uint32_t(data_ptr);
+	data_ptr += 4; /* Skip past the type. */
+
+	collection = (LWCOLLECTION *)lwalloc(sizeof(LWCOLLECTION));
+	collection->srid = SRID_UNKNOWN; /* Default */
+	collection->bbox = NULL;
+	collection->type = type;
+	collection->flags = lwflags;
+
+	ngeoms = gserialized1_get_uint32_t(data_ptr);
+	collection->ngeoms = ngeoms; /* Zero => empty geometry */
+	data_ptr += 4;               /* Skip past the ngeoms. */
+
+	if (ngeoms > 0) {
+		collection->geoms = (LWGEOM **)lwalloc(sizeof(LWGEOM *) * ngeoms);
+		collection->maxgeoms = ngeoms;
+	} else {
+		collection->geoms = NULL;
+		collection->maxgeoms = 0;
+	}
+
+	/* Sub-geometries are never de-serialized with boxes (#1254) */
+	FLAGS_SET_BBOX(lwflags, 0);
+
+	for (i = 0; i < ngeoms; i++) {
+		uint32_t subtype = gserialized1_get_uint32_t(data_ptr);
+		size_t subsize = 0;
+
+		if (!lwcollection_allows_subtype(type, subtype)) {
+			// lwerror("Invalid subtype (%s) for collection type (%s)", lwtype_name(subtype), lwtype_name(type));
+			lwfree(collection);
+			return NULL;
+		}
+		collection->geoms[i] = lwgeom_from_gserialized1_buffer(data_ptr, lwflags, &subsize);
+		data_ptr += subsize;
+	}
+
+	if (size)
+		*size = data_ptr - start_ptr;
+
+	return collection;
+}
+
 LWGEOM *lwgeom_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, size_t *g_size) {
 	uint32_t type;
 
@@ -201,6 +403,25 @@ LWGEOM *lwgeom_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, si
 	switch (type) {
 	case POINTTYPE:
 		return (LWGEOM *)lwpoint_from_gserialized1_buffer(data_ptr, lwflags, g_size);
+	case LINETYPE:
+		return (LWGEOM *)lwline_from_gserialized1_buffer(data_ptr, lwflags, g_size);
+	case POLYGONTYPE:
+		return (LWGEOM *)lwpoly_from_gserialized1_buffer(data_ptr, lwflags, g_size);
+	case CIRCSTRINGTYPE:
+		return (LWGEOM *)lwcircstring_from_gserialized1_buffer(data_ptr, lwflags, g_size);
+	case TRIANGLETYPE:
+		return (LWGEOM *)lwtriangle_from_gserialized1_buffer(data_ptr, lwflags, g_size);
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COMPOUNDTYPE:
+	case CURVEPOLYTYPE:
+	case MULTICURVETYPE:
+	case MULTISURFACETYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE:
+		return (LWGEOM *)lwcollection_from_gserialized1_buffer(data_ptr, lwflags, g_size);
 		// Need to do with postgis
 
 	default:

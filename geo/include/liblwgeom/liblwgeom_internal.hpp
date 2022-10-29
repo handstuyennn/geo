@@ -19,6 +19,11 @@ namespace duckdb {
 #define SIGNUM(n) (((n) > 0) - ((n) < 0))
 
 /**
+ * Tolerance used to determine equality.
+ */
+#define EPSILON_SQLMM 1e-8
+
+/**
  * Floating point comparators.
  */
 #define FP_TOLERANCE                1e-12
@@ -110,15 +115,45 @@ int p3d_same(const POINT3D *p1, const POINT3D *p2);
  * Returns -1 for left and 1 for right and 0 for co-linearity
  */
 int lw_segment_side(const POINT2D *p1, const POINT2D *p2, const POINT2D *q);
+int lw_arc_calculate_gbox_cartesian_2d(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3, GBOX *gbox);
+double lw_arc_center(const POINT2D *p1, const POINT2D *p2, const POINT2D *p3, POINT2D *result);
 
 /*
  * Force dims
  */
 LWGEOM *lwgeom_force_dims(const LWGEOM *lwgeom, int hasz, int hasm, double zval, double mval);
 LWPOINT *lwpoint_force_dims(const LWPOINT *lwpoint, int hasz, int hasm, double zval, double mval);
+LWLINE *lwline_force_dims(const LWLINE *lwline, int hasz, int hasm, double zval, double mval);
+LWPOLY *lwpoly_force_dims(const LWPOLY *lwpoly, int hasz, int hasm, double zval, double mval);
+LWCOLLECTION *lwcollection_force_dims(const LWCOLLECTION *lwcol, int hasz, int hasm, double zval, double mval);
 POINTARRAY *ptarray_force_dims(const POINTARRAY *pa, int hasz, int hasm, double zval, double mval);
 
+/*
+ * Startpoint
+ */
+int lwpoly_startpoint(const LWPOLY *lwpoly, POINT4D *pt);
 int ptarray_startpoint(const POINTARRAY *pa, POINT4D *pt);
+int lwcollection_startpoint(const LWCOLLECTION *col, POINT4D *pt);
+
+/*
+ * Closure test
+ */
+int lwline_is_closed(const LWLINE *line);
+int lwcircstring_is_closed(const LWCIRCSTRING *curve);
+int lwcompound_is_closed(const LWCOMPOUND *curve);
+
+/*
+ * Number of vertices?
+ */
+uint32_t lwline_count_vertices(LWLINE *line);
+uint32_t lwpoly_count_vertices(LWPOLY *poly);
+uint32_t lwcollection_count_vertices(LWCOLLECTION *col);
+
+/** Ensure the collection can hold at least up to ngeoms geometries */
+void lwcollection_reserve(LWCOLLECTION *col, uint32_t ngeoms);
+
+/** Check if subtype is allowed in collectiontype */
+int lwcollection_allows_subtype(int collectiontype, int subtype);
 
 #endif /* !defined _LIBLWGEOM_INTERNAL_H  */
 

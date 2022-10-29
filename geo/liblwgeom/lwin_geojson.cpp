@@ -8,6 +8,9 @@ using namespace json;
 
 namespace duckdb {
 
+/* Prototype */
+static LWGEOM *parse_geojson(json_object *geojson, int *hasz);
+
 static inline json_object *findMemberByName(json_object *poObj, const char *pszName) {
 	json_object *poTmp;
 	json_object_iter it;
@@ -96,6 +99,175 @@ static inline LWGEOM *parse_geojson_point(json_object *geojson, int *hasz) {
 	return (LWGEOM *)lwpoint_construct(0, NULL, pa);
 }
 
+static inline LWGEOM *parse_geojson_linestring(json_object *geojson, int *hasz) {
+	json_object *points = parse_coordinates(geojson);
+	if (!points)
+		return NULL;
+	POINTARRAY *pa = ptarray_construct_empty(1, 0, 1);
+	const int nPoints = json_object_array_length(points);
+	for (int i = 0; i < nPoints; i++) {
+		json_object *coords = json_object_array_get_idx(points, i);
+		parse_geojson_coord(coords, hasz, pa);
+	}
+	return (LWGEOM *)lwline_construct(0, NULL, pa);
+}
+
+static inline LWPOLY *parse_geojson_poly_rings(json_object *rings, int *hasz) {
+	if (!rings || json_object_get_type(rings) != json_type_array)
+		return NULL;
+
+	int nRings = json_object_array_length(rings);
+
+	/* No rings => POLYGON EMPTY */
+	if (!nRings)
+		return lwpoly_construct_empty(0, 1, 0);
+
+	/* Expecting up to nRings otherwise */
+	POINTARRAY **ppa = (POINTARRAY **)lwalloc(sizeof(POINTARRAY *) * nRings);
+	int o = 0;
+
+	for (int i = 0; i < nRings; i++) {
+		json_object *points = json_object_array_get_idx(rings, i);
+		if (!points || json_object_get_type(points) != json_type_array) {
+			for (int k = 0; k < o; k++)
+				ptarray_free(ppa[k]);
+			lwfree(ppa);
+			// lwerror("The 'coordinates' in GeoJSON ring are not an array");
+			return NULL;
+		}
+		int nPoints = json_object_array_length(points);
+
+		/* Skip empty rings */
+		if (!nPoints) {
+			/* Empty outer? Don't promote first hole to outer, holes don't matter. */
+			if (!i)
+				break;
+			else
+				continue;
+		}
+
+		ppa[o] = ptarray_construct_empty(1, 0, 1);
+		for (int j = 0; j < nPoints; j++) {
+			json_object *coords = NULL;
+			coords = json_object_array_get_idx(points, j);
+			if (LW_FAILURE == parse_geojson_coord(coords, hasz, ppa[o])) {
+				for (int k = 0; k <= o; k++)
+					ptarray_free(ppa[k]);
+				lwfree(ppa);
+				// lwerror("The 'coordinates' in GeoJSON are not sufficiently nested");
+				return NULL;
+			}
+		}
+		o++;
+	}
+
+	/* All the rings were empty! */
+	if (!o) {
+		lwfree(ppa);
+		return lwpoly_construct_empty(0, 1, 0);
+	}
+
+	return lwpoly_construct(0, NULL, o, ppa);
+}
+
+static inline LWGEOM *parse_geojson_polygon(json_object *geojson, int *hasz) {
+	return (LWGEOM *)parse_geojson_poly_rings(parse_coordinates(geojson), hasz);
+}
+
+static inline LWGEOM *parse_geojson_multipoint(json_object *geojson, int *hasz) {
+	json_object *points = parse_coordinates(geojson);
+	if (!points)
+		return NULL;
+	LWMPOINT *geom = (LWMPOINT *)lwcollection_construct_empty(MULTIPOINTTYPE, 0, 1, 0);
+
+	const int nPoints = json_object_array_length(points);
+	for (int i = 0; i < nPoints; ++i) {
+		POINTARRAY *pa = ptarray_construct_empty(1, 0, 1);
+		json_object *coord = json_object_array_get_idx(points, i);
+		if (parse_geojson_coord(coord, hasz, pa))
+			geom = lwmpoint_add_lwpoint(geom, lwpoint_construct(0, NULL, pa));
+		else {
+			lwmpoint_free(geom);
+			ptarray_free(pa);
+			return NULL;
+		}
+	}
+
+	return (LWGEOM *)geom;
+}
+
+static inline LWGEOM *parse_geojson_multilinestring(json_object *geojson, int *hasz) {
+	json_object *mls = parse_coordinates(geojson);
+	if (!mls)
+		return NULL;
+	LWMLINE *geom = (LWMLINE *)lwcollection_construct_empty(MULTILINETYPE, 0, 1, 0);
+	const int nLines = json_object_array_length(mls);
+	for (int i = 0; i < nLines; ++i) {
+		POINTARRAY *pa = ptarray_construct_empty(1, 0, 1);
+		json_object *coords = json_object_array_get_idx(mls, i);
+
+		if (json_type_array == json_object_get_type(coords)) {
+			const int nPoints = json_object_array_length(coords);
+			for (int j = 0; j < nPoints; ++j) {
+				json_object *coord = json_object_array_get_idx(coords, j);
+				if (!parse_geojson_coord(coord, hasz, pa)) {
+					lwmline_free(geom);
+					ptarray_free(pa);
+					return NULL;
+				}
+			}
+			geom = lwmline_add_lwline(geom, lwline_construct(0, NULL, pa));
+		} else {
+			lwmline_free(geom);
+			ptarray_free(pa);
+			return NULL;
+		}
+	}
+	return (LWGEOM *)geom;
+}
+
+static inline LWGEOM *parse_geojson_multipolygon(json_object *geojson, int *hasz) {
+	json_object *polys = parse_coordinates(geojson);
+	if (!polys)
+		return NULL;
+	LWGEOM *geom = (LWGEOM *)lwcollection_construct_empty(MULTIPOLYGONTYPE, 0, 1, 0);
+	int nPolys = json_object_array_length(polys);
+
+	for (int i = 0; i < nPolys; ++i) {
+		json_object *rings = json_object_array_get_idx(polys, i);
+		LWPOLY *poly = parse_geojson_poly_rings(rings, hasz);
+		if (poly)
+			geom = (LWGEOM *)lwmpoly_add_lwpoly((LWMPOLY *)geom, poly);
+	}
+
+	return geom;
+}
+
+static inline LWGEOM *parse_geojson_geometrycollection(json_object *geojson, int *hasz) {
+	json_object *poObjGeoms = findMemberByName(geojson, "geometries");
+	if (!poObjGeoms) {
+		// lwerror("Unable to find 'geometries' in GeoJSON string");
+		return NULL;
+	}
+	LWGEOM *geom = (LWGEOM *)lwcollection_construct_empty(COLLECTIONTYPE, 0, 1, 0);
+
+	if (json_type_array == json_object_get_type(poObjGeoms)) {
+		const int nGeoms = json_object_array_length(poObjGeoms);
+		for (int i = 0; i < nGeoms; ++i) {
+			json_object *poObjGeom = json_object_array_get_idx(poObjGeoms, i);
+			LWGEOM *t = parse_geojson(poObjGeom, hasz);
+			if (t)
+				geom = (LWGEOM *)lwcollection_add_lwgeom((LWCOLLECTION *)geom, t);
+			else {
+				lwgeom_free(geom);
+				return NULL;
+			}
+		}
+	}
+
+	return geom;
+}
+
 static inline LWGEOM *parse_geojson(json_object *geojson, int *hasz) {
 	json_object *type = NULL;
 	const char *name;
@@ -115,6 +287,24 @@ static inline LWGEOM *parse_geojson(json_object *geojson, int *hasz) {
 
 	if (strcasecmp(name, "Point") == 0)
 		return parse_geojson_point(geojson, hasz);
+
+	if (strcasecmp(name, "LineString") == 0)
+		return parse_geojson_linestring(geojson, hasz);
+
+	if (strcasecmp(name, "Polygon") == 0)
+		return parse_geojson_polygon(geojson, hasz);
+
+	if (strcasecmp(name, "MultiPoint") == 0)
+		return parse_geojson_multipoint(geojson, hasz);
+
+	if (strcasecmp(name, "MultiLineString") == 0)
+		return parse_geojson_multilinestring(geojson, hasz);
+
+	if (strcasecmp(name, "MultiPolygon") == 0)
+		return parse_geojson_multipolygon(geojson, hasz);
+
+	if (strcasecmp(name, "GeometryCollection") == 0)
+		return parse_geojson_geometrycollection(geojson, hasz);
 
 	// Need to do with postgis
 

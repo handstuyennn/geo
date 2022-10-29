@@ -2,6 +2,7 @@
 
 #include "duckdb.hpp"
 
+#include <cmath>
 #include <stddef.h>
 #include <stdlib.h>
 
