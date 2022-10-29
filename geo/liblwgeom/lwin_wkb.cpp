@@ -2,9 +2,13 @@
 #include "liblwgeom/lwinline.hpp"
 
 #include <cstring>
+#include <limits.h>
 #include <math.h>
 
 namespace duckdb {
+
+/** Max depth in a geometry. Matches the default YYINITDEPTH for WKT */
+#define LW_PARSER_MAX_DEPTH 200
 
 /**
  * Used for passing the parse state between the parsing functions.
@@ -110,6 +114,55 @@ static void lwtype_from_wkb_state(wkb_parse_state *s, uint32_t wkb_type) {
 	switch (wkb_simple_type) {
 	case WKB_POINT_TYPE:
 		s->lwtype = POINTTYPE;
+		break;
+	case WKB_LINESTRING_TYPE:
+		s->lwtype = LINETYPE;
+		break;
+	case WKB_POLYGON_TYPE:
+		s->lwtype = POLYGONTYPE;
+		break;
+	case WKB_CIRCULARSTRING_TYPE:
+		s->lwtype = CIRCSTRINGTYPE;
+		break;
+	case WKB_MULTIPOINT_TYPE:
+		s->lwtype = MULTIPOINTTYPE;
+		break;
+	case WKB_MULTILINESTRING_TYPE:
+		s->lwtype = MULTILINETYPE;
+		break;
+	case WKB_MULTIPOLYGON_TYPE:
+		s->lwtype = MULTIPOLYGONTYPE;
+		break;
+	case WKB_TRIANGLE_TYPE:
+		s->lwtype = TRIANGLETYPE;
+		break;
+	case WKB_GEOMETRYCOLLECTION_TYPE:
+		s->lwtype = COLLECTIONTYPE;
+		break;
+	case WKB_COMPOUNDCURVE_TYPE:
+		s->lwtype = COMPOUNDTYPE;
+		break;
+	case WKB_CURVEPOLYGON_TYPE:
+		s->lwtype = CURVEPOLYTYPE;
+		break;
+	case WKB_MULTICURVE_TYPE:
+		s->lwtype = MULTICURVETYPE;
+		break;
+	case WKB_MULTISURFACE_TYPE:
+		s->lwtype = MULTISURFACETYPE;
+		break;
+	case WKB_POLYHEDRALSURFACE_TYPE:
+		s->lwtype = POLYHEDRALSURFACETYPE;
+		break;
+	case WKB_TIN_TYPE:
+		s->lwtype = TINTYPE;
+		break;
+
+	case WKB_CURVE_TYPE:
+		s->lwtype = CURVEPOLYTYPE;
+		break;
+	case WKB_SURFACE_TYPE:
+		s->lwtype = MULTICURVETYPE;
 		break;
 
 	default: /* Error! */
@@ -254,6 +307,62 @@ static double double_from_wkb_state(wkb_parse_state *s) {
 }
 
 /**
+ * POINTARRAY
+ * Read a dynamically sized point array and advance the parse state forward.
+ * First read the number of points, then read the points.
+ */
+static POINTARRAY *ptarray_from_wkb_state(wkb_parse_state *s) {
+	POINTARRAY *pa = NULL;
+	size_t pa_size;
+	uint32_t ndims = 2;
+	uint32_t npoints = 0;
+	static uint32_t maxpoints = UINT_MAX / WKB_DOUBLE_SIZE / 4;
+
+	/* Calculate the size of this point array. */
+	npoints = integer_from_wkb_state(s);
+	if (s->error)
+		return NULL;
+
+	if (npoints > maxpoints) {
+		s->error = LW_TRUE;
+		return NULL;
+	}
+
+	if (s->has_z)
+		ndims++;
+	if (s->has_m)
+		ndims++;
+	pa_size = npoints * ndims * WKB_DOUBLE_SIZE;
+
+	/* Empty! */
+	if (npoints == 0)
+		return ptarray_construct(s->has_z, s->has_m, npoints);
+
+	/* Does the data we want to read exist? */
+	wkb_parse_state_check(s, pa_size);
+	if (s->error)
+		return NULL;
+
+	/* If we're in a native endianness, we can just copy the data directly! */
+	if (!s->swap_bytes) {
+		pa = ptarray_construct_copy_data(s->has_z, s->has_m, npoints, (uint8_t *)s->pos);
+		s->pos += pa_size;
+	}
+	/* Otherwise we have to read each double, separately. */
+	else {
+		uint32_t i = 0;
+		double *dlist;
+		pa = ptarray_construct(s->has_z, s->has_m, npoints);
+		dlist = (double *)(pa->serialized_pointlist);
+		for (i = 0; i < npoints * ndims; i++) {
+			dlist[i] = double_from_wkb_state(s);
+		}
+	}
+
+	return pa;
+}
+
+/**
  * POINT
  * Read a WKB point, starting just after the endian byte,
  * type number and optional srid number.
@@ -299,12 +408,238 @@ static LWPOINT *lwpoint_from_wkb_state(wkb_parse_state *s) {
 
 	/* Check for POINT(NaN NaN) ==> POINT EMPTY */
 	pt = getPoint2d_cp(pa, 0);
-	if (isnan(pt->x) && isnan(pt->y)) {
+	if (std::isnan(pt->x) && std::isnan(pt->y)) {
 		ptarray_free(pa);
 		return lwpoint_construct_empty(s->srid, s->has_z, s->has_m);
 	} else {
 		return lwpoint_construct(s->srid, NULL, pa);
 	}
+}
+
+/**
+ * LINESTRING
+ * Read a WKB linestring, starting just after the endian byte,
+ * type number and optional srid number. Advance the parse state
+ * forward appropriately.
+ * There is only one pointarray in a linestring. Optionally
+ * check for minimal following of rules (two point minimum).
+ */
+static LWLINE *lwline_from_wkb_state(wkb_parse_state *s) {
+	POINTARRAY *pa = ptarray_from_wkb_state(s);
+	if (s->error)
+		return NULL;
+
+	if (pa == NULL || pa->npoints == 0) {
+		if (pa)
+			ptarray_free(pa);
+		return lwline_construct_empty(s->srid, s->has_z, s->has_m);
+	}
+
+	if (s->check & LW_PARSER_CHECK_MINPOINTS && pa->npoints < 2) {
+		return NULL;
+	}
+
+	return lwline_construct(s->srid, NULL, pa);
+}
+
+/**
+ * CIRCULARSTRING
+ * Read a WKB circularstring, starting just after the endian byte,
+ * type number and optional srid number. Advance the parse state
+ * forward appropriately.
+ * There is only one pointarray in a linestring. Optionally
+ * check for minimal following of rules (three point minimum,
+ * odd number of points).
+ */
+static LWCIRCSTRING *lwcircstring_from_wkb_state(wkb_parse_state *s) {
+	POINTARRAY *pa = ptarray_from_wkb_state(s);
+	if (s->error)
+		return NULL;
+
+	if (pa == NULL || pa->npoints == 0) {
+		if (pa)
+			ptarray_free(pa);
+		return lwcircstring_construct_empty(s->srid, s->has_z, s->has_m);
+	}
+
+	if (s->check & LW_PARSER_CHECK_MINPOINTS && pa->npoints < 3) {
+		return NULL;
+	}
+
+	if (s->check & LW_PARSER_CHECK_ODD && !(pa->npoints % 2)) {
+		return NULL;
+	}
+
+	return lwcircstring_construct(s->srid, NULL, pa);
+}
+
+/**
+ * POLYGON
+ * Read a WKB polygon, starting just after the endian byte,
+ * type number and optional srid number. Advance the parse state
+ * forward appropriately.
+ * First read the number of rings, then read each ring
+ * (which are structured as point arrays)
+ */
+static LWPOLY *lwpoly_from_wkb_state(wkb_parse_state *s) {
+	uint32_t nrings = integer_from_wkb_state(s);
+	if (s->error)
+		return NULL;
+	uint32_t i = 0;
+	LWPOLY *poly = lwpoly_construct_empty(s->srid, s->has_z, s->has_m);
+
+	/* Empty polygon? */
+	if (nrings == 0)
+		return poly;
+
+	for (i = 0; i < nrings; i++) {
+		POINTARRAY *pa = ptarray_from_wkb_state(s);
+		if (pa == NULL) {
+			lwpoly_free(poly);
+			return NULL;
+		}
+
+		/* Check for at least four points. */
+		if (s->check & LW_PARSER_CHECK_MINPOINTS && pa->npoints < 4) {
+			lwpoly_free(poly);
+			ptarray_free(pa);
+			// lwerror("%s must have at least four points in each ring", lwtype_name(s->lwtype));
+			return NULL;
+		}
+
+		/* Check that first and last points are the same. */
+		if (s->check & LW_PARSER_CHECK_CLOSURE && !ptarray_is_closed_2d(pa)) {
+			lwpoly_free(poly);
+			ptarray_free(pa);
+			// lwerror("%s must have closed rings", lwtype_name(s->lwtype));
+			return NULL;
+		}
+
+		/* Add ring to polygon */
+		if (lwpoly_add_ring(poly, pa) == LW_FAILURE) {
+			lwpoly_free(poly);
+			ptarray_free(pa);
+			// lwerror("Unable to add ring to polygon");
+			return NULL;
+		}
+	}
+	return poly;
+}
+
+/**
+ * TRIANGLE
+ * Read a WKB triangle, starting just after the endian byte,
+ * type number and optional srid number. Advance the parse state
+ * forward appropriately.
+ * Triangles are encoded like polygons in WKB, but more like linestrings
+ * as lwgeometries.
+ */
+static LWTRIANGLE *lwtriangle_from_wkb_state(wkb_parse_state *s) {
+	uint32_t nrings = integer_from_wkb_state(s);
+	if (s->error)
+		return NULL;
+
+	/* Empty triangle? */
+	if (nrings == 0)
+		return lwtriangle_construct_empty(s->srid, s->has_z, s->has_m);
+
+	/* Should be only one ring. */
+	if (nrings != 1) {
+		// lwerror("Triangle has wrong number of rings: %d", nrings);
+		return nullptr;
+	}
+
+	/* There's only one ring, we hope? */
+	POINTARRAY *pa = ptarray_from_wkb_state(s);
+
+	/* If there's no points, return an empty triangle. */
+	if (pa == NULL)
+		return lwtriangle_construct_empty(s->srid, s->has_z, s->has_m);
+
+	/* Check for at least four points. */
+	if (s->check & LW_PARSER_CHECK_MINPOINTS && pa->npoints < 4) {
+		ptarray_free(pa);
+		// lwerror("%s must have at least four points", lwtype_name(s->lwtype));
+		return NULL;
+	}
+
+	if (s->check & LW_PARSER_CHECK_ZCLOSURE && !ptarray_is_closed_z(pa)) {
+		ptarray_free(pa);
+		// lwerror("%s must have closed rings", lwtype_name(s->lwtype));
+		return NULL;
+	}
+
+	/* Empty TRIANGLE starts w/ empty POINTARRAY, free it first */
+	return lwtriangle_construct(s->srid, NULL, pa);
+}
+
+/**
+ * CURVEPOLYTYPE
+ */
+static LWCURVEPOLY *lwcurvepoly_from_wkb_state(wkb_parse_state *s) {
+	uint32_t ngeoms = integer_from_wkb_state(s);
+	if (s->error)
+		return NULL;
+	LWCURVEPOLY *cp = lwcurvepoly_construct_empty(s->srid, s->has_z, s->has_m);
+	LWGEOM *geom = NULL;
+	uint32_t i;
+
+	/* Empty collection? */
+	if (ngeoms == 0)
+		return cp;
+
+	for (i = 0; i < ngeoms; i++) {
+		geom = lwgeom_from_wkb_state(s);
+		if (lwcurvepoly_add_ring(cp, geom) == LW_FAILURE) {
+			lwgeom_free(geom);
+			lwgeom_free((LWGEOM *)cp);
+			// lwerror("Unable to add geometry (%p) to curvepoly (%p)", geom, cp);
+			return NULL;
+		}
+	}
+
+	return cp;
+}
+
+/**
+ * COLLECTION, MULTIPOINTTYPE, MULTILINETYPE, MULTIPOLYGONTYPE, COMPOUNDTYPE,
+ * MULTICURVETYPE, MULTISURFACETYPE,
+ * TINTYPE
+ */
+static LWCOLLECTION *lwcollection_from_wkb_state(wkb_parse_state *s) {
+	uint32_t ngeoms = integer_from_wkb_state(s);
+	if (s->error)
+		return NULL;
+	LWCOLLECTION *col = lwcollection_construct_empty(s->lwtype, s->srid, s->has_z, s->has_m);
+	LWGEOM *geom = NULL;
+	uint32_t i;
+
+	/* Empty collection? */
+	if (ngeoms == 0)
+		return col;
+
+	/* Be strict in polyhedral surface closures */
+	if (s->lwtype == POLYHEDRALSURFACETYPE)
+		s->check |= LW_PARSER_CHECK_ZCLOSURE;
+
+	s->depth++;
+	if (s->depth >= LW_PARSER_MAX_DEPTH) {
+		lwcollection_free(col);
+		// lwerror("Geometry has too many chained collections");
+		return NULL;
+	}
+	for (i = 0; i < ngeoms; i++) {
+		geom = lwgeom_from_wkb_state(s);
+		if (lwcollection_add_lwgeom(col, geom) == NULL) {
+			lwgeom_free(geom);
+			lwgeom_free((LWGEOM *)col);
+			// lwerror("Unable to add geometry (%p) to collection (%p)", geom, col);
+			return NULL;
+		}
+	}
+	s->depth--;
+
+	return col;
 }
 
 /**
@@ -356,6 +691,31 @@ LWGEOM *lwgeom_from_wkb_state(wkb_parse_state *s) {
 	case POINTTYPE:
 		return (LWGEOM *)lwpoint_from_wkb_state(s);
 		break;
+	case LINETYPE:
+		return (LWGEOM *)lwline_from_wkb_state(s);
+		break;
+	case POLYGONTYPE:
+		return (LWGEOM *)lwpoly_from_wkb_state(s);
+		break;
+	case CIRCSTRINGTYPE:
+		return (LWGEOM *)lwcircstring_from_wkb_state(s);
+		break;
+	case TRIANGLETYPE:
+		return (LWGEOM *)lwtriangle_from_wkb_state(s);
+		break;
+	case CURVEPOLYTYPE:
+		return (LWGEOM *)lwcurvepoly_from_wkb_state(s);
+		break;
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COMPOUNDTYPE:
+	case MULTICURVETYPE:
+	case MULTISURFACETYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE:
+		return (LWGEOM *)lwcollection_from_wkb_state(s);
 	/* Unknown type! */
 	default:
 		// lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(s->lwtype));

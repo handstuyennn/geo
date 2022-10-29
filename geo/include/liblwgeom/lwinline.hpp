@@ -65,6 +65,35 @@ static inline int lwpoint_is_empty(const LWPOINT *point) {
 	return !point->point || point->point->npoints < 1;
 }
 
+static inline int lwtriangle_is_empty(const LWTRIANGLE *triangle) {
+	return !triangle->points || triangle->points->npoints < 1;
+}
+
+static inline int lwgeom_is_empty(const LWGEOM *geom);
+
+static inline int lwcollection_is_empty(const LWCOLLECTION *col) {
+	uint32_t i;
+	if (col->ngeoms == 0 || !col->geoms)
+		return LW_TRUE;
+	for (i = 0; i < col->ngeoms; i++) {
+		if (!lwgeom_is_empty(col->geoms[i]))
+			return LW_FALSE;
+	}
+	return LW_TRUE;
+}
+
+static inline int lwline_is_empty(const LWLINE *line) {
+	return !line->points || line->points->npoints < 1;
+}
+
+static inline int lwcircstring_is_empty(const LWCIRCSTRING *circ) {
+	return !circ->points || circ->points->npoints < 1;
+}
+
+static inline int lwpoly_is_empty(const LWPOLY *poly) {
+	return poly->nrings < 1 || !poly->rings || !poly->rings[0] || poly->rings[0]->npoints < 1;
+}
+
 /**
  * Return true or false depending on whether a geometry is an "empty"
  * geometry (no vertices members)
@@ -73,6 +102,30 @@ static inline int lwgeom_is_empty(const LWGEOM *geom) {
 	switch (geom->type) {
 	case POINTTYPE:
 		return lwpoint_is_empty((LWPOINT *)geom);
+		break;
+	case LINETYPE:
+		return lwline_is_empty((LWLINE *)geom);
+		break;
+	case POLYGONTYPE:
+		return lwpoly_is_empty((LWPOLY *)geom);
+		break;
+	case CIRCSTRINGTYPE:
+		return lwcircstring_is_empty((LWCIRCSTRING *)geom);
+		break;
+	case TRIANGLETYPE:
+		return lwtriangle_is_empty((LWTRIANGLE *)geom);
+		break;
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COMPOUNDTYPE:
+	case CURVEPOLYTYPE:
+	case MULTICURVETYPE:
+	case MULTISURFACETYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE:
+		return lwcollection_is_empty((LWCOLLECTION *)geom);
 		break;
 	// Need to do with postgis
 	default:

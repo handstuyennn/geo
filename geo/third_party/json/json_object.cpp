@@ -1,6 +1,7 @@
 #include "linkhash.hpp"
 #include "printbuf.hpp"
 
+#include <cmath>
 #include <cstring>
 
 namespace json {
@@ -484,7 +485,7 @@ static int json_object_double_to_json_string_format(struct json_object *jso, str
 	 * ECMA 262 section 9.8.1 defines
 	 * how to handle these cases as strings
 	 */
-	if (isnan(jsodbl->c_double)) {
+	if (std::isnan(jsodbl->c_double)) {
 		size = snprintf(buf, sizeof(buf), "NaN");
 	} else if (isinf(jsodbl->c_double)) {
 		if (jsodbl->c_double > 0)

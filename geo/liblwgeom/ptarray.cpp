@@ -93,6 +93,35 @@ int ptarray_append_point(POINTARRAY *pa, const POINT4D *pt, int repeated_points)
 	return ptarray_insert_point(pa, pt, pa->npoints);
 }
 
+int ptarray_is_closed_2d(const POINTARRAY *in) {
+	if (!in) {
+		// lwerror("ptarray_is_closed_2d: called with null point array");
+		return 0;
+	}
+	if (in->npoints <= 1)
+		return in->npoints; /* single-point are closed, empty not closed */
+
+	return 0 == memcmp(getPoint_internal(in, 0), getPoint_internal(in, in->npoints - 1), sizeof(POINT2D));
+}
+
+int ptarray_is_closed_3d(const POINTARRAY *in) {
+	if (!in) {
+		// lwerror("ptarray_is_closed_3d: called with null point array");
+		return 0;
+	}
+	if (in->npoints <= 1)
+		return in->npoints; /* single-point are closed, empty not closed */
+
+	return 0 == memcmp(getPoint_internal(in, 0), getPoint_internal(in, in->npoints - 1), sizeof(POINT3D));
+}
+
+int ptarray_is_closed_z(const POINTARRAY *in) {
+	if (FLAGS_GET_Z(in->flags))
+		return ptarray_is_closed_3d(in);
+	else
+		return ptarray_is_closed_2d(in);
+}
+
 /*
  * Add a point into a pointarray. Only adds as many dimensions as the
  * pointarray supports.

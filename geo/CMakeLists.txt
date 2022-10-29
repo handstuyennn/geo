@@ -16,6 +16,7 @@ set(GEO_EXTENSION_FILES
     postgis/lwgeom_inout.cpp
     postgis/lwgeom_functions_basic.cpp
     postgis/geography_measurement.cpp
+    postgis/geography_measurement_trees.cpp
     postgis/lwgeom_ogc.cpp
     postgis/lwgeom_geos.cpp
     postgis/geography_centroid.cpp
@@ -41,6 +42,16 @@ set(GEO_EXTENSION_FILES
     liblwgeom/measures.cpp
     liblwgeom/lwgeodetic_tree.cpp
     liblwgeom/lwspheroid.cpp
+    liblwgeom/lwline.cpp
+    liblwgeom/lwcircstring.cpp
+    liblwgeom/lwcollection.cpp
+    liblwgeom/lwcompound.cpp
+    liblwgeom/lwmline.cpp
+    liblwgeom/lwmpoint.cpp
+    liblwgeom/lwtriangle.cpp
+    liblwgeom/lwpoly.cpp
+    liblwgeom/lwcurvepoly.cpp
+    liblwgeom/lwmpoly.cpp
     parser/lwin_wkt_lex.cpp
     parser/lwin_wkt_parse.cpp
     libpgcommon/lwgeom_pg.cpp
