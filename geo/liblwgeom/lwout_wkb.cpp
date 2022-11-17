@@ -708,4 +708,24 @@ static uint8_t *lwgeom_to_wkb_buf(const LWGEOM *geom, uint8_t *buf, uint8_t vari
 	return nullptr;
 }
 
+lwvarlena_t *lwgeom_to_wkb_varlena(const LWGEOM *geom, uint8_t variant) {
+	size_t b_size = lwgeom_to_wkb_size(geom, variant);
+	/* Hex string takes twice as much space as binary, but No NULL ending in varlena */
+	if (variant & WKB_HEX) {
+		b_size = 2 * b_size;
+	}
+
+	lwvarlena_t *buffer = (lwvarlena_t *)lwalloc(b_size + LWVARHDRSZ);
+	int written_size = lwgeom_to_wkb_write_buf(geom, variant, (uint8_t *)buffer->data);
+	if (written_size != (ptrdiff_t)b_size) {
+		char *wkt = lwgeom_to_wkt(geom, WKT_EXTENDED, 15, NULL);
+		// lwerror("Output WKB is not the same size as the allocated buffer. Variant: %u, Geom: %s", variant, wkt);
+		lwfree(wkt);
+		lwfree(buffer);
+		return NULL;
+	}
+	LWSIZE_SET(buffer->size, written_size + LWVARHDRSZ);
+	return buffer;
+}
+
 } // namespace duckdb

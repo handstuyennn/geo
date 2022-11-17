@@ -10,7 +10,7 @@
 
 #include "duckdb/common/common.hpp"
 #include "duckdb/common/types.hpp"
-#include "liblwgeom/liblwgeom.hpp"
+#include "liblwgeom/liblwgeom_internal.hpp"
 
 namespace duckdb {
 
@@ -43,10 +43,15 @@ public:
 	static data_ptr_t GetBase(GSERIALIZED *gser);
 
 	static GSERIALIZED *MakePoint(double x, double y);
-
 	static GSERIALIZED *MakePoint(double x, double y, double z);
+	static GSERIALIZED *MakeLine(GSERIALIZED *g1, GSERIALIZED *g2);
+	static GSERIALIZED *MakeLineGArray(GSERIALIZED *gserArray[], int nelems);
+	static GSERIALIZED *MakePolygon(GSERIALIZED *geom, GSERIALIZED *gserArray[] = {}, int nelems = 0);
 
-	static std::string AsText(data_ptr_t base, size_t size);
+	static lwvarlena_t *AsBinary(GSERIALIZED *gser, string text = "");
+	static std::string AsText(data_ptr_t base, size_t size, int max_digits = OUT_DEFAULT_DECIMAL_DIGITS);
+	static lwvarlena_t *AsGeoJson(GSERIALIZED *gser, size_t m_dec_digits = OUT_DEFAULT_DECIMAL_DIGITS);
+	static lwvarlena_t *GeoHash(GSERIALIZED *gser, size_t m_chars = 0);
 
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
 

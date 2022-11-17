@@ -498,6 +498,7 @@ extern LWCOLLECTION *lwgeom_as_lwcollection(const LWGEOM *lwgeom);
 extern LWCIRCSTRING *lwgeom_as_lwcircstring(const LWGEOM *lwgeom);
 extern LWCURVEPOLY *lwgeom_as_lwcurvepoly(const LWGEOM *lwgeom);
 extern LWCOMPOUND *lwgeom_as_lwcompound(const LWGEOM *lwgeom);
+extern LWTRIANGLE *lwgeom_as_lwtriangle(const LWGEOM *lwgeom);
 
 /* Casts LW*->LWGEOM (always cast) */
 extern LWGEOM *lwcollection_as_lwgeom(const LWCOLLECTION *obj);
@@ -562,6 +563,19 @@ extern POINTARRAY *ptarray_construct_empty(char hasz, char hasm, uint32_t maxpoi
 extern int ptarray_append_point(POINTARRAY *pa, const POINT4D *pt, int allow_duplicates);
 
 /**
+ * Append a #POINTARRAY, pa2 to the end of an existing #POINTARRAY, pa1.
+ *
+ * If gap_tolerance is >= 0 then the end point of pa1 will be checked for
+ * being within gap_tolerance 2d distance from start point of pa2 or an
+ * error will be raised and LW_FAILURE returned.
+ * A gap_tolerance < 0 disables the check.
+ *
+ * If end point of pa1 and start point of pa2 are 2d-equal, then pa2 first
+ * point will not be appended.
+ */
+extern int ptarray_append_ptarray(POINTARRAY *pa1, POINTARRAY *pa2, double gap_tolerance);
+
+/**
  * Insert a point into an existing #POINTARRAY. Zero
  * is the index of the start of the array.
  */
@@ -570,6 +584,8 @@ extern int ptarray_insert_point(POINTARRAY *pa, const POINT4D *p, uint32_t where
 extern int ptarray_is_closed_2d(const POINTARRAY *pa);
 extern int ptarray_is_closed_3d(const POINTARRAY *pa);
 extern int ptarray_is_closed_z(const POINTARRAY *pa);
+
+extern int lwpoint_getPoint4d_p(const LWPOINT *point, POINT4D *out);
 
 /******************************************************************
  * LWPOLY functions
@@ -597,6 +613,12 @@ extern int lwcompound_add_lwgeom(LWCOMPOUND *comp, LWGEOM *geom);
  * Construct a new flags bitmask.
  */
 extern lwflags_t lwflags(int hasz, int hasm, int geodetic);
+
+/******************************************************************
+ * LWMULTIx and LWCOLLECTION functions
+ ******************************************************************/
+
+LWGEOM *lwcollection_getsubgeom(LWCOLLECTION *col, int gnum);
 
 /******************************************************************
  * SERIALIZED FORM functions
@@ -651,6 +673,7 @@ extern float next_float_down(double d);
 extern float next_float_up(double d);
 
 /* general utilities 2D */
+extern double distance2d_pt_pt(const POINT2D *p1, const POINT2D *p2);
 extern double lwgeom_mindistance2d(const LWGEOM *lw1, const LWGEOM *lw2);
 extern double lwgeom_mindistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tolerance);
 
@@ -669,6 +692,11 @@ extern int lwgeom_needs_bbox(const LWGEOM *geom);
  * Count the total number of vertices in any #LWGEOM.
  */
 extern uint32_t lwgeom_count_vertices(const LWGEOM *geom);
+
+/**
+ * Calculate the GeoHash (http://geohash.org) string for a geometry. Caller must free.
+ */
+lwvarlena_t *lwgeom_geohash(const LWGEOM *lwgeom, int precision);
 
 /**
  * Compute a bbox if not already computed
@@ -691,6 +719,8 @@ extern int lwgeom_has_srid(const LWGEOM *geom);
  * NOTE: this will modify the point4d pointed to by 'point'.
  */
 extern int getPoint4d_p(const POINTARRAY *pa, uint32_t n, POINT4D *point);
+
+extern POINTARRAY *ptarray_clone_deep(const POINTARRAY *ptarray);
 
 /*
  * Geometry constructors. These constructors to not copy the point arrays
@@ -719,6 +749,8 @@ extern LWCOLLECTION *lwcollection_construct_empty(uint8_t type, int32_t srid, ch
 /* Other constructors */
 extern LWPOINT *lwpoint_make2d(int32_t srid, double x, double y);
 extern LWPOINT *lwpoint_make3dz(int32_t srid, double x, double y, double z);
+extern LWLINE *lwline_from_lwgeom_array(int32_t srid, uint32_t ngeoms, LWGEOM **geoms);
+extern LWPOLY *lwpoly_from_lwlines(const LWLINE *shell, uint32_t nholes, const LWLINE **holes);
 
 unsigned int geohash_point_as_int(POINT2D *pt);
 
@@ -827,6 +859,44 @@ typedef struct struct_lwgeom_parser_result {
 /* Number of digits of precision in WKT produced. */
 #define WKT_PRECISION 15
 
+struct LWPOINTITERATOR;
+typedef struct LWPOINTITERATOR LWPOINTITERATOR;
+
+/**
+ * Create a new LWPOINTITERATOR over supplied LWGEOM*
+ */
+extern LWPOINTITERATOR *lwpointiterator_create(const LWGEOM *g);
+
+/**
+ * Create a new LWPOINTITERATOR over supplied LWGEOM*
+ * Supports modification of coordinates during iteration.
+ */
+extern LWPOINTITERATOR *lwpointiterator_create_rw(LWGEOM *g);
+
+/**
+ * Free all memory associated with the iterator
+ */
+extern void lwpointiterator_destroy(LWPOINTITERATOR *s);
+
+/**
+ * Returns LW_TRUE if there is another point available in the iterator.
+ */
+extern int lwpointiterator_has_next(LWPOINTITERATOR *s);
+
+/**
+ * Attempts to assigns the next point in the iterator to p.  Does not advance.
+ * Returns LW_SUCCESS if the assignment was successful, LW_FAILURE otherwise.
+ */
+extern int lwpointiterator_peek(LWPOINTITERATOR *s, POINT4D *p);
+
+/**
+ * Attempts to assign the next point in the iterator to p, and advances
+ * the iterator to the next point.  If p is NULL, the iterator will be
+ * advanced without reading a point.
+ * Returns LW_SUCCESS if the assignment was successful, LW_FAILURE otherwise.
+ * */
+extern int lwpointiterator_next(LWPOINTITERATOR *s, POINT4D *p);
+
 /**
  * Check if a #GSERIALIZED has a bounding box without deserializing first.
  */
@@ -864,6 +934,15 @@ extern const char *lwtype_name(uint8_t type);
  * @param size_out (Out parameter) size of the buffer
  */
 extern char *lwgeom_to_wkt(const LWGEOM *geom, uint8_t variant, int precision, size_t *size_out);
+
+/**
+ * @param geom geometry to convert to WKT
+ * @param variant output format to use (WKT_ISO, WKT_SFSQL, WKT_EXTENDED)
+ * @param precision Double precision
+ */
+extern lwvarlena_t *lwgeom_to_wkt_varlena(const LWGEOM *geom, uint8_t variant, int precision);
+
+extern lwvarlena_t *lwgeom_to_wkb_varlena(const LWGEOM *geom, uint8_t variant);
 
 extern uint8_t *bytes_from_hexbytes(const char *hexbuf, size_t hexsize);
 

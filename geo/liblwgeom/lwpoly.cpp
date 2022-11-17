@@ -137,4 +137,46 @@ int lwpoly_add_ring(LWPOLY *poly, POINTARRAY *pa) {
 	return LW_SUCCESS;
 }
 
+/*
+ * Construct a polygon from a LWLINE being
+ * the shell and an array of LWLINE (possibly NULL) being holes.
+ * Pointarrays from intput geoms are cloned.
+ * SRID must be the same for each input line.
+ * Input lines must have at least 4 points, and be closed.
+ */
+LWPOLY *lwpoly_from_lwlines(const LWLINE *shell, uint32_t nholes, const LWLINE **holes) {
+	uint32_t nrings;
+	POINTARRAY **rings = (POINTARRAY **)lwalloc((nholes + 1) * sizeof(POINTARRAY *));
+	int32_t srid = shell->srid;
+	LWPOLY *ret;
+
+	if (shell->points->npoints < 4)
+		// lwerror("lwpoly_from_lwlines: shell must have at least 4 points");
+		return nullptr;
+	if (!ptarray_is_closed_2d(shell->points))
+		// lwerror("lwpoly_from_lwlines: shell must be closed");
+		return nullptr;
+	rings[0] = ptarray_clone_deep(shell->points);
+
+	for (nrings = 1; nrings <= nholes; nrings++) {
+		const LWLINE *hole = holes[nrings - 1];
+
+		if (hole->srid != srid)
+			// lwerror("lwpoly_from_lwlines: mixed SRIDs in input lines");
+			return nullptr;
+
+		if (hole->points->npoints < 4)
+			// lwerror("lwpoly_from_lwlines: holes must have at least 4 points");
+			return nullptr;
+		if (!ptarray_is_closed_2d(hole->points))
+			// lwerror("lwpoly_from_lwlines: holes must be closed");
+			return nullptr;
+
+		rings[nrings] = ptarray_clone_deep(hole->points);
+	}
+
+	ret = lwpoly_construct(srid, NULL, nrings, rings);
+	return ret;
+}
+
 } // namespace duckdb

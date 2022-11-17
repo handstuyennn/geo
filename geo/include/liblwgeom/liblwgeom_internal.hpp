@@ -109,6 +109,7 @@ namespace duckdb {
 int lwprint_double(double d, int maxdd, char *buf);
 
 int p3d_same(const POINT3D *p1, const POINT3D *p2);
+int p2d_same(const POINT2D *p1, const POINT2D *p2);
 
 /*
  * What side of the line formed by p1 and p2 does q fall?
@@ -127,6 +128,12 @@ LWLINE *lwline_force_dims(const LWLINE *lwline, int hasz, int hasm, double zval,
 LWPOLY *lwpoly_force_dims(const LWPOLY *lwpoly, int hasz, int hasm, double zval, double mval);
 LWCOLLECTION *lwcollection_force_dims(const LWCOLLECTION *lwcol, int hasz, int hasm, double zval, double mval);
 POINTARRAY *ptarray_force_dims(const POINTARRAY *pa, int hasz, int hasm, double zval, double mval);
+
+/*
+ * Geohash
+ */
+int lwgeom_geohash_precision(GBOX bbox, GBOX *bounds);
+lwvarlena_t *geohash_point(double longitude, double latitude, int precision);
 
 /*
  * Startpoint

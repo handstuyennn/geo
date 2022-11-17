@@ -107,9 +107,39 @@ GSERIALIZED *Geometry::MakePoint(double x, double y, double z) {
 	return postgis.LWGEOM_makepoint(x, y, z);
 }
 
-std::string Geometry::AsText(data_ptr_t base, size_t size) {
+GSERIALIZED *Geometry::MakeLine(GSERIALIZED *g1, GSERIALIZED *g2) {
 	Postgis postgis;
-	return postgis.LWGEOM_asText(base, size);
+	return postgis.LWGEOM_makeline(g1, g2);
+}
+
+GSERIALIZED *Geometry::MakeLineGArray(GSERIALIZED *gserArray[], int nelems) {
+	Postgis postgis;
+	return postgis.LWGEOM_makeline_garray(gserArray, nelems);
+}
+
+GSERIALIZED *Geometry::MakePolygon(GSERIALIZED *geom, GSERIALIZED *gserArray[], int nelems) {
+	Postgis postgis;
+	return postgis.LWGEOM_makepoly(geom, gserArray, nelems);
+}
+
+lwvarlena_t *Geometry::AsBinary(GSERIALIZED *geom, string text) {
+	Postgis postgis;
+	return postgis.LWGEOM_asBinary(geom, text);
+}
+
+std::string Geometry::AsText(data_ptr_t base, size_t size, int max_digits) {
+	Postgis postgis;
+	return postgis.LWGEOM_asText(base, size, max_digits);
+}
+
+lwvarlena_t *Geometry::AsGeoJson(GSERIALIZED *geom, size_t m_dec_digits) {
+	Postgis postgis;
+	return postgis.LWGEOM_asGeoJson(geom, m_dec_digits);
+}
+
+lwvarlena_t *Geometry::GeoHash(GSERIALIZED *geom, size_t m_chars) {
+	Postgis postgis;
+	return postgis.ST_GeoHash(geom, m_chars);
 }
 
 double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2) {

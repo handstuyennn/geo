@@ -190,4 +190,11 @@ int lw_dist2d_point_point(LWPOINT *point1, LWPOINT *point2, DISTPTS *dl) {
 	return lw_dist2d_pt_pt(p1, p2, dl);
 }
 
+double distance2d_pt_pt(const POINT2D *p1, const POINT2D *p2) {
+	double hside = p2->x - p1->x;
+	double vside = p2->y - p1->y;
+
+	return hypot(hside, vside);
+}
+
 } // namespace duckdb

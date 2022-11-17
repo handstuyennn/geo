@@ -1,6 +1,6 @@
 #pragma once
 #include "duckdb.hpp"
-#include "liblwgeom/liblwgeom.hpp"
+#include "liblwgeom/liblwgeom_internal.hpp"
 
 namespace duckdb {
 /*
@@ -18,8 +18,9 @@ GSERIALIZED *LWGEOM_getGserialized(const void *base, size_t size);
 
 size_t LWGEOM_size(GSERIALIZED *gser);
 char *LWGEOM_base(GSERIALIZED *gser);
-std::string LWGEOM_asText(const void *base, size_t size);
+lwvarlena_t *LWGEOM_asBinary(GSERIALIZED *gser, string text = "");
 std::string LWGEOM_asBinary(const void *base, size_t size);
+std::string LWGEOM_asText(const void *base, size_t size, size_t max_digits = OUT_DEFAULT_DECIMAL_DIGITS);
 std::string LWGEOM_asGeoJson(const void *base, size_t size);
 void LWGEOM_free(GSERIALIZED *gser);
 

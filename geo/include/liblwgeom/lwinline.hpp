@@ -61,6 +61,15 @@ static inline const POINT3D *getPoint3d_cp(const POINTARRAY *pa, uint32_t n) {
 	return (const POINT3D *)getPoint_internal(pa, n);
 }
 
+static inline LWPOINT *lwgeom_as_lwpoint(const LWGEOM *lwgeom) {
+	if (!lwgeom)
+		return NULL;
+	if (lwgeom->type == POINTTYPE)
+		return (LWPOINT *)lwgeom;
+	else
+		return NULL;
+}
+
 static inline int lwpoint_is_empty(const LWPOINT *point) {
 	return !point->point || point->point->npoints < 1;
 }

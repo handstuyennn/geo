@@ -70,6 +70,10 @@ LWCOLLECTION *lwcollection_construct_empty(uint8_t type, int32_t srid, char hasz
 	return ret;
 }
 
+LWGEOM *lwcollection_getsubgeom(LWCOLLECTION *col, int gnum) {
+	return (LWGEOM *)col->geoms[gnum];
+}
+
 /**
  * Appends geom to the collection managed by col. Does not copy or
  * clone, simply takes a reference on the passed geom.

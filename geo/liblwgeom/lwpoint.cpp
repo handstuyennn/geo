@@ -82,4 +82,8 @@ LWPOINT *lwpoint_force_dims(const LWPOINT *point, int hasz, int hasm, double zva
 	return pointout;
 }
 
+int lwpoint_getPoint4d_p(const LWPOINT *point, POINT4D *out) {
+	return lwpoint_is_empty(point) ? 0 : getPoint4d_p(point->point, 0, out);
+}
+
 } // namespace duckdb

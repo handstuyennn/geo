@@ -66,6 +66,15 @@ char *stringbuffer_getstringcopy(stringbuffer_t *s) {
 	return str;
 }
 
+lwvarlena_t *stringbuffer_getvarlenacopy(stringbuffer_t *s) {
+	size_t size = (s->str_end - s->str_start);
+	lwvarlena_t *output = (lwvarlena_t *)lwalloc(size + LWVARHDRSZ);
+	LWSIZE_SET(output->size, size + LWVARHDRSZ);
+
+	memcpy(output->data, s->str_start, size);
+	return output;
+}
+
 /**
  * Free the stringbuffer_t and all memory managed within it.
  */

@@ -33,6 +33,15 @@ LWLINE *lwgeom_as_lwline(const LWGEOM *lwgeom) {
 		return NULL;
 }
 
+LWTRIANGLE *lwgeom_as_lwtriangle(const LWGEOM *lwgeom) {
+	if (lwgeom == NULL)
+		return NULL;
+	if (lwgeom->type == TRIANGLETYPE)
+		return (LWTRIANGLE *)lwgeom;
+	else
+		return NULL;
+}
+
 LWCIRCSTRING *lwgeom_as_lwcircstring(const LWGEOM *lwgeom) {
 	if (lwgeom == NULL)
 		return NULL;

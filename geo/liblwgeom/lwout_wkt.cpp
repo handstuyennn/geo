@@ -607,4 +607,13 @@ char *lwgeom_to_wkt(const LWGEOM *geom, uint8_t variant, int precision, size_t *
 	return str;
 }
 
+lwvarlena_t *lwgeom_to_wkt_varlena(const LWGEOM *geom, uint8_t variant, int precision) {
+	stringbuffer_t *sb = lwgeom_to_wkt_internal(geom, variant, precision);
+	if (!sb)
+		return NULL;
+	lwvarlena_t *output = stringbuffer_getvarlenacopy(sb);
+	stringbuffer_destroy(sb);
+	return output;
+}
+
 } // namespace duckdb
