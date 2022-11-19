@@ -53,17 +53,20 @@ public:
 	static lwvarlena_t *AsGeoJson(GSERIALIZED *gser, size_t m_dec_digits = OUT_DEFAULT_DECIMAL_DIGITS);
 	static lwvarlena_t *GeoHash(GSERIALIZED *gser, size_t m_chars = 0);
 
-	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
-
-	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
-
+	static GSERIALIZED *GeomFromGeoJson(string_t json);
 	static GSERIALIZED *FromText(char *text);
-
 	static GSERIALIZED *FromText(char *text, int srid);
-
 	static GSERIALIZED *FromWKB(const char *text, size_t byte_size);
-
 	static GSERIALIZED *FromWKB(const char *text, size_t byte_size, int srid);
+	static GSERIALIZED *FromGeoHash(string_t hash, int precision = -1);
+
+	static GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);
+
+	static int LWGEOM_dimension(GSERIALIZED *geom);
+	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
+
+	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
+	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
 
 	static double XPoint(const void *data, size_t size);
 

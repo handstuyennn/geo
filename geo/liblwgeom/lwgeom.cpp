@@ -196,6 +196,59 @@ uint32_t lwgeom_count_vertices(const LWGEOM *geom) {
 	return result;
 }
 
+/**
+ * For an #LWGEOM, returns 0 for points, 1 for lines,
+ * 2 for polygons, 3 for volume, and the max dimension
+ * of a collection.
+ */
+int lwgeom_dimension(const LWGEOM *geom) {
+
+	/* Null? Zero. */
+	if (!geom)
+		return -1;
+
+	/* Empty? Zero. */
+	/* if( lwgeom_is_empty(geom) ) return 0; */
+
+	switch (geom->type) {
+	case POINTTYPE:
+	case MULTIPOINTTYPE:
+		return 0;
+	case CIRCSTRINGTYPE:
+	case LINETYPE:
+	case COMPOUNDTYPE:
+	case MULTICURVETYPE:
+	case MULTILINETYPE:
+		return 1;
+	case TRIANGLETYPE:
+	case POLYGONTYPE:
+	case CURVEPOLYTYPE:
+	case MULTISURFACETYPE:
+	case MULTIPOLYGONTYPE:
+	case TINTYPE:
+		return 2;
+	case POLYHEDRALSURFACETYPE: {
+		/* A closed polyhedral surface contains a volume. */
+		int closed = lwpsurface_is_closed((LWPSURFACE *)geom);
+		return (closed ? 3 : 2);
+	}
+	case COLLECTIONTYPE: {
+		int maxdim = 0;
+		uint32_t i;
+		LWCOLLECTION *col = (LWCOLLECTION *)geom;
+		for (i = 0; i < col->ngeoms; i++) {
+			int dim = lwgeom_dimension(col->geoms[i]);
+			maxdim = (dim > maxdim ? dim : maxdim);
+		}
+		return maxdim;
+	}
+	default:
+		// lwerror("%s: unsupported input geometry type: %s", __func__, lwtype_name(geom->type));
+		return -1;
+	}
+	return -1;
+}
+
 int lwgeom_has_srid(const LWGEOM *geom) {
 	if (geom->srid != SRID_UNKNOWN)
 		return LW_TRUE;

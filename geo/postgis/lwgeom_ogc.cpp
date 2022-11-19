@@ -55,6 +55,89 @@ GSERIALIZED *LWGEOM_from_WKB(const char *bytea_wkb, size_t byte_size, int srid) 
 	return geom;
 }
 
+GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom1) {
+	// GEOSGeometry *g1, *g3;
+	GSERIALIZED *result;
+	LWGEOM *lwgeom;
+	int32_t srid;
+
+	/* Empty.Boundary() == Empty */
+	if (gserialized_is_empty(geom1))
+		return nullptr;
+
+	srid = gserialized_get_srid(geom1);
+
+	lwgeom = lwgeom_from_gserialized(geom1);
+	if (!lwgeom) {
+		// lwpgerror("POSTGIS2GEOS: unable to deserialize input");
+		return nullptr;
+	}
+
+	/* GEOS doesn't do triangle type, so we special case that here */
+	if (lwgeom->type == TRIANGLETYPE) {
+		lwgeom->type = LINETYPE;
+		result = geometry_serialize(lwgeom);
+		lwgeom_free(lwgeom);
+		return result;
+	}
+
+	// initGEOS(lwpgnotice, lwgeom_geos_error);
+
+	// g1 = LWGEOM2GEOS(lwgeom, 0);
+	lwgeom_free(lwgeom);
+
+	// if (!g1)
+	// 	HANDLE_GEOS_ERROR("First argument geometry could not be converted to GEOS");
+
+	// g3 = GEOSBoundary(g1);
+
+	// if (!g3) {
+	// 	GEOSGeom_destroy(g1);
+	// 	HANDLE_GEOS_ERROR("GEOSBoundary");
+	// }
+
+	// POSTGIS_DEBUGF(3, "result: %s", GEOSGeomToWKT(g3));
+
+	// GEOSSetSRID(g3, srid);
+
+	// result = GEOS2POSTGIS(g3, gserialized_has_z(geom1));
+
+	// if (!result) {
+	// 	GEOSGeom_destroy(g1);
+	// 	GEOSGeom_destroy(g3);
+	// 	elog(NOTICE, "GEOS2POSTGIS threw an error (result postgis geometry "
+	// 	             "formation)!");
+	// 	PG_RETURN_NULL(); /* never get here */
+	// }
+
+	// GEOSGeom_destroy(g1);
+	// GEOSGeom_destroy(g3);
+
+	// PG_FREE_IF_COPY(geom1, 0);
+
+	// PG_RETURN_POINTER(result);
+	return nullptr;
+}
+
+/** @brief
+ * 		returns 0 for points, 1 for lines, 2 for polygons, 3 for volume.
+ * 		returns max dimension for a collection.
+ */
+int LWGEOM_dimension(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	int dimension = -1;
+
+	dimension = lwgeom_dimension(lwgeom);
+	lwgeom_free(lwgeom);
+
+	if (dimension < 0) {
+		// elog(NOTICE, "Could not compute geometry dimensions");
+		return -1;
+	}
+
+	return dimension;
+}
+
 double LWGEOM_x_point(const void *base, size_t size) {
 	LWGEOM *lwgeom = lwgeom_from_wkb(static_cast<const uint8_t *>(base), size, LW_PARSER_CHECK_NONE);
 	GSERIALIZED *geom = geometry_serialize(lwgeom);

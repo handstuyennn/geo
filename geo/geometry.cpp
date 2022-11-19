@@ -142,14 +142,10 @@ lwvarlena_t *Geometry::GeoHash(GSERIALIZED *geom, size_t m_chars) {
 	return postgis.ST_GeoHash(geom, m_chars);
 }
 
-double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2) {
+GSERIALIZED *Geometry::GeomFromGeoJson(string_t json) {
 	Postgis postgis;
-	return postgis.ST_distance(g1, g2);
-}
-
-double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid) {
-	Postgis postgis;
-	return postgis.geography_distance(g1, g2, use_spheroid);
+	auto ger = postgis.geom_from_geojson(&json.GetString()[0]);
+	return ger;
 }
 
 GSERIALIZED *Geometry::FromText(char *text) {
@@ -170,6 +166,36 @@ GSERIALIZED *Geometry::FromWKB(const char *text, size_t byte_size) {
 GSERIALIZED *Geometry::FromWKB(const char *text, size_t byte_size, int srid) {
 	Postgis postgis;
 	return postgis.LWGEOM_from_WKB(text, byte_size, srid);
+}
+
+GSERIALIZED *Geometry::FromGeoHash(string_t hash, int precision) {
+	Postgis postgis;
+	return postgis.LWGEOM_from_GeoHash(&hash.GetString()[0], precision);
+}
+
+GSERIALIZED *Geometry::LWGEOM_boundary(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_boundary(geom);
+}
+
+int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_dimension(geom);
+}
+
+std::vector<GSERIALIZED *> Geometry::LWGEOM_dump(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_dump(geom);
+}
+
+double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2) {
+	Postgis postgis;
+	return postgis.ST_distance(g1, g2);
+}
+
+double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid) {
+	Postgis postgis;
+	return postgis.geography_distance(g1, g2, use_spheroid);
 }
 
 double Geometry::XPoint(const void *data, size_t size) {

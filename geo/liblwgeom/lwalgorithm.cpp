@@ -1,5 +1,7 @@
 #include "liblwgeom/liblwgeom_internal.hpp"
 
+#include <cstring>
+
 namespace duckdb {
 
 int p3d_same(const POINT3D *p1, const POINT3D *p2) {
@@ -175,6 +177,51 @@ lwvarlena_t *geohash_point(double longitude, double latitude, int precision) {
 	}
 
 	return v;
+}
+
+/*
+** Decode a GeoHash into a bounding box. The lat and lon arguments should
+** both be passed as double arrays of length 2 at a minimum where the values
+** set in them will be the southwest and northeast coordinates of the bounding
+** box accordingly. A precision less than 0 indicates that the entire length
+** of the GeoHash should be used.
+** It will call `lwerror` if an invalid character is found
+*/
+void decode_geohash_bbox(char *geohash, double *lat, double *lon, int precision) {
+	bool is_even = 1;
+
+	lat[0] = -90.0;
+	lat[1] = 90.0;
+	lon[0] = -180.0;
+	lon[1] = 180.0;
+
+	size_t hashlen = strlen(geohash);
+	if (precision < 0 || (size_t)precision > hashlen) {
+		precision = (int)hashlen;
+	}
+
+	for (int i = 0; i < precision; i++) {
+		char c = tolower(geohash[i]);
+
+		/* Valid characters are all digits in base32 */
+		char *base32_pos = strchr(const_cast <char *>(base32), c);
+		if (!base32_pos) {
+			// lwerror("%s: Invalid character '%c'", __func__, geohash[i]);
+			return;
+		}
+		char cd = base32_pos - base32;
+
+		for (size_t j = 0; j < 5; j++) {
+			const char bits[] = {16, 8, 4, 2, 1};
+			char mask = bits[j];
+			if (is_even) {
+				lon[!(cd & mask)] = (lon[0] + lon[1]) / 2;
+			} else {
+				lat[!(cd & mask)] = (lat[0] + lat[1]) / 2;
+			}
+			is_even = !is_even;
+		}
+	}
 }
 
 int lwgeom_geohash_precision(GBOX bbox, GBOX *bounds) {

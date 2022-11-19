@@ -7,6 +7,8 @@
 #include "postgis/lwgeom_geos.hpp"
 #include "postgis/lwgeom_inout.hpp"
 #include "postgis/lwgeom_ogc.hpp"
+#include "postgis/lwgeom_dump.hpp"
+#include "postgis/lwgeom_in_geohash.hpp"
 
 namespace duckdb {
 Postgis::Postgis() {
@@ -79,12 +81,8 @@ GSERIALIZED *Postgis::LWGEOM_makepoly(GSERIALIZED *geom, GSERIALIZED *gserArray[
 	return duckdb::LWGEOM_makepoly(geom, gserArray, nelems);
 }
 
-double Postgis::ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2) {
-	return duckdb::ST_distance(geom1, geom2);
-}
-
-double Postgis::geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid) {
-	return duckdb::geography_distance(geom1, geom2, use_spheroid);
+GSERIALIZED *Postgis::geom_from_geojson(char *json) {
+	return duckdb::geom_from_geojson(json);
 }
 
 GSERIALIZED *Postgis::LWGEOM_from_text(char *text, int srid) {
@@ -93,6 +91,30 @@ GSERIALIZED *Postgis::LWGEOM_from_text(char *text, int srid) {
 
 GSERIALIZED *Postgis::LWGEOM_from_WKB(const char *bytea_wkb, size_t byte_size, int srid) {
 	return duckdb::LWGEOM_from_WKB(bytea_wkb, byte_size, srid);
+}
+
+GSERIALIZED *Postgis::LWGEOM_from_GeoHash(char *hash, int precision) {
+	return duckdb::LWGEOM_from_GeoHash(hash, precision);
+}
+
+GSERIALIZED *Postgis::LWGEOM_boundary(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_boundary(geom);
+}
+
+int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_dimension(geom);
+}
+
+std::vector<GSERIALIZED *> Postgis::LWGEOM_dump(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_dump(geom);
+}
+
+double Postgis::ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::ST_distance(geom1, geom2);
+}
+
+double Postgis::geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid) {
+	return duckdb::geography_distance(geom1, geom2, use_spheroid);
 }
 
 double Postgis::LWGEOM_x_point(const void *data, size_t size) {

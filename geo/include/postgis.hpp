@@ -31,10 +31,18 @@ public:
 	GSERIALIZED *LWGEOM_makeline(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	GSERIALIZED *LWGEOM_makeline_garray(GSERIALIZED *gserArray[], int nelems);
 	GSERIALIZED *LWGEOM_makepoly(GSERIALIZED *geom, GSERIALIZED *gserArray[] = {}, int nelems = 0);
-	double ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2);
-	double geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid);
+	GSERIALIZED *geom_from_geojson(char *input);
 	GSERIALIZED *LWGEOM_from_text(char *text, int srid = 0);
 	GSERIALIZED *LWGEOM_from_WKB(const char *bytea_wkb, size_t byte_size, int srid = 0);
+	GSERIALIZED *LWGEOM_from_GeoHash(char *input, int precision = -1);
+
+	GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);
+
+	int LWGEOM_dimension(GSERIALIZED *geom);
+	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
+
+	double ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	double geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid);
 	double LWGEOM_x_point(const void *data, size_t size);
 	GSERIALIZED *centroid(GSERIALIZED *geom);
 	GSERIALIZED *geography_centroid(GSERIALIZED *geom, bool use_spheroid);

@@ -16,6 +16,7 @@ namespace duckdb {
 GSERIALIZED *LWGEOM_in(char *input);
 GSERIALIZED *LWGEOM_getGserialized(const void *base, size_t size);
 
+GSERIALIZED *geom_from_geojson(char *json);
 size_t LWGEOM_size(GSERIALIZED *gser);
 char *LWGEOM_base(GSERIALIZED *gser);
 lwvarlena_t *LWGEOM_asBinary(GSERIALIZED *gser, string text = "");
