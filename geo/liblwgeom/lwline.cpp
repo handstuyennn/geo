@@ -137,4 +137,23 @@ LWLINE *lwline_from_lwgeom_array(int32_t srid, uint32_t ngeoms, LWGEOM **geoms) 
 	return line;
 }
 
+/**
+ * Returns freshly allocated #LWPOINT that corresponds to the index where.
+ * Returns NULL if the geometry is empty or the index invalid.
+ */
+LWPOINT *lwline_get_lwpoint(const LWLINE *line, uint32_t where) {
+	POINT4D pt;
+	LWPOINT *lwpoint;
+	POINTARRAY *pa;
+
+	if (lwline_is_empty(line) || where >= line->points->npoints)
+		return NULL;
+
+	pa = ptarray_construct_empty(FLAGS_GET_Z(line->flags), FLAGS_GET_M(line->flags), 1);
+	pt = getPoint4d(line->points, where);
+	ptarray_append_point(pa, &pt, LW_TRUE);
+	lwpoint = lwpoint_construct(line->srid, NULL, pa);
+	return lwpoint;
+}
+
 } // namespace duckdb

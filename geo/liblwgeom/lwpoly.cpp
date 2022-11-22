@@ -194,4 +194,23 @@ LWPOLY *lwpoly_from_lwlines(const LWLINE *shell, uint32_t nholes, const LWLINE *
 	return ret;
 }
 
+int lwpoly_is_closed(const LWPOLY *poly) {
+	uint32_t i = 0;
+
+	if (poly->nrings == 0)
+		return LW_TRUE;
+
+	for (i = 0; i < poly->nrings; i++) {
+		if (FLAGS_GET_Z(poly->flags)) {
+			if (!ptarray_is_closed_3d(poly->rings[i]))
+				return LW_FALSE;
+		} else {
+			if (!ptarray_is_closed_2d(poly->rings[i]))
+				return LW_FALSE;
+		}
+	}
+
+	return LW_TRUE;
+}
+
 } // namespace duckdb

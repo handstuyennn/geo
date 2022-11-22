@@ -197,6 +197,83 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo dump_func_info(dump);
 	catalog.AddFunction(*con.context, &dump_func_info);
 
+	// ST_ENDPOINT
+	ScalarFunctionSet endpoint("st_endpoint");
+	endpoint.AddFunction(ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryEndPointFunction));
+
+	CreateScalarFunctionInfo endpoint_func_info(endpoint);
+	catalog.AddFunction(*con.context, &endpoint_func_info);
+
+	// ST_GEOMETRYTYPE
+	ScalarFunctionSet geometrytype("st_geometrytype");
+	geometrytype.AddFunction(ScalarFunction({geo_type}, LogicalType::VARCHAR, GeoFunctions::GeometryTypeFunction));
+
+	CreateScalarFunctionInfo geometrytype_func_info(geometrytype);
+	catalog.AddFunction(*con.context, &geometrytype_func_info);
+
+	// ST_ISCLOSED
+	ScalarFunctionSet isclosed("st_isclosed");
+	isclosed.AddFunction(ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsClosedFunction));
+
+	CreateScalarFunctionInfo isclosed_func_info(isclosed);
+	catalog.AddFunction(*con.context, &isclosed_func_info);
+
+	// ST_ISCOLLECTION
+	ScalarFunctionSet iscollection("st_iscollection");
+	iscollection.AddFunction(
+	    ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsCollectionFunction));
+
+	CreateScalarFunctionInfo iscollection_func_info(iscollection);
+	catalog.AddFunction(*con.context, &iscollection_func_info);
+
+	// ST_ISEMPTY
+	ScalarFunctionSet isempty("st_isempty");
+	isempty.AddFunction(
+	    ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsEmptyFunction));
+
+	CreateScalarFunctionInfo isempty_func_info(isempty);
+	catalog.AddFunction(*con.context, &isempty_func_info);
+
+	// ST_ISRING
+	ScalarFunctionSet isring("st_isring");
+	isring.AddFunction(
+	    ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsRingFunction));
+
+	CreateScalarFunctionInfo isring_func_info(isring);
+	catalog.AddFunction(*con.context, &isring_func_info);
+
+	// ST_NPOINTS
+	ScalarFunctionSet npoints("st_npoints");
+	npoints.AddFunction(
+	    ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryNPointsFunction));
+
+	CreateScalarFunctionInfo npoints_func_info(npoints);
+	catalog.AddFunction(*con.context, &npoints_func_info);
+
+	// ST_NUMGEOMETRIES
+	ScalarFunctionSet numgeometries("st_numgeometries");
+	numgeometries.AddFunction(
+	    ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryNumGeometriesFunction));
+
+	CreateScalarFunctionInfo numgeometries_func_info(numgeometries);
+	catalog.AddFunction(*con.context, &numgeometries_func_info);
+
+	// ST_NUMPOINTS
+	ScalarFunctionSet numpoints("st_numpoints");
+	numpoints.AddFunction(
+	    ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryNumPointsFunction));
+
+	CreateScalarFunctionInfo numpoints_func_info(numpoints);
+	catalog.AddFunction(*con.context, &numpoints_func_info);
+
+	// ST_POINTN
+	ScalarFunctionSet pointn("st_pointn");
+	pointn.AddFunction(
+	    ScalarFunction({geo_type, LogicalType::INTEGER}, geo_type, GeoFunctions::GeometryPointNFunction));
+
+	CreateScalarFunctionInfo pointn_func_info(pointn);
+	catalog.AddFunction(*con.context, &pointn_func_info);
+
 	// ST_X
 	ScalarFunctionSet get_x("st_x");
 	get_x.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryGetXFunction));

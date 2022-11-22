@@ -180,4 +180,24 @@ lwvarlena_t *ST_GeoHash(GSERIALIZED *geom, size_t m_chars) {
 	return nullptr;
 }
 
+bool ST_IsCollection(GSERIALIZED *geom) {
+	int type = gserialized_get_type(geom);
+	return lwtype_is_collection(type);
+}
+
+bool LWGEOM_isempty(GSERIALIZED *geom) {
+	return gserialized_is_empty(geom);
+}
+
+/** number of points in an object */
+int LWGEOM_npoints(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	int npoints = 0;
+
+	npoints = lwgeom_count_vertices(lwgeom);
+	lwgeom_free(lwgeom);
+
+	return npoints;
+}
+
 } // namespace duckdb

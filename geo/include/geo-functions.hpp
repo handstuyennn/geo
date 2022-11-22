@@ -36,6 +36,16 @@ struct GeoFunctions {
 	// **Accessors (15)**
 	static void GeometryDimensionFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryDumpFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryEndPointFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryTypeFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryIsClosedFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryIsCollectionFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryIsEmptyFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryIsRingFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryNPointsFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryNumGeometriesFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryNumPointsFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryPointNFunction(DataChunk &args, ExpressionState &state, Vector &result);
 
 	static void GeometryGetXFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };

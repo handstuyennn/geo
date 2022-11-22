@@ -188,6 +188,56 @@ std::vector<GSERIALIZED *> Geometry::LWGEOM_dump(GSERIALIZED *geom) {
 	return postgis.LWGEOM_dump(geom);
 }
 
+GSERIALIZED *Geometry::LWGEOM_endpoint_linestring(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_endpoint_linestring(geom);
+}
+
+std::string Geometry::Geometrytype(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.geometry_geometrytype(geom);
+}
+
+bool Geometry::IsClosed(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_isclosed(geom);
+}
+
+bool Geometry::IsCollection(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.ST_IsCollection(geom);
+}
+
+bool Geometry::IsEmpty(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_isempty(geom);
+}
+
+bool Geometry::IsRing(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_isring(geom);
+}
+
+int Geometry::NPoints(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_npoints(geom);
+}
+
+int Geometry::NumGeometries(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_numgeometries_collection(geom);
+}
+
+int Geometry::NumPoints(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_numpoints_linestring(geom);
+}
+
+GSERIALIZED *Geometry::PointN(GSERIALIZED *geom, int index) {
+	Postgis postgis;
+	return postgis.LWGEOM_pointn_linestring(geom, index);
+}
+
 double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2) {
 	Postgis postgis;
 	return postgis.ST_distance(g1, g2);

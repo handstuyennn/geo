@@ -11,5 +11,8 @@ GSERIALIZED *LWGEOM_makeline_garray(GSERIALIZED *gserArray[], int nelems);
 GSERIALIZED *LWGEOM_makepoly(GSERIALIZED *geom, GSERIALIZED *gserArray[] = {}, int nelems = 0);
 double ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2);
 lwvarlena_t *ST_GeoHash(GSERIALIZED *gser, size_t m_chars = 0);
+bool ST_IsCollection(GSERIALIZED *geom);
+bool LWGEOM_isempty(GSERIALIZED *geom);
+int LWGEOM_npoints(GSERIALIZED *geom);
 
 } // namespace duckdb

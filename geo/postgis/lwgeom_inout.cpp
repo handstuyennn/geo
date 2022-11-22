@@ -125,7 +125,9 @@ std::string LWGEOM_asText(const void *base, size_t size, size_t max_digits) {
 	// rstr = lwgeom_to_wkt(lwgeom, WKT_EXTENDED, WKT_PRECISION, &wkt_size);
 	auto text = lwgeom_to_wkt_varlena(lwgeom, WKT_ISO, max_digits);
 	lwgeom_free(lwgeom);
-	return std::string(text->data);
+	std::string ret = std::string(text->data);
+	lwfree(text);
+	return ret;
 }
 
 lwvarlena_t *LWGEOM_asBinary(GSERIALIZED *geom, string text) {

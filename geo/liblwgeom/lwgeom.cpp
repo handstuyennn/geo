@@ -449,4 +449,43 @@ int lwgeom_startpoint(const LWGEOM *lwgeom, POINT4D *pt) {
 	}
 }
 
+int lwgeom_is_closed(const LWGEOM *geom) {
+	int type = geom->type;
+
+	if (lwgeom_is_empty(geom))
+		return LW_FALSE;
+
+	/* Test linear types for closure */
+	switch (type) {
+	case LINETYPE:
+		return lwline_is_closed((LWLINE *)geom);
+	case POLYGONTYPE:
+		return lwpoly_is_closed((LWPOLY *)geom);
+	case CIRCSTRINGTYPE:
+		return lwcircstring_is_closed((LWCIRCSTRING *)geom);
+	case COMPOUNDTYPE:
+		return lwcompound_is_closed((LWCOMPOUND *)geom);
+	case TINTYPE:
+		return lwtin_is_closed((LWTIN *)geom);
+	case POLYHEDRALSURFACETYPE:
+		return lwpsurface_is_closed((LWPSURFACE *)geom);
+	}
+
+	/* Recurse into collections and see if anything is not closed */
+	if (lwgeom_is_collection(geom)) {
+		LWCOLLECTION *col = lwgeom_as_lwcollection(geom);
+		uint32_t i;
+		int closed;
+		for (i = 0; i < col->ngeoms; i++) {
+			closed = lwgeom_is_closed(col->geoms[i]);
+			if (!closed)
+				return LW_FALSE;
+		}
+		return LW_TRUE;
+	}
+
+	/* All non-linear non-collection types we will call closed */
+	return LW_TRUE;
+}
+
 } // namespace duckdb

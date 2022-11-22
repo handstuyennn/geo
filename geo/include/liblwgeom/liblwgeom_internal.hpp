@@ -147,9 +147,11 @@ int lwcollection_startpoint(const LWCOLLECTION *col, POINT4D *pt);
  * Closure test
  */
 int lwline_is_closed(const LWLINE *line);
+int lwpoly_is_closed(const LWPOLY *poly);
 int lwcircstring_is_closed(const LWCIRCSTRING *curve);
 int lwcompound_is_closed(const LWCOMPOUND *curve);
 int lwpsurface_is_closed(const LWPSURFACE *psurface);
+int lwtin_is_closed(const LWTIN *tin);
 
 /*
  * Number of vertices?

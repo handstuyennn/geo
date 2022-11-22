@@ -919,6 +919,289 @@ void GeoFunctions::GeometryDumpFunction(DataChunk &args, ExpressionState &state,
 	Geometry::DestroyGeometry(gser);
 }
 
+struct EndPointUnaryOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA geom) {
+		if (geom.GetSize() == 0) {
+			return string_t();
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry dimension: could not getting dimension from geom");
+			return string_t();
+		}
+		auto gserEndpoint = Geometry::LWGEOM_endpoint_linestring(gser);
+		idx_t size = Geometry::GetGeometrySize(gserEndpoint);
+		auto base = Geometry::GetBase(gserEndpoint);
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserEndpoint);
+		return string_t((const char *)base, size);
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryEndPointUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, EndPointUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryEndPointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryEndPointUnaryExecutor<string_t, string_t>(geom_arg, result, args.size());
+}
+
+struct TypeUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom, Vector &result) {
+		if (geom.GetSize() == 0) {
+			return string_t();
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry dimension: could not getting dimension from geom");
+			return string_t();
+		}
+		auto geometrytype = Geometry::Geometrytype(gser);
+		auto rv_size = geometrytype.size();
+		auto result_str = StringVector::EmptyString(result, rv_size);
+		memcpy(result_str.GetDataWriteable(), geometrytype.c_str(), rv_size);
+		result_str.Finalize();
+		Geometry::DestroyGeometry(gser);
+		return result_str;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryTypeUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::ExecuteString<TA, TR, TypeUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryTypeFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryTypeUnaryExecutor<string_t, string_t>(geom_arg, result, args.size());
+}
+
+struct IsClosedUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom) {
+		if (geom.GetSize() == 0) {
+			return false;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry is closed: could not getting closed from geom");
+			return false;
+		}
+		auto isClosed = Geometry::IsClosed(gser);
+		Geometry::DestroyGeometry(gser);
+		return isClosed;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryIsClosedUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, IsClosedUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryIsClosedFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryIsClosedUnaryExecutor<string_t, bool>(geom_arg, result, args.size());
+}
+
+struct IsCollectionUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom) {
+		if (geom.GetSize() == 0) {
+			return false;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry is collection: could not getting collection from geom");
+			return false;
+		}
+		auto isCollection = Geometry::IsCollection(gser);
+		Geometry::DestroyGeometry(gser);
+		return isCollection;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryIsCollectionUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, IsCollectionUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryIsCollectionFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryIsCollectionUnaryExecutor<string_t, bool>(geom_arg, result, args.size());
+}
+
+struct IsEmptyUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom) {
+		if (geom.GetSize() == 0) {
+			return true;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry is empty: could not getting empty from geom");
+			return true;
+		}
+		auto isEmpty = Geometry::IsEmpty(gser);
+		Geometry::DestroyGeometry(gser);
+		return isEmpty;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryIsEmptyUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, IsEmptyUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryIsEmptyFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryIsEmptyUnaryExecutor<string_t, bool>(geom_arg, result, args.size());
+}
+
+struct IsRingUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom) {
+		if (geom.GetSize() == 0) {
+			return true;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
+			return true;
+		}
+		auto isRing = Geometry::IsRing(gser);
+		Geometry::DestroyGeometry(gser);
+		return isRing;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryIsRingUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, IsRingUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryIsRingFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryIsRingUnaryExecutor<string_t, bool>(geom_arg, result, args.size());
+}
+
+struct NPointsUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom) {
+		if (geom.GetSize() == 0) {
+			return true;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
+			return true;
+		}
+		auto nPoints = Geometry::NPoints(gser);
+		Geometry::DestroyGeometry(gser);
+		return nPoints;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryNPointsUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, NPointsUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryNPointsFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryNPointsUnaryExecutor<string_t, int>(geom_arg, result, args.size());
+}
+
+struct NumGeometriesUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom) {
+		if (geom.GetSize() == 0) {
+			return true;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
+			return true;
+		}
+		auto numGeometries = Geometry::NumGeometries(gser);
+		Geometry::DestroyGeometry(gser);
+		return numGeometries;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryNumGeometriesUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, NumGeometriesUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryNumGeometriesFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryNumGeometriesUnaryExecutor<string_t, int>(geom_arg, result, args.size());
+}
+
+struct NumPointsUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom) {
+		if (geom.GetSize() == 0) {
+			return true;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
+			return true;
+		}
+		auto numGeometries = Geometry::NumPoints(gser);
+		Geometry::DestroyGeometry(gser);
+		return numGeometries;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryNumPointsUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, NumPointsUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryNumPointsFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryNumPointsUnaryExecutor<string_t, int>(geom_arg, result, args.size());
+}
+
+template <typename TA, typename TB, typename TR>
+static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
+	if (geom.GetSize() == 0) {
+		return string_t();
+	}
+	auto gser = Geometry::GetGserialized(geom);
+	if (!gser) {
+		throw ConversionException("Failure in geometry get point n: could not getting point n from geom");
+		return string_t();
+	}
+	auto gserPointN = Geometry::PointN(gser, index);
+	idx_t rv_size = Geometry::GetGeometrySize(gserPointN);
+	auto base = Geometry::GetBase(gserPointN);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser);
+	Geometry::DestroyGeometry(gserPointN);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryPointNBinaryExecutor(Vector &geom_vec, Vector &index_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, index_vec, result, count,
+	                                    [&](TA geom, TB index) { return PointNScalarFunction<TA, TB, TR>(result, geom, index); });
+}
+
+void GeoFunctions::GeometryPointNFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	auto &index_arg = args.data[1];
+	GeometryPointNBinaryExecutor<string_t, int, string_t>(geom_arg, index_arg, result, args.size());
+}
+
 struct GetXUnaryOperator {
 	template <class TA, class TR>
 	static inline TR Operation(TA text) {

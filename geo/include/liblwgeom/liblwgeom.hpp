@@ -679,6 +679,11 @@ extern double lwgeom_mindistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw
 
 extern int lwgeom_dimension(const LWGEOM *geom);
 
+extern LWPOINT *lwline_get_lwpoint(const LWLINE *line, uint32_t where);
+
+extern LWPOINT *lwcompound_get_endpoint(const LWCOMPOUND *lwcmp);
+extern LWPOINT *lwcompound_get_lwpoint(const LWCOMPOUND *lwcmp, uint32_t where);
+
 /**
  * @brief Check whether or not a lwgeom is big enough to warrant a bounding box.
  *
@@ -713,6 +718,20 @@ extern void lwgeom_add_bbox(LWGEOM *lwgeom);
  * a valid SRID set.
  */
 extern int lwgeom_has_srid(const LWGEOM *geom);
+
+/**
+ * Return true or false depending on whether a geometry is a linear
+ * feature that closes on itself.
+ */
+extern int lwgeom_is_closed(const LWGEOM *geom);
+
+/*
+ * copies a point from the point array into the parameter point
+ * will set point's z=0 (or NaN) if pa is 2d
+ * will set point's m=0 (or NaN) if pa is 3d or 2d
+ * NOTE: point is a real POINT3D *not* a pointer
+ */
+extern POINT4D getPoint4d(const POINTARRAY *pa, uint32_t n);
 
 /*
  * copies a point from the point array into the parameter point

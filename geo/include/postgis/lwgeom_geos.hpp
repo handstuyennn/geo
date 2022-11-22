@@ -5,5 +5,6 @@
 namespace duckdb {
 
 GSERIALIZED *centroid(GSERIALIZED *geom);
+bool LWGEOM_isring(GSERIALIZED *geom);
 
 } // namespace duckdb

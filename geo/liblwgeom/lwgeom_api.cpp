@@ -90,6 +90,27 @@ void ptarray_set_point4d(POINTARRAY *pa, uint32_t n, const POINT4D *p4d) {
 	}
 }
 
+/************************************************************************
+ * POINTARRAY support functions
+ *
+ * TODO: should be moved to ptarray.c probably
+ *
+ ************************************************************************/
+
+/*
+ * Copies a point from the point array into the parameter point
+ * will set point's z=NO_Z_VALUE if pa is 2d
+ * will set point's m=NO_M_VALUE if pa is 3d or 2d
+ *
+ * NOTE: point is a real POINT3D *not* a pointer
+ */
+POINT4D
+getPoint4d(const POINTARRAY *pa, uint32_t n) {
+	POINT4D result;
+	getPoint4d_p(pa, n, &result);
+	return result;
+}
+
 /*
  * Copies a point from the point array into the parameter point
  * will set point's z=NO_Z_VALUE  if pa is 2d

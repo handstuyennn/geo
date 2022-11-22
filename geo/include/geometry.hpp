@@ -64,6 +64,16 @@ public:
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
+	static GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);
+	static std::string Geometrytype(GSERIALIZED *geom);
+	static bool IsClosed(GSERIALIZED *geom);
+	static bool IsCollection(GSERIALIZED *geom);
+	static bool IsEmpty(GSERIALIZED *geom);
+	static bool IsRing(GSERIALIZED *geom);
+	static int NPoints(GSERIALIZED *geom);
+	static int NumGeometries(GSERIALIZED *geom);
+	static int NumPoints(GSERIALIZED *geom);
+	static GSERIALIZED *PointN(GSERIALIZED *geom, int index);
 
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);

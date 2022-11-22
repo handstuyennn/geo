@@ -1,9 +1,20 @@
 #include "postgis/lwgeom_ogc.hpp"
 
 #include "liblwgeom/gserialized.hpp"
+#include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
 
 namespace duckdb {
+
+/* Matches lwutil.c::lwgeomTypeName */
+std::string stTypeName[] = {"Unknown",           "ST_Point",
+                            "ST_LineString",     "ST_Polygon",
+                            "ST_MultiPoint",     "ST_MultiLineString",
+                            "ST_MultiPolygon",   "ST_GeometryCollection",
+                            "ST_CircularString", "ST_CompoundCurve",
+                            "ST_CurvePolygon",   "ST_MultiCurve",
+                            "ST_MultiSurface",   "ST_PolyhedralSurface",
+                            "ST_Triangle",       "ST_Tin"};
 
 GSERIALIZED *LWGEOM_from_text(char *wkt, int srid) {
 	LWGEOM_PARSER_RESULT lwg_parser_result;
@@ -151,6 +162,133 @@ double LWGEOM_x_point(const void *base, size_t size) {
 		return LW_FAILURE;
 	}
 	return pt.x;
+}
+
+/** EndPoint(GEOMETRY) -- find the first linestring in GEOMETRY,
+ * @return the last point.
+ * 	Return NULL if there is no LINESTRING(..) in GEOMETRY
+ */
+GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	LWPOINT *lwpoint = NULL;
+	int type = lwgeom->type;
+
+	if (type == LINETYPE || type == CIRCSTRINGTYPE) {
+		LWLINE *line = (LWLINE *)lwgeom;
+		if (line->points)
+			lwpoint = lwline_get_lwpoint((LWLINE *)lwgeom, line->points->npoints - 1);
+	} else if (type == COMPOUNDTYPE) {
+		lwpoint = lwcompound_get_endpoint((LWCOMPOUND *)lwgeom);
+	}
+
+	lwgeom_free(lwgeom);
+
+	if (!lwpoint)
+		return nullptr;
+
+	GSERIALIZED *ret = geometry_serialize(lwpoint_as_lwgeom(lwpoint));
+	lwgeom_free(lwpoint_as_lwgeom(lwpoint));
+
+	return ret;
+}
+
+/* returns a string representation of this geometry's type */
+std::string geometry_geometrytype(GSERIALIZED *gser) {
+	/* Build a text type to store things in */
+	return stTypeName[gserialized_get_type(gser)];
+}
+
+/**
+ * @brief IsClosed(GEOMETRY) if geometry is a linestring then returns
+ * 		startpoint == endpoint.  If its not a linestring then return NULL.
+ * 		If it's a collection containing multiple linestrings,
+ * @return true only if all the linestrings have startpoint=endpoint.
+ */
+bool LWGEOM_isclosed(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	int closed = lwgeom_is_closed(lwgeom);
+
+	lwgeom_free(lwgeom);
+	return closed;
+}
+
+int LWGEOM_numgeometries_collection(GSERIALIZED *geom) {
+	LWGEOM *lwgeom;
+	uint32_t ret = 1;
+
+	lwgeom = lwgeom_from_gserialized(geom);
+	if (lwgeom_is_empty(lwgeom)) {
+		ret = 0;
+	} else if (lwgeom_is_collection(lwgeom)) {
+		LWCOLLECTION *col = lwgeom_as_lwcollection(lwgeom);
+		ret = col->ngeoms;
+	}
+	lwgeom_free(lwgeom);
+
+	return ret;
+}
+
+/**
+ * numpoints(LINESTRING) -- return the number of points in the
+ * linestring, or NULL if it is not a linestring
+ */
+int LWGEOM_numpoints_linestring(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	int count = -1;
+	int type = lwgeom->type;
+
+	if (type == LINETYPE || type == CIRCSTRINGTYPE || type == COMPOUNDTYPE)
+		count = lwgeom_count_vertices(lwgeom);
+
+	lwgeom_free(lwgeom);
+
+	/* OGC says this functions is only valid on LINESTRING */
+	if (count < 0)
+		return 0;
+
+	return count;
+}
+
+/**
+ * PointN(GEOMETRY,INTEGER) -- find the first linestring in GEOMETRY,
+ * @return the point at index INTEGER (1 is 1st point).  Return NULL if
+ * 		there is no LINESTRING(..) in GEOMETRY or INTEGER is out of bounds.
+ */
+GSERIALIZED *LWGEOM_pointn_linestring(GSERIALIZED *geom, int where) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	LWPOINT *lwpoint = NULL;
+	int type = lwgeom->type;
+
+	/* If index is negative, count backward */
+	if (where < 1) {
+		int count = -1;
+		if (type == LINETYPE || type == CIRCSTRINGTYPE || type == COMPOUNDTYPE)
+			count = lwgeom_count_vertices(lwgeom);
+		if (count > 0) {
+			/* only work if we found the total point number */
+			/* converting where to positive backward indexing, +1 because 1 indexing */
+			where = where + count + 1;
+		}
+		if (where < 1)
+			return nullptr;
+	}
+
+	if (type == LINETYPE || type == CIRCSTRINGTYPE) {
+		/* OGC index starts at one, so we substract first. */
+		lwpoint = lwline_get_lwpoint((LWLINE *)lwgeom, where - 1);
+	} else if (type == COMPOUNDTYPE) {
+		lwpoint = lwcompound_get_lwpoint((LWCOMPOUND *)lwgeom, where - 1);
+	}
+
+	lwgeom_free(lwgeom);
+
+	if (!lwpoint)
+		return nullptr;
+
+	auto ret = geometry_serialize(lwpoint_as_lwgeom(lwpoint));
+
+	lwgeom_free((LWGEOM *)lwpoint);
+	return ret;
 }
 
 } // namespace duckdb

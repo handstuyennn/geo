@@ -2,13 +2,13 @@
 
 #include "postgis/geography_centroid.hpp"
 #include "postgis/geography_measurement.hpp"
+#include "postgis/lwgeom_dump.hpp"
 #include "postgis/lwgeom_export.hpp"
 #include "postgis/lwgeom_functions_basic.hpp"
 #include "postgis/lwgeom_geos.hpp"
+#include "postgis/lwgeom_in_geohash.hpp"
 #include "postgis/lwgeom_inout.hpp"
 #include "postgis/lwgeom_ogc.hpp"
-#include "postgis/lwgeom_dump.hpp"
-#include "postgis/lwgeom_in_geohash.hpp"
 
 namespace duckdb {
 Postgis::Postgis() {
@@ -107,6 +107,46 @@ int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 
 std::vector<GSERIALIZED *> Postgis::LWGEOM_dump(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dump(geom);
+}
+
+GSERIALIZED *Postgis::LWGEOM_endpoint_linestring(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_endpoint_linestring(geom);
+}
+
+std::string Postgis::geometry_geometrytype(GSERIALIZED *geom) {
+	return duckdb::geometry_geometrytype(geom);
+}
+
+bool Postgis::LWGEOM_isclosed(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_isclosed(geom);
+}
+
+bool Postgis::ST_IsCollection(GSERIALIZED *geom) {
+	return duckdb::ST_IsCollection(geom);
+}
+
+bool Postgis::LWGEOM_isempty(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_isempty(geom);
+}
+
+bool Postgis::LWGEOM_isring(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_isring(geom);
+}
+
+int Postgis::LWGEOM_npoints(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_npoints(geom);
+}
+
+int Postgis::LWGEOM_numgeometries_collection(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_numgeometries_collection(geom);
+}
+
+int Postgis::LWGEOM_numpoints_linestring(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_numpoints_linestring(geom);
+}
+
+GSERIALIZED *Postgis::LWGEOM_pointn_linestring(GSERIALIZED *geom, int index) {
+	return duckdb::LWGEOM_pointn_linestring(geom, index);
 }
 
 double Postgis::ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2) {

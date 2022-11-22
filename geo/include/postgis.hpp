@@ -40,6 +40,16 @@ public:
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
+	GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);
+	std::string geometry_geometrytype(GSERIALIZED *geom);
+	bool LWGEOM_isclosed(GSERIALIZED *geom);
+	bool ST_IsCollection(GSERIALIZED *geom);
+	bool LWGEOM_isempty(GSERIALIZED *geom);
+	bool LWGEOM_isring(GSERIALIZED *geom);
+	int LWGEOM_npoints(GSERIALIZED *geom);
+	int LWGEOM_numgeometries_collection(GSERIALIZED *geom);
+	int LWGEOM_numpoints_linestring(GSERIALIZED *geom);
+	GSERIALIZED *LWGEOM_pointn_linestring(GSERIALIZED *geom, int index);
 
 	double ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	double geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid);
