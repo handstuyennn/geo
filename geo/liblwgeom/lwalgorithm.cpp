@@ -30,6 +30,43 @@ int lw_segment_side(const POINT2D *p1, const POINT2D *p2, const POINT2D *q) {
 	return SIGNUM(side);
 }
 
+int lw_arc_side(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3, const POINT2D *Q) {
+	POINT2D C;
+	double radius_A;
+	double side_Q, side_A2;
+	double d;
+
+	side_Q = lw_segment_side(A1, A3, Q);
+	radius_A = lw_arc_center(A1, A2, A3, &C);
+	side_A2 = lw_segment_side(A1, A3, A2);
+
+	/* Linear case */
+	if (radius_A < 0)
+		return side_Q;
+
+	d = distance2d_pt_pt(Q, &C);
+
+	/* Q is on the arc boundary */
+	if (d == radius_A && side_Q == side_A2) {
+		return 0;
+	}
+
+	/* Q on A1-A3 line, so its on opposite side to A2 */
+	if (side_Q == 0) {
+		return -1 * side_A2;
+	}
+
+	/*
+	 * Q is inside the arc boundary, so it's not on the side we
+	 * might think from examining only the end points
+	 */
+	if (d < radius_A && side_Q == side_A2) {
+		side_Q *= -1;
+	}
+
+	return side_Q;
+}
+
 /**
  * Determines the center of the circle defined by the three given points.
  * In the event the circle is complete, the midpoint of the segment defined
@@ -81,6 +118,34 @@ double lw_arc_center(const POINT2D *p1, const POINT2D *p2, const POINT2D *p3, PO
 	cr = sqrt(pow(cx - p1->x, 2) + pow(cy - p1->y, 2));
 
 	return cr;
+}
+
+/**
+ * Returns true if P is on the same side of the plane partition
+ * defined by A1/A3 as A2 is. Only makes sense if P has already been
+ * determined to be on the circle defined by A1/A2/A3.
+ */
+int lw_pt_in_arc(const POINT2D *P, const POINT2D *A1, const POINT2D *A2, const POINT2D *A3) {
+	return lw_segment_side(A1, A3, A2) == lw_segment_side(A1, A3, P);
+}
+
+/**
+ * Returns true if P is between A1/A2. Only makes sense if P has already been
+ * deterined to be on the line defined by A1/A2.
+ */
+int lw_pt_in_seg(const POINT2D *P, const POINT2D *A1, const POINT2D *A2) {
+	return ((A1->x <= P->x && P->x < A2->x) || (A1->x >= P->x && P->x > A2->x)) ||
+	       ((A1->y <= P->y && P->y < A2->y) || (A1->y >= P->y && P->y > A2->y));
+}
+
+/**
+ * Returns true if arc A is actually a point (all vertices are the same) .
+ */
+int lw_arc_is_pt(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3) {
+	if (A1->x == A2->x && A2->x == A3->x && A1->y == A2->y && A2->y == A3->y)
+		return LW_TRUE;
+	else
+		return LW_FALSE;
 }
 
 /*
@@ -204,7 +269,7 @@ void decode_geohash_bbox(char *geohash, double *lat, double *lon, int precision)
 		char c = tolower(geohash[i]);
 
 		/* Valid characters are all digits in base32 */
-		char *base32_pos = strchr(const_cast <char *>(base32), c);
+		char *base32_pos = strchr(const_cast<char *>(base32), c);
 		if (!base32_pos) {
 			// lwerror("%s: Invalid character '%c'", __func__, geohash[i]);
 			return;

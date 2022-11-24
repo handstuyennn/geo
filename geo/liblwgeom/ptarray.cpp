@@ -188,6 +188,237 @@ int ptarray_is_closed_2d(const POINTARRAY *in) {
 	return 0 == memcmp(getPoint_internal(in, 0), getPoint_internal(in, in->npoints - 1), sizeof(POINT2D));
 }
 
+/**
+ * Return 1 if the point is inside the POINTARRAY, -1 if it is outside,
+ * and 0 if it is on the boundary.
+ */
+int ptarray_contains_point(const POINTARRAY *pa, const POINT2D *pt) {
+	return ptarray_contains_point_partial(pa, pt, LW_TRUE, NULL);
+}
+
+int ptarray_contains_point_partial(const POINTARRAY *pa, const POINT2D *pt, int check_closed, int *winding_number) {
+	int wn = 0;
+	uint32_t i;
+	double side;
+	const POINT2D *seg1;
+	const POINT2D *seg2;
+	double ymin, ymax;
+
+	seg1 = getPoint2d_cp(pa, 0);
+	seg2 = getPoint2d_cp(pa, pa->npoints - 1);
+	if (check_closed && !p2d_same(seg1, seg2))
+		lwerror("ptarray_contains_point called on unclosed ring");
+
+	for (i = 1; i < pa->npoints; i++) {
+		seg2 = getPoint2d_cp(pa, i);
+
+		/* Zero length segments are ignored. */
+		if (seg1->x == seg2->x && seg1->y == seg2->y) {
+			seg1 = seg2;
+			continue;
+		}
+
+		ymin = FP_MIN(seg1->y, seg2->y);
+		ymax = FP_MAX(seg1->y, seg2->y);
+
+		/* Only test segments in our vertical range */
+		if (pt->y > ymax || pt->y < ymin) {
+			seg1 = seg2;
+			continue;
+		}
+
+		side = lw_segment_side(seg1, seg2, pt);
+
+		/*
+		 * A point on the boundary of a ring is not contained.
+		 * WAS: if (fabs(side) < 1e-12), see #852
+		 */
+		if ((side == 0) && lw_pt_in_seg(pt, seg1, seg2)) {
+			return LW_BOUNDARY;
+		}
+
+		/*
+		 * If the point is to the left of the line, and it's rising,
+		 * then the line is to the right of the point and
+		 * circling counter-clockwise, so increment.
+		 */
+		if ((side < 0) && (seg1->y <= pt->y) && (pt->y < seg2->y)) {
+			wn++;
+		}
+
+		/*
+		 * If the point is to the right of the line, and it's falling,
+		 * then the line is to the right of the point and circling
+		 * clockwise, so decrement.
+		 */
+		else if ((side > 0) && (seg2->y <= pt->y) && (pt->y < seg1->y)) {
+			wn--;
+		}
+
+		seg1 = seg2;
+	}
+
+	/* Sent out the winding number for calls that are building on this as a primitive */
+	if (winding_number)
+		*winding_number = wn;
+
+	/* Outside */
+	if (wn == 0) {
+		return LW_OUTSIDE;
+	}
+
+	/* Inside */
+	return LW_INSIDE;
+}
+
+/**
+ * For POINTARRAYs representing CIRCULARSTRINGS. That is, linked triples
+ * with each triple being control points of a circular arc. Such
+ * POINTARRAYs have an odd number of vertices.
+ *
+ * Return 1 if the point is inside the POINTARRAY, -1 if it is outside,
+ * and 0 if it is on the boundary.
+ */
+
+int ptarrayarc_contains_point(const POINTARRAY *pa, const POINT2D *pt) {
+	return ptarrayarc_contains_point_partial(pa, pt, LW_TRUE /* Check closed*/, NULL);
+}
+
+int ptarrayarc_contains_point_partial(const POINTARRAY *pa, const POINT2D *pt, int check_closed, int *winding_number) {
+	int wn = 0;
+	uint32_t i;
+	int side;
+	const POINT2D *seg1;
+	const POINT2D *seg2;
+	const POINT2D *seg3;
+	GBOX gbox;
+
+	/* Check for not an arc ring (always have odd # of points) */
+	if ((pa->npoints % 2) == 0) {
+		lwerror("ptarrayarc_contains_point called with even number of points");
+		return LW_OUTSIDE;
+	}
+
+	/* Check for not an arc ring (always have >= 3 points) */
+	if (pa->npoints < 3) {
+		lwerror("ptarrayarc_contains_point called too-short pointarray");
+		return LW_OUTSIDE;
+	}
+
+	/* Check for unclosed case */
+	seg1 = getPoint2d_cp(pa, 0);
+	seg3 = getPoint2d_cp(pa, pa->npoints - 1);
+	if (check_closed && !p2d_same(seg1, seg3)) {
+		lwerror("ptarrayarc_contains_point called on unclosed ring");
+		return LW_OUTSIDE;
+	}
+	/* OK, it's closed. Is it just one circle? */
+	else if (p2d_same(seg1, seg3) && pa->npoints == 3) {
+		double radius, d;
+		POINT2D c;
+		seg2 = getPoint2d_cp(pa, 1);
+
+		/* Wait, it's just a point, so it can't contain anything */
+		if (lw_arc_is_pt(seg1, seg2, seg3))
+			return LW_OUTSIDE;
+
+		/* See if the point is within the circle radius */
+		radius = lw_arc_center(seg1, seg2, seg3, &c);
+		d = distance2d_pt_pt(pt, &c);
+		if (FP_EQUALS(d, radius))
+			return LW_BOUNDARY; /* Boundary of circle */
+		else if (d < radius)
+			return LW_INSIDE; /* Inside circle */
+		else
+			return LW_OUTSIDE; /* Outside circle */
+	} else if (p2d_same(seg1, pt) || p2d_same(seg3, pt)) {
+		return LW_BOUNDARY; /* Boundary case */
+	}
+
+	/* Start on the ring */
+	seg1 = getPoint2d_cp(pa, 0);
+	for (i = 1; i < pa->npoints; i += 2) {
+		seg2 = getPoint2d_cp(pa, i);
+		seg3 = getPoint2d_cp(pa, i + 1);
+
+		/* Catch an easy boundary case */
+		if (p2d_same(seg3, pt))
+			return LW_BOUNDARY;
+
+		/* Skip arcs that have no size */
+		if (lw_arc_is_pt(seg1, seg2, seg3)) {
+			seg1 = seg3;
+			continue;
+		}
+
+		/* Only test segments in our vertical range */
+		lw_arc_calculate_gbox_cartesian_2d(seg1, seg2, seg3, &gbox);
+		if (pt->y > gbox.ymax || pt->y < gbox.ymin) {
+			seg1 = seg3;
+			continue;
+		}
+
+		/* Outside of horizontal range, and not between end points we also skip */
+		if ((pt->x > gbox.xmax || pt->x < gbox.xmin) &&
+		    (pt->y > FP_MAX(seg1->y, seg3->y) || pt->y < FP_MIN(seg1->y, seg3->y))) {
+			seg1 = seg3;
+			continue;
+		}
+
+		side = lw_arc_side(seg1, seg2, seg3, pt);
+
+		/* On the boundary */
+		if ((side == 0) && lw_pt_in_arc(pt, seg1, seg2, seg3)) {
+			return LW_BOUNDARY;
+		}
+
+		/* Going "up"! Point to left of arc. */
+		if (side < 0 && (seg1->y <= pt->y) && (pt->y < seg3->y)) {
+			wn++;
+		}
+
+		/* Going "down"! */
+		if (side > 0 && (seg2->y <= pt->y) && (pt->y < seg1->y)) {
+			wn--;
+		}
+
+		/* Inside the arc! */
+		if (pt->x <= gbox.xmax && pt->x >= gbox.xmin) {
+			POINT2D C;
+			double radius = lw_arc_center(seg1, seg2, seg3, &C);
+			double d = distance2d_pt_pt(pt, &C);
+
+			/* On the boundary! */
+			if (d == radius)
+				return LW_BOUNDARY;
+
+			/* Within the arc! */
+			if (d < radius) {
+				/* Left side, increment winding number */
+				if (side < 0)
+					wn++;
+				/* Right side, decrement winding number */
+				if (side > 0)
+					wn--;
+			}
+		}
+
+		seg1 = seg3;
+	}
+
+	/* Sent out the winding number for calls that are building on this as a primitive */
+	if (winding_number)
+		*winding_number = wn;
+
+	/* Outside */
+	if (wn == 0) {
+		return LW_OUTSIDE;
+	}
+
+	/* Inside */
+	return LW_INSIDE;
+}
+
 int ptarray_is_closed_3d(const POINTARRAY *in) {
 	if (!in) {
 		// lwerror("ptarray_is_closed_3d: called with null point array");

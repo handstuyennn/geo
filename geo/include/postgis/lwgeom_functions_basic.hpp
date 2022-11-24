@@ -14,5 +14,6 @@ lwvarlena_t *ST_GeoHash(GSERIALIZED *gser, size_t m_chars = 0);
 bool ST_IsCollection(GSERIALIZED *geom);
 bool LWGEOM_isempty(GSERIALIZED *geom);
 int LWGEOM_npoints(GSERIALIZED *geom);
+GSERIALIZED *LWGEOM_closestpoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 } // namespace duckdb

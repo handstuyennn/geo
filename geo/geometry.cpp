@@ -178,6 +178,16 @@ GSERIALIZED *Geometry::LWGEOM_boundary(GSERIALIZED *geom) {
 	return postgis.LWGEOM_boundary(geom);
 }
 
+GSERIALIZED *Geometry::Difference(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.ST_Difference(geom1, geom2);
+}
+
+GSERIALIZED *Geometry::ClosestPoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.LWGEOM_closestpoint(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);
@@ -238,6 +248,11 @@ GSERIALIZED *Geometry::PointN(GSERIALIZED *geom, int index) {
 	return postgis.LWGEOM_pointn_linestring(geom, index);
 }
 
+GSERIALIZED *Geometry::StartPoint(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_startpoint_linestring(geom);
+}
+
 double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2) {
 	Postgis postgis;
 	return postgis.ST_distance(g1, g2);
@@ -248,9 +263,14 @@ double Geometry::Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid) {
 	return postgis.geography_distance(g1, g2, use_spheroid);
 }
 
-double Geometry::XPoint(const void *data, size_t size) {
+double Geometry::XPoint(GSERIALIZED *geom) {
 	Postgis postgis;
-	return postgis.LWGEOM_x_point(data, size);
+	return postgis.LWGEOM_x_point(geom);
+}
+
+double Geometry::YPoint(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_y_point(geom);
 }
 
 GSERIALIZED *Geometry::Centroid(GSERIALIZED *g) {

@@ -14,6 +14,8 @@ bool LWGEOM_isclosed(GSERIALIZED *geom);
 int LWGEOM_numgeometries_collection(GSERIALIZED *geom);
 int LWGEOM_numpoints_linestring(GSERIALIZED *geom);
 GSERIALIZED *LWGEOM_pointn_linestring(GSERIALIZED *geom, int where);
-double LWGEOM_x_point(const void *base, size_t size);
+GSERIALIZED *LWGEOM_startpoint_linestring(GSERIALIZED *geom);
+double LWGEOM_x_point(GSERIALIZED *geom);
+double LWGEOM_y_point(GSERIALIZED *geom);
 
 } // namespace duckdb

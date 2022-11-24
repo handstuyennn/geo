@@ -228,24 +228,21 @@ void GeoExtension::Load(DuckDB &db) {
 
 	// ST_ISEMPTY
 	ScalarFunctionSet isempty("st_isempty");
-	isempty.AddFunction(
-	    ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsEmptyFunction));
+	isempty.AddFunction(ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsEmptyFunction));
 
 	CreateScalarFunctionInfo isempty_func_info(isempty);
 	catalog.AddFunction(*con.context, &isempty_func_info);
 
 	// ST_ISRING
 	ScalarFunctionSet isring("st_isring");
-	isring.AddFunction(
-	    ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsRingFunction));
+	isring.AddFunction(ScalarFunction({geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIsRingFunction));
 
 	CreateScalarFunctionInfo isring_func_info(isring);
 	catalog.AddFunction(*con.context, &isring_func_info);
 
 	// ST_NPOINTS
 	ScalarFunctionSet npoints("st_npoints");
-	npoints.AddFunction(
-	    ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryNPointsFunction));
+	npoints.AddFunction(ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryNPointsFunction));
 
 	CreateScalarFunctionInfo npoints_func_info(npoints);
 	catalog.AddFunction(*con.context, &npoints_func_info);
@@ -260,8 +257,7 @@ void GeoExtension::Load(DuckDB &db) {
 
 	// ST_NUMPOINTS
 	ScalarFunctionSet numpoints("st_numpoints");
-	numpoints.AddFunction(
-	    ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryNumPointsFunction));
+	numpoints.AddFunction(ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryNumPointsFunction));
 
 	CreateScalarFunctionInfo numpoints_func_info(numpoints);
 	catalog.AddFunction(*con.context, &numpoints_func_info);
@@ -274,12 +270,42 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo pointn_func_info(pointn);
 	catalog.AddFunction(*con.context, &pointn_func_info);
 
+	// ST_STARTPOINT
+	ScalarFunctionSet startpoint("st_startpoint");
+	startpoint.AddFunction(ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryStartPointFunction));
+
+	CreateScalarFunctionInfo startpoint_func_info(startpoint);
+	catalog.AddFunction(*con.context, &startpoint_func_info);
+
 	// ST_X
 	ScalarFunctionSet get_x("st_x");
 	get_x.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryGetXFunction));
 
 	CreateScalarFunctionInfo get_x_func_info(get_x);
 	catalog.AddFunction(*con.context, &get_x_func_info);
+
+	// ST_X
+	ScalarFunctionSet get_y("st_y");
+	get_y.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryGetYFunction));
+
+	CreateScalarFunctionInfo get_y_func_info(get_y);
+	catalog.AddFunction(*con.context, &get_y_func_info);
+
+	//**Transformations (10)**:
+	// ST_DIFFERENCE
+	ScalarFunctionSet difference("st_difference");
+	difference.AddFunction(ScalarFunction({geo_type, geo_type}, geo_type, GeoFunctions::GeometryDifferenceFunction));
+
+	CreateScalarFunctionInfo difference_func_info(difference);
+	catalog.AddFunction(*con.context, &difference_func_info);
+
+	// ST_CLOSESTPOINT
+	ScalarFunctionSet closestpoint("st_closestpoint");
+	closestpoint.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, geo_type, GeoFunctions::GeometryClosestPointFunction));
+
+	CreateScalarFunctionInfo closestpoint_func_info(closestpoint);
+	catalog.AddFunction(*con.context, &closestpoint_func_info);
 
 	con.Commit();
 }

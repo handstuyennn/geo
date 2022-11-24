@@ -18,6 +18,12 @@ void gbox_init(GBOX *gbox) {
 	memset(gbox, 0, sizeof(GBOX));
 }
 
+GBOX *gbox_clone(const GBOX *gbox) {
+	GBOX *g = (GBOX *)lwalloc(sizeof(GBOX));
+	memcpy(g, gbox, sizeof(GBOX));
+	return g;
+}
+
 int gbox_merge(const GBOX *new_box, GBOX *merge_box) {
 	assert(merge_box);
 

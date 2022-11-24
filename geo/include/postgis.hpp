@@ -37,6 +37,8 @@ public:
 	GSERIALIZED *LWGEOM_from_GeoHash(char *input, int precision = -1);
 
 	GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);
+	GSERIALIZED *ST_Difference(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	GSERIALIZED *LWGEOM_closestpoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
@@ -50,10 +52,12 @@ public:
 	int LWGEOM_numgeometries_collection(GSERIALIZED *geom);
 	int LWGEOM_numpoints_linestring(GSERIALIZED *geom);
 	GSERIALIZED *LWGEOM_pointn_linestring(GSERIALIZED *geom, int index);
+	GSERIALIZED *LWGEOM_startpoint_linestring(GSERIALIZED *geom);
+	double LWGEOM_x_point(GSERIALIZED *geom);
+	double LWGEOM_y_point(GSERIALIZED *geom);
 
 	double ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	double geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid);
-	double LWGEOM_x_point(const void *data, size_t size);
 	GSERIALIZED *centroid(GSERIALIZED *geom);
 	GSERIALIZED *geography_centroid(GSERIALIZED *geom, bool use_spheroid);
 };

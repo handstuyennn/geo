@@ -2,6 +2,7 @@
 
 #include "liblwgeom/gserialized.hpp"
 #include "liblwgeom/liblwgeom.hpp"
+#include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
 
 #include <float.h>
@@ -198,6 +199,29 @@ int LWGEOM_npoints(GSERIALIZED *geom) {
 	lwgeom_free(lwgeom);
 
 	return npoints;
+}
+
+/**
+Returns the point in first input geometry that is closest to the second input geometry in 2d
+*/
+GSERIALIZED *LWGEOM_closestpoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GSERIALIZED *result;
+	LWGEOM *point;
+	LWGEOM *lwgeom1 = lwgeom_from_gserialized(geom1);
+	LWGEOM *lwgeom2 = lwgeom_from_gserialized(geom2);
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	point = lwgeom_closest_point(lwgeom1, lwgeom2);
+
+	if (lwgeom_is_empty(point))
+		return nullptr;
+
+	result = geometry_serialize(point);
+	lwgeom_free(point);
+	lwgeom_free(lwgeom1);
+	lwgeom_free(lwgeom2);
+
+	return result;
 }
 
 } // namespace duckdb

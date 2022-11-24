@@ -105,6 +105,13 @@ namespace duckdb {
 #define OUT_MAX_BYTES_DOUBLE   (1 /* Sign */ + 2 /* 0.x */ + OUT_MAX_DIGITS)
 #define OUT_DOUBLE_BUFFER_SIZE OUT_MAX_BYTES_DOUBLE + 1 /* +1 including NULL */
 
+/**
+ * Constants for point-in-polygon return values
+ */
+#define LW_INSIDE   1
+#define LW_BOUNDARY 0
+#define LW_OUTSIDE  -1
+
 /* Utilities */
 int lwprint_double(double d, int maxdd, char *buf);
 
@@ -116,8 +123,18 @@ int p2d_same(const POINT2D *p1, const POINT2D *p2);
  * Returns -1 for left and 1 for right and 0 for co-linearity
  */
 int lw_segment_side(const POINT2D *p1, const POINT2D *p2, const POINT2D *q);
+int lw_arc_side(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3, const POINT2D *Q);
 int lw_arc_calculate_gbox_cartesian_2d(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3, GBOX *gbox);
 double lw_arc_center(const POINT2D *p1, const POINT2D *p2, const POINT2D *p3, POINT2D *result);
+int lw_pt_in_seg(const POINT2D *P, const POINT2D *A1, const POINT2D *A2);
+int lw_pt_in_arc(const POINT2D *P, const POINT2D *A1, const POINT2D *A2, const POINT2D *A3);
+int ptarray_contains_point(const POINTARRAY *pa, const POINT2D *pt);
+int ptarray_contains_point_partial(const POINTARRAY *pa, const POINT2D *pt, int check_closed, int *winding_number);
+int ptarrayarc_contains_point(const POINTARRAY *pa, const POINT2D *pt);
+int ptarrayarc_contains_point_partial(const POINTARRAY *pa, const POINT2D *pt, int check_closed, int *winding_number);
+int lwgeom_contains_point(const LWGEOM *geom, const POINT2D *pt);
+int lw_arc_is_pt(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3);
+int lwcompound_contains_point(const LWCOMPOUND *comp, const POINT2D *pt);
 
 /*
  * Force dims
@@ -135,6 +152,11 @@ POINTARRAY *ptarray_force_dims(const POINTARRAY *pa, int hasz, int hasm, double 
 int lwgeom_geohash_precision(GBOX bbox, GBOX *bounds);
 lwvarlena_t *geohash_point(double longitude, double latitude, int precision);
 void decode_geohash_bbox(char *geohash, double *lat, double *lon, int precision);
+
+/*
+ * Clone support
+ */
+GBOX *gbox_clone(const GBOX *gbox);
 
 /*
  * Startpoint

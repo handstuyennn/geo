@@ -149,19 +149,39 @@ int LWGEOM_dimension(GSERIALIZED *geom) {
 	return dimension;
 }
 
-double LWGEOM_x_point(const void *base, size_t size) {
-	LWGEOM *lwgeom = lwgeom_from_wkb(static_cast<const uint8_t *>(base), size, LW_PARSER_CHECK_NONE);
-	GSERIALIZED *geom = geometry_serialize(lwgeom);
+double LWGEOM_x_point(GSERIALIZED *geom) {
 	POINT4D pt;
 
-	if (gserialized_get_type(geom) != POINTTYPE)
+	if (gserialized_get_type(geom) != POINTTYPE) {
 		// lwpgerror("Argument to ST_X() must have type POINT");
+		throw Exception("Argument to ST_X() must have type POINT");
 		return LW_FAILURE;
+	}
 
 	if (gserialized_peek_first_point(geom, &pt) == LW_FAILURE) {
 		return LW_FAILURE;
 	}
 	return pt.x;
+}
+
+/**
+ * Y(GEOMETRY) -- return Y value of the point.
+ * 	Raise an error if input is not a point.
+ */
+double LWGEOM_y_point(GSERIALIZED *geom) {
+	POINT4D pt;
+
+	if (gserialized_get_type(geom) != POINTTYPE) {
+		// lwpgerror("Argument to ST_Y() must have type POINT");
+		throw Exception("Argument to ST_Y() must have type POINT");
+		return LW_FAILURE;
+	}
+
+	if (gserialized_peek_first_point(geom, &pt) == LW_FAILURE) {
+		// PG_RETURN_NULL();
+		return LW_FAILURE;
+	}
+	return pt.y;
 }
 
 /** EndPoint(GEOMETRY) -- find the first linestring in GEOMETRY,
@@ -288,6 +308,33 @@ GSERIALIZED *LWGEOM_pointn_linestring(GSERIALIZED *geom, int where) {
 	auto ret = geometry_serialize(lwpoint_as_lwgeom(lwpoint));
 
 	lwgeom_free((LWGEOM *)lwpoint);
+	return ret;
+}
+
+/**
+ * ST_StartPoint(GEOMETRY)
+ * @return the first point of a linestring.
+ * 		Return NULL if there is no LINESTRING
+ */
+GSERIALIZED *LWGEOM_startpoint_linestring(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	LWPOINT *lwpoint = NULL;
+	int type = lwgeom->type;
+
+	if (type == LINETYPE || type == CIRCSTRINGTYPE) {
+		lwpoint = lwline_get_lwpoint((LWLINE *)lwgeom, 0);
+	} else if (type == COMPOUNDTYPE) {
+		lwpoint = lwcompound_get_startpoint((LWCOMPOUND *)lwgeom);
+	}
+
+	lwgeom_free(lwgeom);
+
+	if (!lwpoint)
+		return nullptr;
+
+	auto ret = geometry_serialize(lwpoint_as_lwgeom(lwpoint));
+	lwgeom_free((LWGEOM *)lwpoint);
+
 	return ret;
 }
 

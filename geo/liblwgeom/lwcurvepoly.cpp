@@ -66,4 +66,21 @@ int lwcurvepoly_add_ring(LWCURVEPOLY *poly, LWGEOM *ring) {
 	return LW_SUCCESS;
 }
 
+LWCURVEPOLY *lwcurvepoly_construct_from_lwpoly(LWPOLY *lwpoly) {
+	LWCURVEPOLY *ret;
+	uint32_t i;
+	ret = (LWCURVEPOLY *)lwalloc(sizeof(LWCURVEPOLY));
+	ret->type = CURVEPOLYTYPE;
+	ret->flags = lwpoly->flags;
+	ret->srid = lwpoly->srid;
+	ret->nrings = lwpoly->nrings;
+	ret->maxrings = lwpoly->nrings; /* Allocate room for sub-members, just in case. */
+	ret->rings = (LWGEOM **)lwalloc(ret->maxrings * sizeof(LWGEOM *));
+	ret->bbox = lwpoly->bbox ? gbox_clone(lwpoly->bbox) : NULL;
+	for (i = 0; i < ret->nrings; i++) {
+		ret->rings[i] = lwline_as_lwgeom(lwline_construct(ret->srid, NULL, ptarray_clone_deep(lwpoly->rings[i])));
+	}
+	return ret;
+}
+
 } // namespace duckdb

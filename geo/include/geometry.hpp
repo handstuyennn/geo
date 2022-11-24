@@ -61,6 +61,8 @@ public:
 	static GSERIALIZED *FromGeoHash(string_t hash, int precision = -1);
 
 	static GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);
+	static GSERIALIZED *Difference(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	static GSERIALIZED *ClosestPoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
@@ -74,11 +76,12 @@ public:
 	static int NumGeometries(GSERIALIZED *geom);
 	static int NumPoints(GSERIALIZED *geom);
 	static GSERIALIZED *PointN(GSERIALIZED *geom, int index);
+	static GSERIALIZED *StartPoint(GSERIALIZED *geom);
+	static double XPoint(GSERIALIZED *geom);
+	static double YPoint(GSERIALIZED *geom);
 
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
-
-	static double XPoint(const void *data, size_t size);
 
 	static GSERIALIZED *Centroid(GSERIALIZED *g);
 

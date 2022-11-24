@@ -101,6 +101,14 @@ GSERIALIZED *Postgis::LWGEOM_boundary(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_boundary(geom);
 }
 
+GSERIALIZED *Postgis::ST_Difference(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::ST_Difference(geom1, geom2);
+}
+
+GSERIALIZED *Postgis::LWGEOM_closestpoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::LWGEOM_closestpoint(geom1, geom2);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }
@@ -149,16 +157,24 @@ GSERIALIZED *Postgis::LWGEOM_pointn_linestring(GSERIALIZED *geom, int index) {
 	return duckdb::LWGEOM_pointn_linestring(geom, index);
 }
 
+GSERIALIZED *Postgis::LWGEOM_startpoint_linestring(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_startpoint_linestring(geom);
+}
+
+double Postgis::LWGEOM_x_point(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_x_point(geom);
+}
+
+double Postgis::LWGEOM_y_point(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_y_point(geom);
+}
+
 double Postgis::ST_distance(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::ST_distance(geom1, geom2);
 }
 
 double Postgis::geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid) {
 	return duckdb::geography_distance(geom1, geom2, use_spheroid);
-}
-
-double Postgis::LWGEOM_x_point(const void *data, size_t size) {
-	return duckdb::LWGEOM_x_point(data, size);
 }
 
 GSERIALIZED *Postgis::centroid(GSERIALIZED *geom) {

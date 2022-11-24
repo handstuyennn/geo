@@ -1202,27 +1202,170 @@ void GeoFunctions::GeometryPointNFunction(DataChunk &args, ExpressionState &stat
 	GeometryPointNBinaryExecutor<string_t, int, string_t>(geom_arg, index_arg, result, args.size());
 }
 
+struct StartPointUnaryOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE geom, Vector &result) {
+		if (geom.GetSize() == 0) {
+			return string_t();
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry gets start point: could not getting start point from geom");
+			return string_t();
+		}
+		auto gserStartPoint = Geometry::StartPoint(gser);
+		idx_t rv_size = Geometry::GetGeometrySize(gserStartPoint);
+		auto base = Geometry::GetBase(gserStartPoint);
+		auto result_str = StringVector::EmptyString(result, rv_size);
+		memcpy(result_str.GetDataWriteable(), base, rv_size);
+		result_str.Finalize();
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserStartPoint);
+		return result_str;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryStartPointUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::ExecuteString<TA, TR, StartPointUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryStartPointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryStartPointUnaryExecutor<string_t, string_t>(geom_arg, result, args.size());
+}
+
 struct GetXUnaryOperator {
 	template <class TA, class TR>
-	static inline TR Operation(TA text) {
-		if (text.GetSize() == 0) {
+	static inline TR Operation(TA geom) {
+		if (geom.GetSize() == 0) {
 			// throw ConversionException(
 			//     "Failure in geometry get X: could not get coordinate X from geometry");
 			return 0.00;
 		}
-		double x_val = Geometry::XPoint(text.GetDataUnsafe(), text.GetSize());
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry gets X: could not getting X from geom");
+			return 0.00;
+		}
+		double x_val = Geometry::XPoint(gser);
+		Geometry::DestroyGeometry(gser);
 		return x_val;
 	}
 };
 
 template <typename TA, typename TR>
-static void GeometryGetXUnaryExecutor(Vector &text, Vector &result, idx_t count) {
-	UnaryExecutor::Execute<TA, TR, GetXUnaryOperator>(text, result, count);
+static void GeometryGetXUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, GetXUnaryOperator>(geom, result, count);
 }
 
 void GeoFunctions::GeometryGetXFunction(DataChunk &args, ExpressionState &state, Vector &result) {
-	auto &text_arg = args.data[0];
-	GeometryGetXUnaryExecutor<string_t, double>(text_arg, result, args.size());
+	auto &geom_arg = args.data[0];
+	GeometryGetXUnaryExecutor<string_t, double>(geom_arg, result, args.size());
+}
+
+struct GetYUnaryOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA geom) {
+		if (geom.GetSize() == 0) {
+			// throw ConversionException(
+			//     "Failure in geometry get X: could not get coordinate X from geometry");
+			return 0.00;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry gets Y: could not getting Y from geom");
+			return 0.00;
+		}
+		double y_val = Geometry::YPoint(gser);
+		Geometry::DestroyGeometry(gser);
+		return y_val;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryGetYUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, GetYUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryGetYFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryGetYUnaryExecutor<string_t, double>(geom_arg, result, args.size());
+}
+
+template <typename TA, typename TB, typename TR>
+static TR DifferenceScalarFunction(Vector &result, TA geom1, TB geom2) {
+	if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
+		return string_t();
+	}
+	if (geom1.GetSize() == 0) {
+		return geom2;
+	} else if (geom2.GetSize() == 0) {
+		return geom1;
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	if (!gser1 || !gser2) {
+		throw ConversionException("Failure in geometry get difference: could not getting difference from geom");
+		return string_t();
+	}
+	auto gserDiff = Geometry::Difference(gser1, gser2);
+	idx_t rv_size = Geometry::GetGeometrySize(gserDiff);
+	auto base = Geometry::GetBase(gserDiff);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	Geometry::DestroyGeometry(gserDiff);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryDifferenceBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count,
+	                                    [&](TA geom1, TB geom2) { return DifferenceScalarFunction<TA, TB, TR>(result, geom1, geom2); });
+}
+
+void GeoFunctions::GeometryDifferenceFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryDifferenceBinaryExecutor<string_t, string_t, string_t>(geom1_arg, geom2_arg, result, args.size());
+}
+
+template <typename TA, typename TB, typename TR>
+static TR ClosestPointScalarFunction(Vector &result, TA geom1, TB geom2) {
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+		return string_t();
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	if (!gser1 || !gser2) {
+		throw ConversionException("Failure in geometry get closest point: could not getting closest point from geom");
+		return string_t();
+	}
+	auto gserClosestPoint = Geometry::ClosestPoint(gser1, gser2);
+	idx_t rv_size = Geometry::GetGeometrySize(gserClosestPoint);
+	auto base = Geometry::GetBase(gserClosestPoint);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	Geometry::DestroyGeometry(gserClosestPoint);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryClosestPointBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count,
+	                                    [&](TA geom1, TB geom2) { return ClosestPointScalarFunction<TA, TB, TR>(result, geom1, geom2); });
+}
+
+void GeoFunctions::GeometryClosestPointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryClosestPointBinaryExecutor<string_t, string_t, string_t>(geom1_arg, geom2_arg, result, args.size());
 }
 
 } // namespace duckdb

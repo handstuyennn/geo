@@ -46,8 +46,13 @@ struct GeoFunctions {
 	static void GeometryNumGeometriesFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryNumPointsFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryPointNFunction(DataChunk &args, ExpressionState &state, Vector &result);
-
+	static void GeometryStartPointFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryGetXFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryGetYFunction(DataChunk &args, ExpressionState &state, Vector &result);
+
+	// **Transformations (10)**:
+	static void GeometryDifferenceFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryClosestPointFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

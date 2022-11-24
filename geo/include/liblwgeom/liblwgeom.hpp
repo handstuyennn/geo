@@ -610,6 +610,12 @@ extern int lwcurvepoly_add_ring(LWCURVEPOLY *poly, LWGEOM *ring);
 extern int lwcompound_add_lwgeom(LWCOMPOUND *comp, LWGEOM *geom);
 
 /**
+ * Construct an equivalent curve polygon from a polygon. Curve polygons
+ * can have linear rings as their rings, so this works fine (in theory?)
+ */
+extern LWCURVEPOLY *lwcurvepoly_construct_from_lwpoly(LWPOLY *lwpoly);
+
+/**
  * Construct a new flags bitmask.
  */
 extern lwflags_t lwflags(int hasz, int hasm, int geodetic);
@@ -676,11 +682,13 @@ extern float next_float_up(double d);
 extern double distance2d_pt_pt(const POINT2D *p1, const POINT2D *p2);
 extern double lwgeom_mindistance2d(const LWGEOM *lw1, const LWGEOM *lw2);
 extern double lwgeom_mindistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tolerance);
+extern LWGEOM *lwgeom_closest_point(const LWGEOM *lw1, const LWGEOM *lw2);
 
 extern int lwgeom_dimension(const LWGEOM *geom);
 
 extern LWPOINT *lwline_get_lwpoint(const LWLINE *line, uint32_t where);
 
+extern LWPOINT *lwcompound_get_startpoint(const LWCOMPOUND *lwcmp);
 extern LWPOINT *lwcompound_get_endpoint(const LWCOMPOUND *lwcmp);
 extern LWPOINT *lwcompound_get_lwpoint(const LWCOMPOUND *lwcmp, uint32_t where);
 
@@ -1115,6 +1123,8 @@ void lwerror(const char *fmt, ...);
 extern lwvarlena_t *lwgeom_to_geojson(const LWGEOM *geo, const char *srs, int precision, int has_bbox);
 
 extern int lwgeom_startpoint(const LWGEOM *lwgeom, POINT4D *pt);
+
+LWGEOM *lwgeom_difference_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
 
 #endif /* !defined _LIBLWGEOM_H  */
 

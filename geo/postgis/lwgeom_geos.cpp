@@ -47,4 +47,27 @@ bool LWGEOM_isring(GSERIALIZED *geom) {
 	return false;
 }
 
+GSERIALIZED *ST_Difference(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GSERIALIZED *result;
+	LWGEOM *lwgeom1, *lwgeom2, *lwresult;
+	double prec = -1;
+
+	lwgeom1 = lwgeom_from_gserialized(geom1);
+	lwgeom2 = lwgeom_from_gserialized(geom2);
+
+	lwresult = lwgeom_difference_prec(lwgeom1, lwgeom2, prec);
+	if (!lwresult) {
+		lwgeom_free(lwgeom1);
+		lwgeom_free(lwgeom2);
+		return nullptr;
+	}
+	result = geometry_serialize(lwresult);
+
+	lwgeom_free(lwgeom1);
+	lwgeom_free(lwgeom2);
+	lwgeom_free(lwresult);
+
+	return result;
+}
+
 } // namespace duckdb
