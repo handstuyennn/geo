@@ -1368,4 +1368,39 @@ void GeoFunctions::GeometryClosestPointFunction(DataChunk &args, ExpressionState
 	GeometryClosestPointBinaryExecutor<string_t, string_t, string_t>(geom1_arg, geom2_arg, result, args.size());
 }
 
+template <typename TA, typename TB, typename TR>
+static TR UnionScalarFunction(Vector &result, TA geom1, TB geom2) {
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+		return string_t();
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	if (!gser1 || !gser2) {
+		throw ConversionException("Failure in geometry get union: could not getting union from geom");
+		return string_t();
+	}
+	auto gserUnion = Geometry::GeometryUnion(gser1, gser2);
+	idx_t rv_size = Geometry::GetGeometrySize(gserUnion);
+	auto base = Geometry::GetBase(gserUnion);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	Geometry::DestroyGeometry(gserUnion);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryUnionBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count,
+	                                    [&](TA geom1, TB geom2) { return UnionScalarFunction<TA, TB, TR>(result, geom1, geom2); });
+}
+
+void GeoFunctions::GeometryUnionFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryUnionBinaryExecutor<string_t, string_t, string_t>(geom1_arg, geom2_arg, result, args.size());
+}
+
 } // namespace duckdb

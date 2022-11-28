@@ -1,3 +1,15 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * Copyright (C) 2001-2003 Refractions Research Inc.
+ *
+ * This is free software; you can redistribute and/or modify it under
+ * the terms of the GNU General Public Licence. See the COPYING file.
+ *
+ **********************************************************************/
+
 #include "liblwgeom/gserialized.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
 

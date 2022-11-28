@@ -581,6 +581,25 @@ extern int ptarray_append_ptarray(POINTARRAY *pa1, POINTARRAY *pa2, double gap_t
  */
 extern int ptarray_insert_point(POINTARRAY *pa, const POINT4D *p, uint32_t where);
 
+/**
+ * Remove a point from an existing #POINTARRAY. Zero
+ * is the index of the start of the array.
+ */
+extern int ptarray_remove_point(POINTARRAY *pa, uint32_t where);
+
+/**
+ * @brief Add a point in a pointarray.
+ *
+ * @param pa the source POINTARRAY
+ * @param p the point to add
+ * @param pdims number of ordinates in p (2..4)
+ * @param where to insert the point. 0 prepends, pa->npoints appends
+ *
+ * @returns a newly constructed POINTARRAY using a newly allocated buffer
+ *          for the actual points, or NULL on error.
+ */
+extern POINTARRAY *ptarray_addPoint(const POINTARRAY *pa, uint8_t *p, size_t pdims, uint32_t where);
+
 extern int ptarray_is_closed_2d(const POINTARRAY *pa);
 extern int ptarray_is_closed_3d(const POINTARRAY *pa);
 extern int ptarray_is_closed_z(const POINTARRAY *pa);
@@ -749,6 +768,10 @@ extern POINT4D getPoint4d(const POINTARRAY *pa, uint32_t n);
  */
 extern int getPoint4d_p(const POINTARRAY *pa, uint32_t n, POINT4D *point);
 
+/**
+ * Deep clone an LWGEOM, everything is copied
+ */
+extern LWGEOM *lwgeom_clone_deep(const LWGEOM *lwgeom);
 extern POINTARRAY *ptarray_clone_deep(const POINTARRAY *ptarray);
 
 /*
@@ -947,6 +970,80 @@ extern int lwgeom_parse_wkt(LWGEOM_PARSER_RESULT *parser_result, char *wktstr, i
 void lwgeom_parser_result_init(LWGEOM_PARSER_RESULT *parser_result);
 void lwgeom_parser_result_free(LWGEOM_PARSER_RESULT *parser_result);
 
+/*******************************************************************************
+ * SQLMM internal functions
+ ******************************************************************************/
+
+int lwgeom_has_arc(const LWGEOM *geom);
+LWGEOM *lwgeom_stroke(const LWGEOM *geom, uint32_t perQuad);
+
+/**
+ * Semantic of the `tolerance` argument passed to
+ * lwcurve_linearize
+ */
+typedef enum {
+	/**
+	 * Tolerance expresses the number of segments to use
+	 * for each quarter of circle (quadrant). Must be
+	 * an integer.
+	 */
+	LW_LINEARIZE_TOLERANCE_TYPE_SEGS_PER_QUAD = 0,
+	/**
+	 * Tolerance expresses the maximum distance between
+	 * an arbitrary point on the curve and the closest
+	 * point to it on the resulting approximation, in
+	 * cartesian units.
+	 */
+	LW_LINEARIZE_TOLERANCE_TYPE_MAX_DEVIATION = 1,
+	/**
+	 * Tolerance expresses the maximum angle between
+	 * the radii generating approximation line vertices,
+	 * given in radiuses. A value of 1 would result
+	 * in an approximation of a semicircle composed by
+	 * 180 segments
+	 */
+	LW_LINEARIZE_TOLERANCE_TYPE_MAX_ANGLE = 2
+} LW_LINEARIZE_TOLERANCE_TYPE;
+
+typedef enum {
+	/**
+	 * Symmetric linearization means that the output
+	 * vertices would be the same no matter the order
+	 * of the points defining the input curve.
+	 */
+	LW_LINEARIZE_FLAG_SYMMETRIC = 1 << 0,
+
+	/**
+	 * Retain angle instructs the engine to try its best
+	 * to retain the requested angle between generating
+	 * radii (where angle can be given explicitly with
+	 * LW_LINEARIZE_TOLERANCE_TYPE_MAX_ANGLE or implicitly
+	 * with LW_LINEARIZE_TOLERANCE_TYPE_SEGS_PER_QUAD or
+	 * LW_LINEARIZE_TOLERANCE_TYPE_MAX_DEVIATION).
+	 *
+	 * It only makes sense with LW_LINEARIZE_FLAG_SYMMETRIC
+	 * which would otherwise reduce the angle as needed to
+	 * keep it constant among all radiis so that all
+	 * segments are of the same length.
+	 *
+	 * When this flag is set, the first and last generating
+	 * angles (and thus the first and last segments) may
+	 * instead be smaller (shorter) than the others.
+	 *
+	 */
+	LW_LINEARIZE_FLAG_RETAIN_ANGLE = 1 << 1
+} LW_LINEARIZE_FLAGS;
+
+/**
+ * @param geom input geometry
+ * @param tol tolerance, semantic driven by tolerance_type
+ * @param type see LW_LINEARIZE_TOLERANCE_TYPE
+ * @param flags bitwise OR of operational flags, see LW_LINEARIZE_FLAGS
+ *
+ * @return a newly allocated LWGEOM
+ */
+extern LWGEOM *lwcurve_linearize(const LWGEOM *geom, double tol, LW_LINEARIZE_TOLERANCE_TYPE type, int flags);
+
 /**
  * Return the type name string associated with a type number
  * (e.g. Point, LineString, Polygon)
@@ -1118,13 +1215,36 @@ extern void *lwalloc(size_t size);
 extern void *lwrealloc(void *mem, size_t size);
 extern void lwfree(void *mem);
 
+/**
+ * Write a notice out to the notice handler.
+ *
+ * Uses standard printf() substitutions.
+ * Use for messages you always want output.
+ * For debugging, use LWDEBUG() or LWDEBUGF().
+ * @ingroup logging
+ */
+void lwnotice(const char *fmt, ...);
+
+/**
+ * Write a notice out to the error handler.
+ *
+ * Uses standard printf() substitutions.
+ * Use for errors you always want output.
+ * For debugging, use LWDEBUG() or LWDEBUGF().
+ * @ingroup logging
+ */
 void lwerror(const char *fmt, ...);
 
 extern lwvarlena_t *lwgeom_to_geojson(const LWGEOM *geo, const char *srs, int precision, int has_bbox);
 
 extern int lwgeom_startpoint(const LWGEOM *lwgeom, POINT4D *pt);
 
+/*******************************************************************************
+ * GEOS proxy functions on LWGEOM
+ ******************************************************************************/
+
 LWGEOM *lwgeom_difference_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
+LWGEOM *lwgeom_union_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
 
 #endif /* !defined _LIBLWGEOM_H  */
 

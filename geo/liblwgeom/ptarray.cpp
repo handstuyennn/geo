@@ -1,9 +1,46 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2012 Sandro Santilli <strk@kbt.io>
+ * Copyright (C) 2001-2006 Refractions Research Inc.
+ *
+ **********************************************************************/
+
 #include "liblwgeom/liblwgeom_internal.hpp"
 #include "liblwgeom/lwinline.hpp"
 
 #include <cstring>
 
 namespace duckdb {
+
+int ptarray_has_z(const POINTARRAY *pa) {
+	if (!pa)
+		return LW_FALSE;
+	return FLAGS_GET_Z(pa->flags);
+}
+
+int ptarray_has_m(const POINTARRAY *pa) {
+	if (!pa)
+		return LW_FALSE;
+	return FLAGS_GET_M(pa->flags);
+}
 
 void ptarray_free(POINTARRAY *pa) {
 	if (pa) {
@@ -68,6 +105,23 @@ POINTARRAY *ptarray_construct_empty(char hasz, char hasm, uint32_t maxpoints) {
 		pa->serialized_pointlist = NULL;
 
 	return pa;
+}
+
+/**
+ * @brief Clone a POINTARRAY object. Serialized pointlist is not copied.
+ */
+POINTARRAY *ptarray_clone(const POINTARRAY *in) {
+	POINTARRAY *out = (POINTARRAY *)lwalloc(sizeof(POINTARRAY));
+
+	out->flags = in->flags;
+	out->npoints = in->npoints;
+	out->maxpoints = in->maxpoints;
+
+	FLAGS_SET_READONLY(out->flags, 1);
+
+	out->serialized_pointlist = in->serialized_pointlist;
+
+	return out;
 }
 
 int ptarray_append_point(POINTARRAY *pa, const POINT4D *pt, int repeated_points) {
@@ -149,6 +203,34 @@ int ptarray_append_ptarray(POINTARRAY *pa1, POINTARRAY *pa2, double gap_toleranc
 	memcpy(getPoint_internal(pa1, pa1->npoints), getPoint_internal(pa2, poff), ptsize * npoints);
 
 	pa1->npoints = ncap;
+
+	return LW_SUCCESS;
+}
+
+/*
+ * Add a point into a pointarray. Only adds as many dimensions as the
+ * pointarray supports.
+ */
+int ptarray_remove_point(POINTARRAY *pa, uint32_t where) {
+	/* Check for pathology */
+	if (!pa) {
+		lwerror("ptarray_remove_point: null input");
+		return LW_FAILURE;
+	}
+
+	/* Error on invalid offset value */
+	if (where >= pa->npoints) {
+		lwerror("ptarray_remove_point: offset out of range (%d)", where);
+		return LW_FAILURE;
+	}
+
+	/* If the point is any but the last, we need to copy the data back one point */
+	if (where < pa->npoints - 1)
+		memmove(getPoint_internal(pa, where), getPoint_internal(pa, where + 1),
+		        ptarray_point_size(pa) * (pa->npoints - where - 1));
+
+	/* We have one less point */
+	pa->npoints--;
 
 	return LW_SUCCESS;
 }
@@ -492,6 +574,39 @@ int ptarray_insert_point(POINTARRAY *pa, const POINT4D *p, uint32_t where) {
 	return LW_SUCCESS;
 }
 
+POINTARRAY *ptarray_addPoint(const POINTARRAY *pa, uint8_t *p, size_t pdims, uint32_t where) {
+	POINTARRAY *ret;
+	POINT4D pbuf;
+	size_t ptsize = ptarray_point_size(pa);
+
+	if (pdims < 2 || pdims > 4) {
+		lwerror("ptarray_addPoint: point dimension out of range (%d)", pdims);
+		return NULL;
+	}
+
+	if (where > pa->npoints) {
+		lwerror("ptarray_addPoint: offset out of range (%d)", where);
+		return NULL;
+	}
+
+	pbuf.x = pbuf.y = pbuf.z = pbuf.m = 0.0;
+	memcpy((uint8_t *)&pbuf, p, pdims * sizeof(double));
+
+	ret = ptarray_construct(FLAGS_GET_Z(pa->flags), FLAGS_GET_M(pa->flags), pa->npoints + 1);
+
+	if (where) {
+		memcpy(getPoint_internal(ret, 0), getPoint_internal(pa, 0), ptsize * where);
+	}
+
+	memcpy(getPoint_internal(ret, where), (uint8_t *)&pbuf, ptsize);
+
+	if (where + 1 != ret->npoints) {
+		memcpy(getPoint_internal(ret, where + 1), getPoint_internal(pa, where), ptsize * (pa->npoints - where));
+	}
+
+	return ret;
+}
+
 POINTARRAY *ptarray_force_dims(const POINTARRAY *pa, int hasz, int hasm, double zval, double mval) {
 	/* TODO handle zero-length point arrays */
 	uint32_t i;
@@ -514,6 +629,65 @@ POINTARRAY *ptarray_force_dims(const POINTARRAY *pa, int hasz, int hasm, double 
 
 int ptarray_startpoint(const POINTARRAY *pa, POINT4D *pt) {
 	return getPoint4d_p(pa, 0, pt);
+}
+
+void ptarray_remove_repeated_points_in_place(POINTARRAY *pa, double tolerance, uint32_t min_points) {
+	uint32_t i;
+	double tolsq = tolerance * tolerance;
+	const POINT2D *last = NULL;
+	const POINT2D *pt;
+	uint32_t n_points = pa->npoints;
+	uint32_t n_points_out = 1;
+	size_t pt_size = ptarray_point_size(pa);
+
+	double dsq = FLT_MAX;
+
+	/* No-op on short inputs */
+	if (n_points <= min_points)
+		return;
+
+	last = getPoint2d_cp(pa, 0);
+	void *p_to = ((char *)last) + pt_size;
+	for (i = 1; i < n_points; i++) {
+		int last_point = (i == n_points - 1);
+
+		/* Look straight into the abyss */
+		pt = getPoint2d_cp(pa, i);
+
+		/* Don't drop points if we are running short of points */
+		if (n_points + n_points_out > min_points + i) {
+			if (tolerance > 0.0) {
+				/* Only drop points that are within our tolerance */
+				dsq = distance2d_sqr_pt_pt(last, pt);
+				/* Allow any point but the last one to be dropped */
+				if (!last_point && dsq <= tolsq) {
+					continue;
+				}
+			} else {
+				/* At tolerance zero, only skip exact dupes */
+				if (memcmp((char *)pt, (char *)last, pt_size) == 0)
+					continue;
+			}
+
+			/* Got to last point, and it's not very different from */
+			/* the point that preceded it. We want to keep the last */
+			/* point, not the second-to-last one, so we pull our write */
+			/* index back one value */
+			if (last_point && n_points_out > 1 && tolerance > 0.0 && dsq <= tolsq) {
+				n_points_out--;
+				p_to = (char *)p_to - pt_size;
+			}
+		}
+
+		/* Compact all remaining values to front of array */
+		memcpy(p_to, pt, pt_size);
+		n_points_out++;
+		p_to = (char *)p_to + pt_size;
+		last = pt;
+	}
+	/* Adjust array length */
+	pa->npoints = n_points_out;
+	return;
 }
 
 } // namespace duckdb

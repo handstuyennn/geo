@@ -307,6 +307,14 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo closestpoint_func_info(closestpoint);
 	catalog.AddFunction(*con.context, &closestpoint_func_info);
 
+	// ST_UNION
+	ScalarFunctionSet geom_union("st_union");
+	geom_union.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, geo_type, GeoFunctions::GeometryUnionFunction));
+
+	CreateScalarFunctionInfo union_func_info(geom_union);
+	catalog.AddFunction(*con.context, &union_func_info);
+
 	con.Commit();
 }
 

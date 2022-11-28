@@ -1,3 +1,28 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2001-2006 Refractions Research Inc.
+ * Copyright (C) 2017-2018 Daniel Baston <dbaston@gmail.com>
+ *
+ **********************************************************************/
+
 #include "liblwgeom/liblwgeom.hpp"
 #include "liblwgeom/liblwgeom_internal.hpp"
 #include "liblwgeom/lwinline.hpp"
@@ -109,6 +134,35 @@ LWGEOM *lwpoint_as_lwgeom(const LWPOINT *obj) {
 	if (obj == NULL)
 		return NULL;
 	return (LWGEOM *)obj;
+}
+
+/**
+ * Deep-clone an #LWGEOM object. #POINTARRAY <em>are</em> copied.
+ */
+LWGEOM *lwgeom_clone_deep(const LWGEOM *lwgeom) {
+	switch (lwgeom->type) {
+	case POINTTYPE:
+	case LINETYPE:
+	case CIRCSTRINGTYPE:
+	case TRIANGLETYPE:
+		return (LWGEOM *)lwline_clone_deep((LWLINE *)lwgeom);
+	case POLYGONTYPE:
+		return (LWGEOM *)lwpoly_clone_deep((LWPOLY *)lwgeom);
+	case COMPOUNDTYPE:
+	case CURVEPOLYTYPE:
+	case MULTICURVETYPE:
+	case MULTISURFACETYPE:
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case POLYHEDRALSURFACETYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE:
+		return (LWGEOM *)lwcollection_clone_deep((LWCOLLECTION *)lwgeom);
+	default:
+		lwerror("lwgeom_clone_deep: Unknown geometry type: %s", lwtype_name(lwgeom->type));
+		return NULL;
+	}
 }
 
 void lwgeom_set_srid(LWGEOM *geom, int32_t srid) {

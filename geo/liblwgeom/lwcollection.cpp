@@ -70,6 +70,27 @@ LWCOLLECTION *lwcollection_construct_empty(uint8_t type, int32_t srid, char hasz
 	return ret;
 }
 
+/**
+ * @brief Deep clone #LWCOLLECTION object. #POINTARRAY are copied.
+ */
+LWCOLLECTION *lwcollection_clone_deep(const LWCOLLECTION *g) {
+	uint32_t i;
+	LWCOLLECTION *ret = (LWCOLLECTION *)lwalloc(sizeof(LWCOLLECTION));
+	memcpy(ret, g, sizeof(LWCOLLECTION));
+	if (g->ngeoms > 0) {
+		ret->geoms = (LWGEOM **)lwalloc(sizeof(LWGEOM *) * g->ngeoms);
+		for (i = 0; i < g->ngeoms; i++) {
+			ret->geoms[i] = lwgeom_clone_deep(g->geoms[i]);
+		}
+		if (g->bbox)
+			ret->bbox = gbox_copy(g->bbox);
+	} else {
+		ret->bbox = NULL; /* empty collection */
+		ret->geoms = NULL;
+	}
+	return ret;
+}
+
 LWGEOM *lwcollection_getsubgeom(LWCOLLECTION *col, int gnum) {
 	return (LWGEOM *)col->geoms[gnum];
 }

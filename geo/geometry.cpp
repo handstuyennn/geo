@@ -188,6 +188,11 @@ GSERIALIZED *Geometry::ClosestPoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.LWGEOM_closestpoint(geom1, geom2);
 }
 
+GSERIALIZED *Geometry::GeometryUnion(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.ST_Union(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

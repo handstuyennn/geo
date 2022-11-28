@@ -61,6 +61,7 @@ set(GEO_EXTENSION_FILES
     liblwgeom/lwpsurface.cpp
     liblwgeom/lwtin.cpp
     liblwgeom/lwgeom_geos.cpp
+    liblwgeom/lwstroke.cpp
     parser/lwin_wkt_lex.cpp
     parser/lwin_wkt_parse.cpp
     libpgcommon/lwgeom_pg.cpp

@@ -1,3 +1,30 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2011-2012 Sandro Santilli <strk@kbt.io>
+ * Copyright (C) 2011 Paul Ramsey <pramsey@cleverelephant.ca>
+ * Copyright (C) 2007-2008 Mark Cave-Ayland
+ * Copyright (C) 2001-2006 Refractions Research Inc.
+ *
+ **********************************************************************/
+
 #pragma once
 #include "duckdb.hpp"
 #include "liblwgeom/liblwgeom.hpp"
@@ -154,8 +181,18 @@ lwvarlena_t *geohash_point(double longitude, double latitude, int precision);
 void decode_geohash_bbox(char *geohash, double *lat, double *lon, int precision);
 
 /*
+ * PointArray
+ */
+int ptarray_has_z(const POINTARRAY *pa);
+int ptarray_has_m(const POINTARRAY *pa);
+
+/*
  * Clone support
  */
+LWLINE *lwline_clone_deep(const LWLINE *lwgeom);
+LWPOLY *lwpoly_clone_deep(const LWPOLY *lwgeom);
+LWCOLLECTION *lwcollection_clone_deep(const LWCOLLECTION *lwgeom);
+POINTARRAY *ptarray_clone(const POINTARRAY *ptarray);
 GBOX *gbox_clone(const GBOX *gbox);
 
 /*
@@ -164,6 +201,8 @@ GBOX *gbox_clone(const GBOX *gbox);
 int lwpoly_startpoint(const LWPOLY *lwpoly, POINT4D *pt);
 int ptarray_startpoint(const POINTARRAY *pa, POINT4D *pt);
 int lwcollection_startpoint(const LWCOLLECTION *col, POINT4D *pt);
+
+void ptarray_remove_repeated_points_in_place(POINTARRAY *pa, double tolerance, uint32_t min_points);
 
 /*
  * Closure test

@@ -1,3 +1,29 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright 2009-2014 Sandro Santilli <strk@kbt.io>
+ * Copyright 2008 Paul Ramsey <pramsey@cleverelephant.ca>
+ * Copyright 2001-2003 Refractions Research Inc.
+ *
+ **********************************************************************/
+
 #include "postgis/lwgeom_geos.hpp"
 
 #include "liblwgeom/gserialized.hpp"
@@ -61,6 +87,27 @@ GSERIALIZED *ST_Difference(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 		lwgeom_free(lwgeom2);
 		return nullptr;
 	}
+	result = geometry_serialize(lwresult);
+
+	lwgeom_free(lwgeom1);
+	lwgeom_free(lwgeom2);
+	lwgeom_free(lwresult);
+
+	return result;
+}
+
+GSERIALIZED *ST_Union(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GSERIALIZED *result;
+	LWGEOM *lwgeom1, *lwgeom2, *lwresult;
+	double gridSize = -1;
+
+	// if (PG_NARGS() > 2 && !PG_ARGISNULL(2))
+	// 	gridSize = PG_GETARG_FLOAT8(2);
+
+	lwgeom1 = lwgeom_from_gserialized(geom1);
+	lwgeom2 = lwgeom_from_gserialized(geom2);
+
+	lwresult = lwgeom_union_prec(lwgeom1, lwgeom2, gridSize);
 	result = geometry_serialize(lwresult);
 
 	lwgeom_free(lwgeom1);

@@ -1,3 +1,17 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ *
+ * Copyright (C) 2011      Sandro Santilli <strk@kbt.io>
+ * Copyright (C) 2009-2011 Paul Ramsey <pramsey@cleverelephant.ca>
+ * Copyright (C) 2008      Mark Cave-Ayland <mark.cave-ayland@siriusit.co.uk>
+ * Copyright (C) 2004-2007 Refractions Research Inc.
+ *
+ * This is free software; you can redistribute and/or modify it under
+ * the terms of the GNU General Public Licence. See the COPYING file.
+ *
+ **********************************************************************/
+
 #pragma once
 #include "duckdb.hpp"
 #include "liblwgeom/liblwgeom.hpp"

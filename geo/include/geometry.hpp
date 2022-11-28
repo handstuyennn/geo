@@ -63,6 +63,7 @@ public:
 	static GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);
 	static GSERIALIZED *Difference(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static GSERIALIZED *ClosestPoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	static GSERIALIZED *GeometryUnion(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
