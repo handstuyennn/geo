@@ -4,6 +4,7 @@ project(${TARGET_NAME})
 
 include_directories(include)
 include_directories(third_party/json/include)
+include_directories(third_party/geos/include)
 
 add_subdirectory(third_party)
 

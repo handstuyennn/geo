@@ -1,0 +1,109 @@
+/**********************************************************************
+ *
+ * GEOS - Geometry Engine Open Source
+ * http://geos.osgeo.org
+ *
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
+ * Copyright (C) 2001-2002 Vivid Solutions Inc.
+ * Copyright (C) 2005 2006 Refractions Research Inc.
+ *
+ * This is free software; you can redistribute and/or modify it under
+ * the terms of the GNU Lesser General Public Licence as published
+ * by the Free Software Foundation.
+ * See the COPYING file for more information.
+ *
+ **********************************************************************
+ *
+ * Last port: geom/MultiPolygon.java r320 (JTS-1.12)
+ *
+ **********************************************************************/
+
+#pragma once
+
+#include "geos/export.hpp"
+#include "geos/geom/GeometryCollection.hpp" // for inheritance
+#include "geos/geom/Polygon.hpp"            // for inheritance
+
+#include <string>
+#include <vector>
+
+namespace geos {
+namespace geom { // geos::geom
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4250) // T1 inherits T2 via dominance
+#endif
+
+/// Models a collection of {@link Polygon}s.
+///
+/// As per the OGC SFS specification,
+/// the Polygons in a MultiPolygon may not overlap,
+/// and may only touch at single points.
+/// This allows the topological point-set semantics
+/// to be well-defined.
+///
+class GEOS_DLL MultiPolygon : public GeometryCollection {
+public:
+	friend class GeometryFactory;
+
+	~MultiPolygon() override;
+
+	const Polygon *getGeometryN(std::size_t n) const override;
+
+	std::string getGeometryType() const override;
+
+	GeometryTypeId getGeometryTypeId() const override;
+
+	/// Returns surface dimension (2)
+	Dimension::DimensionType getDimension() const override;
+
+	bool isDimensionStrict(Dimension::DimensionType d) const override {
+		return d == Dimension::A;
+	}
+
+protected:
+	/**
+	 * \brief Construct a MultiPolygon
+	 *
+	 * @param newPolys
+	 *	the <code>Polygon</code>s for this <code>MultiPolygon</code>,
+	 *	or <code>null</code> or an empty array to create the empty
+	 *	geometry. Elements may be empty <code>Polygon</code>s, but
+	 *	not <code>null</code>s.
+	 *	The polygons must conform to the assertions specified in the
+	 *	<A HREF="http://www.opengis.org/techno/specs.htm">
+	 *	OpenGIS Simple Features Specification for SQL
+	 *	</A>.
+	 *
+	 *	Constructed object will take ownership of
+	 *	the vector and its elements.
+	 *
+	 * @param newFactory
+	 * 	The GeometryFactory used to create this geometry
+	 *	Caller must keep the factory alive for the life-time
+	 *	of the constructed MultiPolygon.
+	 */
+	MultiPolygon(std::vector<Geometry *> *newPolys, const GeometryFactory *newFactory);
+
+	MultiPolygon(std::vector<std::unique_ptr<Polygon>> &&newPolys, const GeometryFactory &newFactory);
+
+	MultiPolygon(std::vector<std::unique_ptr<Geometry>> &&newPolys, const GeometryFactory &newFactory);
+
+	MultiPolygon(const MultiPolygon &mp) : GeometryCollection(mp) {};
+
+	MultiPolygon *cloneImpl() const override {
+		return new MultiPolygon(*this);
+	}
+
+	int getSortIndex() const override {
+		return SORTINDEX_MULTIPOLYGON;
+	};
+};
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
+} // namespace geom
+} // namespace geos

@@ -18,9 +18,11 @@ string Geometry::GetString(string_t geometry, DataFormatType ftype) {
 		text = postgis.LWGEOM_asBinary(data, len);
 		break;
 
-	case DataFormatType::FORMAT_VALUE_TYPE_WKT:
-		text = postgis.LWGEOM_asText(data, len);
-		break;
+	case DataFormatType::FORMAT_VALUE_TYPE_WKT: {
+		auto gser = Geometry::GetGserialized(geometry);
+		text = postgis.LWGEOM_asText(gser);
+		Geometry::DestroyGeometry(gser);
+	} break;
 
 	case DataFormatType::FORMAT_VALUE_TYPE_GEOJSON:
 		text = postgis.LWGEOM_asGeoJson(data, len);
@@ -127,9 +129,9 @@ lwvarlena_t *Geometry::AsBinary(GSERIALIZED *geom, string text) {
 	return postgis.LWGEOM_asBinary(geom, text);
 }
 
-std::string Geometry::AsText(data_ptr_t base, size_t size, int max_digits) {
+std::string Geometry::AsText(GSERIALIZED *geom, int max_digits) {
 	Postgis postgis;
-	return postgis.LWGEOM_asText(base, size, max_digits);
+	return postgis.LWGEOM_asText(geom, max_digits);
 }
 
 lwvarlena_t *Geometry::AsGeoJson(GSERIALIZED *geom, size_t m_dec_digits) {

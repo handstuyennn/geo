@@ -344,32 +344,36 @@ void GeoFunctions::GeometryAsBinaryFunction(DataChunk &args, ExpressionState &st
 
 struct AsTextUnaryOperator {
 	template <class TA, class TR>
-	static inline TR Operation(TA text, Vector &result) {
-		if (text.GetSize() == 0) {
-			return text;
+	static inline TR Operation(TA geom, Vector &result) {
+		if (geom.GetSize() == 0) {
+			return geom;
 		}
-		string str = Geometry::AsText((data_ptr_t)text.GetDataUnsafe(), text.GetSize());
-		auto result_str = StringVector::EmptyString(result, str.size());
-		memcpy(result_str.GetDataWriteable(), str.c_str(), str.size());
+		auto gser = Geometry::GetGserialized(geom);
+		auto text = Geometry::AsText(gser);
+		auto result_str = StringVector::EmptyString(result, text.size());
+		memcpy(result_str.GetDataWriteable(), text.c_str(), text.size());
 		result_str.Finalize();
+		Geometry::DestroyGeometry(gser);
 		return result_str;
 	}
 };
 
-static string_t AsTextScalarFunction(Vector &result, string_t text, size_t max_digits) {
-	if (text.GetSize() == 0) {
-		return text;
+static string_t AsTextScalarFunction(Vector &result, string_t geom, size_t max_digits) {
+	if (geom.GetSize() == 0) {
+		return geom;
 	}
-	string str = Geometry::AsText((data_ptr_t)text.GetDataUnsafe(), text.GetSize(), max_digits);
+	auto gser = Geometry::GetGserialized(geom);
+	auto str = Geometry::AsText(gser, max_digits);
 	auto result_str = StringVector::EmptyString(result, str.size());
 	memcpy(result_str.GetDataWriteable(), str.c_str(), str.size());
 	result_str.Finalize();
+	Geometry::DestroyGeometry(gser);
 	return result_str;
 }
 
 template <typename TA, typename TR>
-static void GeometryAsTextUnaryExecutor(Vector &text, Vector &result, idx_t count) {
-	UnaryExecutor::ExecuteString<TA, TR, AsTextUnaryOperator>(text, result, count);
+static void GeometryAsTextUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::ExecuteString<TA, TR, AsTextUnaryOperator>(geom, result, count);
 }
 
 template <typename TA, typename TB, typename TR>
@@ -380,12 +384,12 @@ static void GeometryAsTextBinaryExecutor(Vector &text, Vector &max_digits, Vecto
 }
 
 void GeoFunctions::GeometryAsTextFunction(DataChunk &args, ExpressionState &state, Vector &result) {
-	auto &text_arg = args.data[0];
+	auto &geom_arg = args.data[0];
 	if (args.data.size() == 2) {
 		auto &max_digit_arg = args.data[1];
-		GeometryAsTextBinaryExecutor<string_t, int, string_t>(text_arg, max_digit_arg, result, args.size());
+		GeometryAsTextBinaryExecutor<string_t, int, string_t>(geom_arg, max_digit_arg, result, args.size());
 	} else {
-		GeometryAsTextUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
+		GeometryAsTextUnaryExecutor<string_t, string_t>(geom_arg, result, args.size());
 	}
 }
 
@@ -1192,8 +1196,9 @@ static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
 
 template <typename TA, typename TB, typename TR>
 static void GeometryPointNBinaryExecutor(Vector &geom_vec, Vector &index_vec, Vector &result, idx_t count) {
-	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, index_vec, result, count,
-	                                    [&](TA geom, TB index) { return PointNScalarFunction<TA, TB, TR>(result, geom, index); });
+	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, index_vec, result, count, [&](TA geom, TB index) {
+		return PointNScalarFunction<TA, TB, TR>(result, geom, index);
+	});
 }
 
 void GeoFunctions::GeometryPointNFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -1323,8 +1328,9 @@ static TR DifferenceScalarFunction(Vector &result, TA geom1, TB geom2) {
 
 template <typename TA, typename TB, typename TR>
 static void GeometryDifferenceBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
-	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count,
-	                                    [&](TA geom1, TB geom2) { return DifferenceScalarFunction<TA, TB, TR>(result, geom1, geom2); });
+	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count, [&](TA geom1, TB geom2) {
+		return DifferenceScalarFunction<TA, TB, TR>(result, geom1, geom2);
+	});
 }
 
 void GeoFunctions::GeometryDifferenceFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -1358,8 +1364,9 @@ static TR ClosestPointScalarFunction(Vector &result, TA geom1, TB geom2) {
 
 template <typename TA, typename TB, typename TR>
 static void GeometryClosestPointBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
-	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count,
-	                                    [&](TA geom1, TB geom2) { return ClosestPointScalarFunction<TA, TB, TR>(result, geom1, geom2); });
+	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count, [&](TA geom1, TB geom2) {
+		return ClosestPointScalarFunction<TA, TB, TR>(result, geom1, geom2);
+	});
 }
 
 void GeoFunctions::GeometryClosestPointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -1393,8 +1400,9 @@ static TR UnionScalarFunction(Vector &result, TA geom1, TB geom2) {
 
 template <typename TA, typename TB, typename TR>
 static void GeometryUnionBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
-	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count,
-	                                    [&](TA geom1, TB geom2) { return UnionScalarFunction<TA, TB, TR>(result, geom1, geom2); });
+	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count, [&](TA geom1, TB geom2) {
+		return UnionScalarFunction<TA, TB, TR>(result, geom1, geom2);
+	});
 }
 
 void GeoFunctions::GeometryUnionFunction(DataChunk &args, ExpressionState &state, Vector &result) {

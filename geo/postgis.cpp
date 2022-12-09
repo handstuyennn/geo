@@ -37,8 +37,8 @@ lwvarlena_t *Postgis::LWGEOM_asBinary(GSERIALIZED *gser, string text) {
 	return duckdb::LWGEOM_asBinary(gser, text);
 }
 
-string Postgis::LWGEOM_asText(const void *data, size_t size, size_t max_digits) {
-	return duckdb::LWGEOM_asText(data, size, max_digits);
+string Postgis::LWGEOM_asText(GSERIALIZED *gser, size_t max_digits) {
+	return duckdb::LWGEOM_asText(gser, max_digits);
 }
 
 lwvarlena_t *Postgis::LWGEOM_asGeoJson(GSERIALIZED *gser, size_t m_dec_digits) {

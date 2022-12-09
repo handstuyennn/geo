@@ -142,16 +142,27 @@ char *LWGEOM_base(GSERIALIZED *gser) {
 	return (char *)buffer;
 }
 
-std::string LWGEOM_asText(const void *base, size_t size, size_t max_digits) {
+// std::string LWGEOM_asText(const void *base, size_t size, size_t max_digits) {
+// 	std::string rstr = "";
+// 	LWGEOM *lwgeom = lwgeom_from_wkb(static_cast<const uint8_t *>(base), size, LW_PARSER_CHECK_NONE);
+// 	// size_t wkt_size;
+// 	// rstr = lwgeom_to_wkt(lwgeom, WKT_EXTENDED, WKT_PRECISION, &wkt_size);
+// 	auto text = lwgeom_to_wkt_varlena(lwgeom, WKT_ISO, max_digits);
+// 	lwgeom_free(lwgeom);
+// 	std::string ret = std::string(text->data);
+// 	lwfree(text);
+// 	return ret;
+// }
+
+std::string LWGEOM_asText(GSERIALIZED *geom, size_t dbl_dig_for_wkt) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+
 	std::string rstr = "";
-	LWGEOM *lwgeom = lwgeom_from_wkb(static_cast<const uint8_t *>(base), size, LW_PARSER_CHECK_NONE);
-	// size_t wkt_size;
-	// rstr = lwgeom_to_wkt(lwgeom, WKT_EXTENDED, WKT_PRECISION, &wkt_size);
-	auto text = lwgeom_to_wkt_varlena(lwgeom, WKT_ISO, max_digits);
+	size_t wkt_size;
+	rstr = lwgeom_to_wkt(lwgeom, WKT_ISO, dbl_dig_for_wkt, &wkt_size);
+
 	lwgeom_free(lwgeom);
-	std::string ret = std::string(text->data);
-	lwfree(text);
-	return ret;
+	return rstr;
 }
 
 lwvarlena_t *LWGEOM_asBinary(GSERIALIZED *geom, string text) {

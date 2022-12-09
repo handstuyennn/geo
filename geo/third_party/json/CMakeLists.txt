@@ -1,6 +1,5 @@
 add_library(
   duckdb_geo_json OBJECT
-  json.cpp
   json_tokener.cpp
   printbuf.cpp
   json_object.cpp

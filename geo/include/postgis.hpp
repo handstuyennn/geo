@@ -20,7 +20,7 @@ public:
 	char *LWGEOM_base(GSERIALIZED *gser);
 	string LWGEOM_asBinary(const void *data, size_t size);
 	lwvarlena_t *LWGEOM_asBinary(GSERIALIZED *gser, string text = "");
-	string LWGEOM_asText(const void *data, size_t size, size_t max_digits = OUT_DEFAULT_DECIMAL_DIGITS);
+	string LWGEOM_asText(GSERIALIZED *gser, size_t max_digits = OUT_DEFAULT_DECIMAL_DIGITS);
 	lwvarlena_t *LWGEOM_asGeoJson(GSERIALIZED *gser, size_t m_dec_digits = OUT_DEFAULT_DECIMAL_DIGITS);
 	string LWGEOM_asGeoJson(const void *data, size_t size);
 	lwvarlena_t *ST_GeoHash(GSERIALIZED *gser, size_t m_chars = 0);

@@ -25,7 +25,7 @@
 
 #pragma once
 #include "duckdb.hpp"
-// #include "geos_c.hpp"
+#include "geos_c.hpp"
 #include "liblwgeom/liblwgeom.hpp"
 
 namespace duckdb {
@@ -33,6 +33,8 @@ namespace duckdb {
 /*
  ** Public prototypes for GEOS utility functions.
  */
-// LWGEOM *GEOS2LWGEOM(const GEOSGeometry *geom, uint8_t want3d);
+LWGEOM *GEOS2LWGEOM(const GEOSGeometry *geom, uint8_t want3d);
+
+POINTARRAY *ptarray_from_GEOSCoordSeq(const GEOSCoordSequence *cs, uint8_t want3d);
 
 } // namespace duckdb

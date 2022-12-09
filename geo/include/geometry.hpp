@@ -49,7 +49,7 @@ public:
 	static GSERIALIZED *MakePolygon(GSERIALIZED *geom, GSERIALIZED *gserArray[] = {}, int nelems = 0);
 
 	static lwvarlena_t *AsBinary(GSERIALIZED *gser, string text = "");
-	static std::string AsText(data_ptr_t base, size_t size, int max_digits = OUT_DEFAULT_DECIMAL_DIGITS);
+	static std::string AsText(GSERIALIZED *gser, int max_digits = OUT_DEFAULT_DECIMAL_DIGITS);
 	static lwvarlena_t *AsGeoJson(GSERIALIZED *gser, size_t m_dec_digits = OUT_DEFAULT_DECIMAL_DIGITS);
 	static lwvarlena_t *GeoHash(GSERIALIZED *gser, size_t m_chars = 0);
 

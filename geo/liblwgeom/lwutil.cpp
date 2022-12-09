@@ -127,4 +127,11 @@ void lwerror(const char *fmt, ...) {
 	throw std::runtime_error(buffer);
 }
 
+void lwnotice(const char *fmt, ...) {
+	va_list ap;
+
+	char buffer[100];
+	sprintf(buffer, fmt, ap);
+}
+
 } // namespace duckdb
