@@ -58,6 +58,17 @@ public:
 		return d == Dimension::P;
 	}
 
+	/** \brief
+	 * Gets the boundary of this geometry.
+	 *
+	 * Zero-dimensional geometries have no boundary by definition,
+	 * so an empty GeometryCollection is returned.
+	 *
+	 * @return an empty GeometryCollection
+	 * @see Geometry#getBoundary
+	 */
+	std::unique_ptr<Geometry> getBoundary() const override;
+
 protected:
 	/**
 	 * \brief Constructs a <code>MultiPoint</code>.

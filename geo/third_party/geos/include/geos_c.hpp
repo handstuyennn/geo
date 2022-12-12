@@ -298,6 +298,19 @@ extern GEOSGeometry GEOS_DLL *GEOSUnaryUnion_r(GEOSContextHandle_t handle, const
 /** \see GEOSGeom_destroy */
 extern void GEOS_DLL GEOSGeom_destroy_r(GEOSContextHandle_t handle, GEOSGeometry *g);
 
+/* ========= Topology Operations ========= */
+
+/** \see GEOSDifference */
+extern GEOSGeometry GEOS_DLL *GEOSDifference_r(GEOSContextHandle_t handle, const GEOSGeometry *g1,
+                                               const GEOSGeometry *g2);
+
+/** \see GEOSDifferencePrec */
+extern GEOSGeometry GEOS_DLL *GEOSDifferencePrec_r(GEOSContextHandle_t handle, const GEOSGeometry *g1,
+                                                   const GEOSGeometry *g2, double gridSize);
+
+/** \see GEOSBoundary */
+extern GEOSGeometry GEOS_DLL *GEOSBoundary_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
+
 /*
  * External code to GEOS can define GEOS_USE_ONLY_R_API
  * to strip the non-reentrant API functions from this header,
@@ -645,6 +658,63 @@ extern GEOSGeometry GEOS_DLL *GEOSUnion(const GEOSGeometry *ga, const GEOSGeomet
  * \see geos::operation::overlayng::OverlayNG
  */
 extern GEOSGeometry GEOS_DLL *GEOSUnaryUnion(const GEOSGeometry *g);
+
+///@}
+
+/* ========== Linear referencing functions */
+/** @name Linear Referencing
+ * Functions to operate on LineStrings using locations
+ * specified by distance along the line.
+ */
+///@{
+
+/**
+ * Returns the difference of two geometries A and B: the set of points
+ * that fall within A but **not** within B.
+ * \param ga the base geometry
+ * \param gb the geometry to subtract from it
+ * \return A newly allocated geometry of the difference. NULL on exception.
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ * \see geos::operation::overlayng::OverlayNG
+ */
+extern GEOSGeometry GEOS_DLL *GEOSDifference(const GEOSGeometry *ga, const GEOSGeometry *gb);
+
+/**
+ * Returns the difference of two geometries A and B: the set of points
+ * that fall within A but **not** within B.
+ * All the vertices of the output
+ * geometry must fall on the grid defined by the gridSize, and the
+ * output will be a valid geometry.
+ * \param ga one of the geometries
+ * \param gb the other geometry
+ * \param gridSize the cell size of the precision grid
+ * \return A newly allocated geometry of the difference. NULL on exception.
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ * \see geos::operation::overlayng::OverlayNG
+ */
+extern GEOSGeometry GEOS_DLL *GEOSDifferencePrec(const GEOSGeometry *ga, const GEOSGeometry *gb, double gridSize);
+
+///@}
+
+/* ========== Buffer related functions ========== */
+/** @name Buffer and Offset Curves
+ * Functions for creating distance-based buffers and offset curves.
+ */
+///@{
+
+/**
+ * Returns the "boundary" of a geometry, as defined by the DE9IM:
+ *
+ * - the boundary of a polygon is the linear rings dividing the exterior
+ *   from the interior
+ * - the boundary of a linestring is the end points
+ * - the boundary of a point is the point
+ *
+ * \param g The input geometry
+ * \return A newly allocated geometry of the boundary. NULL on exception.
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ */
+extern GEOSGeometry GEOS_DLL *GEOSBoundary(const GEOSGeometry *g);
 
 #endif /* #ifndef GEOS_USE_ONLY_R_API */
 

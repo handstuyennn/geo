@@ -20,6 +20,7 @@
 
 #include <geos/geom/Coordinate.hpp>
 #include <geos/geom/CoordinateSequenceFilter.hpp>
+#include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/GeometryFilter.hpp>
 #include <geos/geom/Point.hpp>
 #include <geos/util/IllegalArgumentException.hpp>
@@ -164,6 +165,10 @@ void Point::apply_ro(CoordinateSequenceFilter &filter) const {
 
 bool Point::isSimple() const {
 	return true;
+}
+
+std::unique_ptr<Geometry> Point::getBoundary() const {
+	return getFactory()->createGeometryCollection();
 }
 
 } // namespace geom

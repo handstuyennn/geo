@@ -91,6 +91,20 @@ public:
 	 */
 	std::unique_ptr<CoordinateSequence> releaseCoordinates();
 
+	virtual std::unique_ptr<Point> getPointN(std::size_t n) const;
+
+	/// \brief
+	/// Return the start point of the LineString
+	/// or NULL if this is an EMPTY LineString.
+	///
+	virtual std::unique_ptr<Point> getStartPoint() const;
+
+	/// \brief
+	/// Return the end point of the LineString
+	/// or NULL if this is an EMPTY LineString.
+	///
+	virtual std::unique_ptr<Point> getEndPoint() const;
+
 	/// Returns line dimension (1)
 	Dimension::DimensionType getDimension() const override;
 
@@ -126,6 +140,13 @@ public:
 	void apply_ro(CoordinateSequenceFilter &filter) const override;
 
 	const CoordinateXY *getCoordinate() const override;
+
+	/**
+	 * \brief
+	 * Returns a MultiPoint.
+	 * Empty for closed LineString, a Point for each vertex otherwise.
+	 */
+	std::unique_ptr<Geometry> getBoundary() const override;
 
 protected:
 	LineString(const LineString &ls);

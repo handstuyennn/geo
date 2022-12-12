@@ -25,8 +25,10 @@
 #include "postgis/lwgeom_ogc.hpp"
 
 #include "liblwgeom/gserialized.hpp"
+#include "liblwgeom/lwgeom_geos.hpp"
 #include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
+#include "postgis/lwgeom_geos.hpp"
 
 namespace duckdb {
 
@@ -91,7 +93,7 @@ GSERIALIZED *LWGEOM_from_WKB(const char *bytea_wkb, size_t byte_size, int srid) 
 }
 
 GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom1) {
-	// GEOSGeometry *g1, *g3;
+	GEOSGeometry *g1, *g3;
 	GSERIALIZED *result;
 	LWGEOM *lwgeom;
 	int32_t srid;
@@ -116,42 +118,36 @@ GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom1) {
 		return result;
 	}
 
-	// initGEOS(lwpgnotice, lwgeom_geos_error);
+	initGEOS(lwnotice, lwgeom_geos_error);
 
-	// g1 = LWGEOM2GEOS(lwgeom, 0);
+	g1 = LWGEOM2GEOS(lwgeom, 0);
 	lwgeom_free(lwgeom);
 
-	// if (!g1)
-	// 	HANDLE_GEOS_ERROR("First argument geometry could not be converted to GEOS");
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
 
-	// g3 = GEOSBoundary(g1);
+	g3 = GEOSBoundary(g1);
 
-	// if (!g3) {
-	// 	GEOSGeom_destroy(g1);
-	// 	HANDLE_GEOS_ERROR("GEOSBoundary");
-	// }
+	if (!g3) {
+		GEOSGeom_destroy(g1);
+		throw "GEOSBoundary";
+	}
 
-	// POSTGIS_DEBUGF(3, "result: %s", GEOSGeomToWKT(g3));
+	GEOSSetSRID(g3, srid);
 
-	// GEOSSetSRID(g3, srid);
+	result = GEOS2POSTGIS(g3, gserialized_has_z(geom1));
 
-	// result = GEOS2POSTGIS(g3, gserialized_has_z(geom1));
+	if (!result) {
+		GEOSGeom_destroy(g1);
+		GEOSGeom_destroy(g3);
+		throw "GEOS2POSTGIS threw an error (result postgis geometry formation)!";
+		return nullptr;
+	}
 
-	// if (!result) {
-	// 	GEOSGeom_destroy(g1);
-	// 	GEOSGeom_destroy(g3);
-	// 	elog(NOTICE, "GEOS2POSTGIS threw an error (result postgis geometry "
-	// 	             "formation)!");
-	// 	PG_RETURN_NULL(); /* never get here */
-	// }
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g3);
 
-	// GEOSGeom_destroy(g1);
-	// GEOSGeom_destroy(g3);
-
-	// PG_FREE_IF_COPY(geom1, 0);
-
-	// PG_RETURN_POINTER(result);
-	return nullptr;
+	return result;
 }
 
 /** @brief

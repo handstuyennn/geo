@@ -234,5 +234,36 @@ double Polygon::getArea() const {
 	return area;
 }
 
+// Returns a newly allocated Geometry object
+/*public*/
+std::unique_ptr<Geometry> Polygon::getBoundary() const {
+	/*
+	 * We will make sure that what we
+	 * return is composed of LineString,
+	 * not LinearRings
+	 */
+
+	const GeometryFactory *gf = getFactory();
+
+	if (isEmpty()) {
+		return std::unique_ptr<Geometry>(gf->createMultiLineString());
+	}
+
+	if (holes.empty()) {
+		return std::unique_ptr<Geometry>(gf->createLineString(*shell));
+	}
+
+	std::vector<std::unique_ptr<Geometry>> rings(holes.size() + 1);
+
+	rings[0] = gf->createLineString(*shell);
+	for (std::size_t i = 0, n = holes.size(); i < n; ++i) {
+		const LinearRing *hole = holes[i].get();
+		std::unique_ptr<LineString> ls = gf->createLineString(*hole);
+		rings[i + 1] = std::move(ls);
+	}
+
+	return getFactory()->createMultiLineString(std::move(rings));
+}
+
 } // namespace geom
 } // namespace geos

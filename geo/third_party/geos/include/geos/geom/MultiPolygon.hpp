@@ -62,6 +62,14 @@ public:
 		return d == Dimension::A;
 	}
 
+	/** \brief
+	 * Computes the boundary of this geometry
+	 *
+	 * @return a lineal geometry (which may be empty)
+	 * @see Geometry#getBoundary
+	 */
+	std::unique_ptr<Geometry> getBoundary() const override;
+
 protected:
 	/**
 	 * \brief Construct a MultiPolygon

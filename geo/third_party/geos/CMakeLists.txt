@@ -39,6 +39,7 @@ add_library(
   operation/overlay/PolygonBuilder.cpp
   operation/overlay/ElevationMatrix.cpp
   operation/GeometryGraphOperation.cpp
+  operation/BoundaryOp.cpp
   operation/polygonize/EdgeRing.cpp
   operation/overlay/MaximalEdgeRing.cpp
   operation/overlay/MinimalEdgeRing.cpp

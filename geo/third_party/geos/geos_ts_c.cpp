@@ -24,6 +24,8 @@
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/LineString.hpp>
 #include <geos/geom/Point.hpp>
+#include <geos/operation/overlayng/OverlayNG.hpp>
+#include <geos/operation/overlayng/OverlayNGRobust.hpp>
 #include <geos/util/IllegalArgumentException.hpp>
 #include <geos/util/Interrupt.hpp>
 #include <geos/util/Machine.hpp>
@@ -66,6 +68,10 @@ using geos::geom::Geometry;
 using geos::geom::GeometryFactory;
 using geos::geom::LineString;
 using geos::geom::Polygon;
+using geos::geom::PrecisionModel;
+
+using geos::operation::overlayng::OverlayNG;
+using geos::operation::overlayng::OverlayNGRobust;
 
 using geos::util::IllegalArgumentException;
 
@@ -613,6 +619,33 @@ void GEOSGeom_destroy_r(GEOSContextHandle_t extHandle, Geometry *a) {
 	});
 }
 
+//-------------------------------------------------------------------
+// GEOS functions that return geometries
+//-------------------------------------------------------------------
+
+Geometry *GEOSDifference_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2) {
+	return execute(extHandle, [&]() {
+		auto g3 = g1->difference(g2);
+		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
+}
+
+Geometry *GEOSDifferencePrec_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, double gridSize) {
+	return execute(extHandle, [&]() {
+		std::unique_ptr<PrecisionModel> pm;
+		if (gridSize != 0) {
+			pm.reset(new PrecisionModel(1.0 / gridSize));
+		} else {
+			pm.reset(new PrecisionModel());
+		}
+		auto g3 = gridSize != 0 ? OverlayNG::overlay(g1, g2, OverlayNG::DIFFERENCE, pm.get())
+		                        : OverlayNGRobust::Overlay(g1, g2, OverlayNG::DIFFERENCE);
+		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
+}
+
 GEOSMessageHandler GEOSContext_setNoticeHandler_r(GEOSContextHandle_t extHandle, GEOSMessageHandler nf) {
 	GEOSContextHandleInternal_t *handle = reinterpret_cast<GEOSContextHandleInternal_t *>(extHandle);
 	if (0 == handle->initialized) {
@@ -629,6 +662,14 @@ GEOSMessageHandler GEOSContext_setErrorHandler_r(GEOSContextHandle_t extHandle, 
 	}
 
 	return handle->setErrorHandler(nf);
+}
+
+Geometry *GEOSBoundary_r(GEOSContextHandle_t extHandle, const Geometry *g1) {
+	return execute(extHandle, [&]() {
+		auto g3 = g1->getBoundary();
+		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
 }
 
 } /* extern "C" */

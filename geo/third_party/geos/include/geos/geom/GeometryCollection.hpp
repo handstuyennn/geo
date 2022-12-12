@@ -137,6 +137,8 @@ public:
 	/// Returns the total area of this collection
 	double getArea() const override;
 
+	std::unique_ptr<Geometry> getBoundary() const override;
+
 protected:
 	GeometryCollection(const GeometryCollection &gc);
 

@@ -427,6 +427,36 @@ public:
 	///
 	std::unique_ptr<Geometry> buffer(double distance) const;
 
+	/**
+	 * \brief
+	 * Returns a Geometry representing the points making up this
+	 * Geometry that do not make up other.
+	 *
+	 * @throws util::TopologyException if a robustness error occurs
+	 * @throws util::IllegalArgumentException if either input is a
+	 *         non-empty GeometryCollection
+	 *
+	 */
+	std::unique_ptr<Geometry> difference(const Geometry *other) const;
+
+	/**
+	 * \brief
+	 * Returns the boundary, or an empty geometry of appropriate
+	 * dimension if this <code>Geometry</code>  is empty.
+	 *
+	 * (In the case of zero-dimensional geometries,
+	 * an empty GeometryCollection is returned.)
+	 * For a discussion of this function, see the OpenGIS Simple
+	 * Features Specification. As stated in SFS Section 2.1.13.1,
+	 * "the boundary of a Geometry is a set of Geometries of the
+	 * next lower dimension."
+	 *
+	 * @return  the closure of the combinatorial boundary
+	 *          of this <code>Geometry</code>.
+	 *          Ownershipof the returned object transferred to caller.
+	 */
+	virtual std::unique_ptr<Geometry> getBoundary() const = 0; // Abstract
+
 protected:
 	/// The bounding box of this Geometry
 	mutable std::unique_ptr<Envelope> envelope;

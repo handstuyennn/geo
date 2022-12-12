@@ -27,6 +27,7 @@
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/GeometryFilter.hpp>
 #include <geos/geom/LineString.hpp>
+#include <geos/operation/BoundaryOp.hpp>
 #include <geos/util/IllegalArgumentException.hpp>
 #include <memory>
 #include <typeinfo>
@@ -197,6 +198,33 @@ void LineString::apply_ro(CoordinateSequenceFilter &filter) const {
 
 bool LineString::isRing() const {
 	return isClosed() && isSimple();
+}
+
+std::unique_ptr<Geometry> LineString::getBoundary() const {
+	operation::BoundaryOp bop(*this);
+	return bop.getBoundary();
+}
+
+std::unique_ptr<Point> LineString::getPointN(std::size_t n) const {
+	assert(getFactory());
+	assert(points.get());
+	return std::unique_ptr<Point>(getFactory()->createPoint(points->getAt(n)));
+}
+
+std::unique_ptr<Point> LineString::getStartPoint() const {
+	if (isEmpty()) {
+		return nullptr;
+		// return new Point(NULL,NULL);
+	}
+	return getPointN(0);
+}
+
+std::unique_ptr<Point> LineString::getEndPoint() const {
+	if (isEmpty()) {
+		return nullptr;
+		// return new Point(NULL,NULL);
+	}
+	return getPointN(getNumPoints() - 1);
 }
 
 } // namespace geom

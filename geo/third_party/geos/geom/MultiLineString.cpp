@@ -21,6 +21,7 @@
 #include <cassert>
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/MultiLineString.hpp>
+#include <geos/operation/BoundaryOp.hpp>
 #include <vector>
 
 namespace geos {
@@ -53,6 +54,11 @@ const LineString *MultiLineString::getGeometryN(std::size_t i) const {
 
 Dimension::DimensionType MultiLineString::getDimension() const {
 	return Dimension::L; // line
+}
+
+std::unique_ptr<Geometry> MultiLineString::getBoundary() const {
+	operation::BoundaryOp bop(*this);
+	return bop.getBoundary();
 }
 
 } // namespace geom

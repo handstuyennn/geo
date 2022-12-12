@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cassert>
 #include <geos/geom/Geometry.hpp>
+#include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/LineString.hpp>
 #include <geos/geom/MultiPolygon.hpp>
 #include <geos/geom/Polygon.hpp>
@@ -59,6 +60,28 @@ GeometryTypeId MultiPolygon::getGeometryTypeId() const {
 
 Dimension::DimensionType MultiPolygon::getDimension() const {
 	return Dimension::A; // area
+}
+
+std::unique_ptr<Geometry> MultiPolygon::getBoundary() const {
+	if (isEmpty()) {
+		return std::unique_ptr<Geometry>(getFactory()->createMultiLineString());
+	}
+
+	std::vector<std::unique_ptr<Geometry>> allRings;
+	for (const auto &pg : geometries) {
+		auto g = pg->getBoundary();
+
+		if (g->getNumGeometries() == 1) {
+			allRings.push_back(std::move(g));
+		} else {
+			for (std::size_t i = 0; i < g->getNumGeometries(); ++i) {
+				// TODO avoid this clone
+				allRings.push_back(g->getGeometryN(i)->clone());
+			}
+		}
+	}
+
+	return getFactory()->createMultiLineString(std::move(allRings));
 }
 
 } // namespace geom

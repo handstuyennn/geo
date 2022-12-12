@@ -111,6 +111,16 @@ public:
 	void apply_rw(CoordinateSequenceFilter &filter) override;
 	void apply_ro(CoordinateSequenceFilter &filter) const override;
 
+	/**
+	 * Gets the boundary of this geometry.
+	 * Zero-dimensional geometries have no boundary by definition,
+	 * so an empty GeometryCollection is returned.
+	 *
+	 * @return an empty GeometryCollection
+	 * @see Geometry::getBoundary
+	 */
+	std::unique_ptr<Geometry> getBoundary() const override;
+
 protected:
 	/**
 	 * \brief

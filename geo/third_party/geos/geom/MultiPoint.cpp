@@ -55,5 +55,9 @@ Dimension::DimensionType MultiPoint::getDimension() const {
 	return Dimension::P; // point
 }
 
+std::unique_ptr<Geometry> MultiPoint::getBoundary() const {
+	return std::unique_ptr<Geometry>(getFactory()->createGeometryCollection());
+}
+
 } // namespace geom
 } // namespace geos

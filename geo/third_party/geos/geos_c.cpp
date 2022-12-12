@@ -191,4 +191,20 @@ void GEOSGeom_destroy(Geometry *a) {
 	return GEOSGeom_destroy_r(handle, a);
 }
 
+//-------------------------------------------------------------------
+// GEOS functions that return geometries
+//-------------------------------------------------------------------
+
+Geometry *GEOSDifference(const Geometry *g1, const Geometry *g2) {
+	return GEOSDifference_r(handle, g1, g2);
+}
+
+Geometry *GEOSDifferencePrec(const Geometry *g1, const Geometry *g2, double gridSize) {
+	return GEOSDifferencePrec_r(handle, g1, g2, gridSize);
+}
+
+Geometry *GEOSBoundary(const Geometry *g) {
+	return GEOSBoundary_r(handle, g);
+}
+
 } /* extern "C" */

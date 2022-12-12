@@ -185,13 +185,6 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo from_geohash_func_info(from_geohash);
 	catalog.AddFunction(*con.context, &from_geohash_func_info);
 
-	// ST_BOUNDARY
-	ScalarFunctionSet boundary("st_boundary");
-	boundary.AddFunction(ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryBoundaryFunction));
-
-	CreateScalarFunctionInfo boundary_func_info(boundary);
-	catalog.AddFunction(*con.context, &boundary_func_info);
-
 	// ST_DIMENSION
 	ScalarFunctionSet dimension("st_dimension");
 	dimension.AddFunction(ScalarFunction({geo_type}, LogicalType::INTEGER, GeoFunctions::GeometryDimensionFunction));
@@ -315,6 +308,13 @@ void GeoExtension::Load(DuckDB &db) {
 
 	CreateScalarFunctionInfo closestpoint_func_info(closestpoint);
 	catalog.AddFunction(*con.context, &closestpoint_func_info);
+
+	// ST_BOUNDARY
+	ScalarFunctionSet boundary("st_boundary");
+	boundary.AddFunction(ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryBoundaryFunction));
+
+	CreateScalarFunctionInfo boundary_func_info(boundary);
+	catalog.AddFunction(*con.context, &boundary_func_info);
 
 	// ST_UNION
 	ScalarFunctionSet geom_union("st_union");

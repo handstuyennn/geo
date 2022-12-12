@@ -231,5 +231,9 @@ void GeometryCollection::setSRID(int newSRID) {
 	}
 }
 
+std::unique_ptr<Geometry> GeometryCollection::getBoundary() const {
+	throw util::IllegalArgumentException("Operation not supported by GeometryCollection\n");
+}
+
 } // namespace geom
 } // namespace geos

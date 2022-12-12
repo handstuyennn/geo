@@ -55,6 +55,9 @@ public:
 		return d == Dimension::L;
 	}
 
+	/// Returns a (possibly empty) [MultiPoint](@ref geom::MultiPoint)
+	std::unique_ptr<Geometry> getBoundary() const override;
+
 protected:
 	/**
 	 * \brief Constructs a MultiLineString.

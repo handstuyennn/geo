@@ -197,5 +197,19 @@ std::unique_ptr<Geometry> Geometry::buffer(double p_distance) const {
 	return std::unique_ptr<Geometry>(BufferOp::bufferOp(this, p_distance));
 }
 
+std::unique_ptr<Geometry> Geometry::difference(const Geometry *other) const
+// throw(IllegalArgumentException *)
+{
+	// special case: if A.isEmpty ==> empty; if B.isEmpty ==> A
+	if (isEmpty()) {
+		return OverlayOp::createEmptyResult(OverlayOp::opDIFFERENCE, this, other, getFactory());
+	}
+	if (other->isEmpty()) {
+		return clone();
+	}
+
+	return HeuristicOverlay(this, other, OverlayOp::opDIFFERENCE);
+}
+
 } // namespace geom
 } // namespace geos
