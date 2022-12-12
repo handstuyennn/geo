@@ -83,6 +83,10 @@ char GEOSisEmpty(const Geometry *g) {
 	return GEOSisEmpty_r(handle, g);
 }
 
+char GEOSisRing(const Geometry *g) {
+	return GEOSisRing_r(handle, g);
+}
+
 int GEOSCoordSeq_getXY(const CoordinateSequence *s, unsigned int idx, double *x, double *y) {
 	return GEOSCoordSeq_getXY_r(handle, s, idx, x, y);
 }
@@ -173,6 +177,10 @@ geos::geom::Geometry *GEOSGeom_createEmptyPolygon() {
 
 Geometry *GEOSUnion(const Geometry *g1, const Geometry *g2) {
 	return GEOSUnion_r(handle, g1, g2);
+}
+
+Geometry *GEOSUnaryUnion(const Geometry *g) {
+	return GEOSUnaryUnion_r(handle, g);
 }
 
 //-------------------------------------------------------------------

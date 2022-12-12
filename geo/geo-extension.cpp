@@ -28,6 +28,15 @@ static unique_ptr<FunctionData> MakePolygonArrayBind(ClientContext &context, Sca
 	return nullptr;
 }
 
+static unique_ptr<FunctionData> GeometryUnionArrayBind(ClientContext &context, ScalarFunction &bound_function,
+                                                       vector<unique_ptr<Expression>> &arguments) {
+	if (arguments[0]->HasParameter()) {
+		throw ParameterNotResolvedException();
+	}
+	bound_function.arguments[0] = arguments[0]->return_type;
+	return nullptr;
+}
+
 void GeoExtension::Load(DuckDB &db) {
 	Connection con(db);
 	con.BeginTransaction();
@@ -309,8 +318,9 @@ void GeoExtension::Load(DuckDB &db) {
 
 	// ST_UNION
 	ScalarFunctionSet geom_union("st_union");
-	geom_union.AddFunction(
-	    ScalarFunction({geo_type, geo_type}, geo_type, GeoFunctions::GeometryUnionFunction));
+	geom_union.AddFunction(ScalarFunction({geo_type, geo_type}, geo_type, GeoFunctions::GeometryUnionFunction));
+	geom_union.AddFunction(ScalarFunction({LogicalType::LIST(geo_type)}, geo_type,
+	                                      GeoFunctions::GeometryUnionArrayFunction, GeometryUnionArrayBind));
 
 	CreateScalarFunctionInfo union_func_info(geom_union);
 	catalog.AddFunction(*con.context, &union_func_info);

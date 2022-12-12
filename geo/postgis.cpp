@@ -113,6 +113,10 @@ GSERIALIZED *Postgis::ST_Union(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::ST_Union(geom1, geom2);
 }
 
+GSERIALIZED *Postgis::pgis_union_geometry_array(GSERIALIZED *gserArray[], int nelems) {
+	return duckdb::pgis_union_geometry_array(gserArray, nelems);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

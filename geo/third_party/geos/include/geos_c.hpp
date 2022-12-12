@@ -223,6 +223,9 @@ extern const GEOSGeometry GEOS_DLL *GEOSGetInteriorRingN_r(GEOSContextHandle_t h
 /** \see GEOSisEmpty */
 extern char GEOS_DLL GEOSisEmpty_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
 
+/** \see GEOSisRing */
+extern char GEOS_DLL GEOSisRing_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
+
 /** \see GEOSHasZ */
 extern char GEOS_DLL GEOSHasZ_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
 
@@ -286,6 +289,9 @@ extern GEOSGeometry GEOS_DLL *GEOSGeom_createPolygon_r(GEOSContextHandle_t handl
 
 /** \see GEOSUnion */
 extern GEOSGeometry GEOS_DLL *GEOSUnion_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
+
+/** \see GEOSUnaryUnion */
+extern GEOSGeometry GEOS_DLL *GEOSUnaryUnion_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
 
 /* ========= Memory management ========= */
 
@@ -492,6 +498,15 @@ extern void GEOS_DLL GEOSSetSRID(GEOSGeometry *g, int SRID);
 extern char GEOS_DLL GEOSHasZ(const GEOSGeometry *g);
 
 /**
+ * Tests whether the input geometry is a ring. Rings are
+ * linestrings, without self-intersections,
+ * with start and end point being identical.
+ * \param g The geometry to test
+ * \return 1 on true, 0 on false, 2 on exception
+ */
+extern char GEOS_DLL GEOSisRing(const GEOSGeometry *g);
+
+/**
  * Returns the number of sub-geometries immediately under a
  * multi-geometry or collection or 1 for a simple geometry.
  * For nested collections, remember to check if returned
@@ -619,6 +634,17 @@ extern const GEOSGeometry GEOS_DLL *GEOSGetInteriorRingN(const GEOSGeometry *g, 
  * \see geos::operation::overlayng::OverlayNG
  */
 extern GEOSGeometry GEOS_DLL *GEOSUnion(const GEOSGeometry *ga, const GEOSGeometry *gb);
+
+/**
+ * Returns the union of all components of a single geometry. Usually
+ * used to convert a collection into the smallest set of polygons
+ * that cover the same area.
+ * \param g The input geometry
+ * \return A newly allocated geometry of the union. NULL on exception.
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ * \see geos::operation::overlayng::OverlayNG
+ */
+extern GEOSGeometry GEOS_DLL *GEOSUnaryUnion(const GEOSGeometry *g);
 
 #endif /* #ifndef GEOS_USE_ONLY_R_API */
 

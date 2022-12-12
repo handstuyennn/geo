@@ -69,6 +69,8 @@ using geos::geom::Polygon;
 
 using geos::util::IllegalArgumentException;
 
+typedef std::unique_ptr<Geometry> GeomPtr;
+
 typedef struct GEOSContextHandle_HS {
 	const GeometryFactory *geomFactory;
 	char msgBuffer[1024];
@@ -383,6 +385,18 @@ int GEOSCoordSeq_getXYZ_r(GEOSContextHandle_t extHandle, const CoordinateSequenc
 	});
 }
 
+char GEOSisRing_r(GEOSContextHandle_t extHandle, const Geometry *g) {
+	return execute(extHandle, 2, [&]() {
+		// both LineString* and LinearRing* can cast to LineString*
+		const LineString *ls = dynamic_cast<const LineString *>(g);
+		if (ls) {
+			return ls->isRing();
+		} else {
+			return false;
+		}
+	});
+}
+
 int GEOSGetNumInteriorRings_r(GEOSContextHandle_t extHandle, const Geometry *g1) {
 	return execute(extHandle, -1, [&]() {
 		const Polygon *p = dynamic_cast<const Polygon *>(g1);
@@ -574,6 +588,14 @@ Geometry *GEOSUnion_r(GEOSContextHandle_t extHandle, const Geometry *g1, const G
 	return execute(extHandle, [&]() {
 		auto g3 = g1->Union(g2);
 		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
+}
+
+Geometry *GEOSUnaryUnion_r(GEOSContextHandle_t extHandle, const Geometry *g) {
+	return execute(extHandle, [&]() {
+		GeomPtr g3(g->Union());
+		g3->setSRID(g->getSRID());
 		return g3.release();
 	});
 }

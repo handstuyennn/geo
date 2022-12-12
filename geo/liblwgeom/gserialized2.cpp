@@ -228,6 +228,10 @@ int gserialized2_has_extended(const GSERIALIZED *g) {
 	return G2FLAGS_GET_EXTENDED(g->gflags);
 }
 
+int gserialized2_has_z(const GSERIALIZED *g) {
+	return G2FLAGS_GET_Z(g->gflags);
+}
+
 /* Public function */
 GSERIALIZED *gserialized2_from_lwgeom(LWGEOM *geom, size_t *size) {
 	size_t expected_size = 0;

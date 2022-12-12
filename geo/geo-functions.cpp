@@ -1411,4 +1411,65 @@ void GeoFunctions::GeometryUnionFunction(DataChunk &args, ExpressionState &state
 	GeometryUnionBinaryExecutor<string_t, string_t, string_t>(geom1_arg, geom2_arg, result, args.size());
 }
 
+void GeoFunctions::GeometryUnionArrayFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	Vector &input = args.data[0];
+	auto count = args.size();
+	result.SetVectorType(VectorType::CONSTANT_VECTOR);
+	if (input.GetVectorType() != VectorType::CONSTANT_VECTOR) {
+		result.SetVectorType(VectorType::FLAT_VECTOR);
+	}
+
+	auto result_entries = FlatVector::GetData<string_t>(result);
+	auto &result_validity = FlatVector::Validity(result);
+
+	auto list_size = ListVector::GetListSize(input);
+	auto &child_vector = ListVector::GetEntry(input);
+
+	UnifiedVectorFormat child_data;
+	child_vector.ToUnifiedFormat(list_size, child_data);
+
+	UnifiedVectorFormat list_data;
+	input.ToUnifiedFormat(count, list_data);
+	auto list_entries = (list_entry_t *)list_data.data;
+
+	// not required for a comparison of nested types
+	auto child_value = (string_t *)child_data.data;
+
+	for (idx_t i = 0; i < count; i++) {
+		auto list_index = list_data.sel->get_index(i);
+
+		if (!list_data.validity.RowIsValid(list_index)) {
+			result_validity.SetInvalid(i);
+			continue;
+		}
+
+		const auto &list_entry = list_entries[list_index];
+		std::vector<GSERIALIZED *> gserArray(list_entry.length);
+		for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {
+			auto child_value_idx = child_data.sel->get_index(list_entry.offset + child_idx);
+			if (!child_data.validity.RowIsValid(child_value_idx)) {
+				continue;
+			}
+
+			auto value = child_value[child_value_idx];
+			if (value.GetSize() == 0) {
+				continue;
+			}
+			auto gser = Geometry::GetGserialized(value);
+			if (!gser) {
+				continue;
+			}
+			gserArray[child_idx] = gser;
+		}
+		auto gsergeom = Geometry::GeometryUnionGArray(&gserArray[0], list_entry.length);
+		idx_t rv_size = Geometry::GetGeometrySize(gsergeom);
+		auto base = Geometry::GetBase(gsergeom);
+		for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {
+			Geometry::DestroyGeometry(gserArray[child_idx]);
+		}
+		Geometry::DestroyGeometry(gsergeom);
+		result_entries[i] = string_t((const char *)base, rv_size);
+	}
+}
+
 } // namespace duckdb

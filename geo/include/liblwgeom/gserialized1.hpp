@@ -48,6 +48,11 @@ lwflags_t gserialized1_get_lwflags(const GSERIALIZED *g);
 int gserialized1_has_bbox(const GSERIALIZED *gser);
 
 /**
+ * Check if a #GSERIALIZED has a Z ordinate.
+ */
+int gserialized1_has_z(const GSERIALIZED *gser);
+
+/**
  * Extract the SRID from the serialized form (it is packed into
  * three bytes so this is a handy function).
  */

@@ -115,4 +115,14 @@ void gserialized_error_if_srid_mismatch_reference(const GSERIALIZED *g1, const i
 		        srid1, srid2);
 }
 
+/**
+ * Check if a #GSERIALIZED has a Z ordinate.
+ */
+int gserialized_has_z(const GSERIALIZED *g) {
+	if (GFLAGS_GET_VERSION(g->gflags))
+		return gserialized2_has_z(g);
+	else
+		return gserialized1_has_z(g);
+}
+
 } // namespace duckdb

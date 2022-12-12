@@ -34,6 +34,7 @@ namespace duckdb {
  ** Public prototypes for GEOS utility functions.
  */
 LWGEOM *GEOS2LWGEOM(const GEOSGeometry *geom, uint8_t want3d);
+GEOSGeometry *LWGEOM2GEOS(const LWGEOM *g, uint8_t autofix);
 
 POINTARRAY *ptarray_from_GEOSCoordSeq(const GEOSCoordSequence *cs, uint8_t want3d);
 

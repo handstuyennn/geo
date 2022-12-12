@@ -54,6 +54,7 @@ struct GeoFunctions {
 	static void GeometryDifferenceFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryClosestPointFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryUnionFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryUnionArrayFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

@@ -75,6 +75,11 @@ LWGEOM *lwgeom_from_gserialized(const GSERIALIZED *g);
 extern uint32_t gserialized_get_type(const GSERIALIZED *g);
 
 /**
+ * Check if a #GSERIALIZED has a Z ordinate.
+ */
+extern int gserialized_has_z(const GSERIALIZED *gser);
+
+/**
  * Pull the first point values of a #GSERIALIZED. Only works for POINTTYPE
  */
 int gserialized_peek_first_point(const GSERIALIZED *g, POINT4D *out_point);

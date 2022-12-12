@@ -542,4 +542,30 @@ int lwgeom_is_closed(const LWGEOM *geom) {
 	return LW_TRUE;
 }
 
+LWGEOM *lwgeom_construct_empty(uint8_t type, int32_t srid, char hasz, char hasm) {
+	switch (type) {
+	case POINTTYPE:
+		return lwpoint_as_lwgeom(lwpoint_construct_empty(srid, hasz, hasm));
+	case LINETYPE:
+		return lwline_as_lwgeom(lwline_construct_empty(srid, hasz, hasm));
+	case POLYGONTYPE:
+		return lwpoly_as_lwgeom(lwpoly_construct_empty(srid, hasz, hasm));
+	case CURVEPOLYTYPE:
+		return lwcurvepoly_as_lwgeom(lwcurvepoly_construct_empty(srid, hasz, hasm));
+	case CIRCSTRINGTYPE:
+		return lwcircstring_as_lwgeom(lwcircstring_construct_empty(srid, hasz, hasm));
+	case TRIANGLETYPE:
+		return lwtriangle_as_lwgeom(lwtriangle_construct_empty(srid, hasz, hasm));
+	case COMPOUNDTYPE:
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COLLECTIONTYPE:
+		return lwcollection_as_lwgeom(lwcollection_construct_empty(type, srid, hasz, hasm));
+	default:
+		lwerror("lwgeom_construct_empty: unsupported geometry type: %s", lwtype_name(type));
+		return NULL;
+	}
+}
+
 } // namespace duckdb

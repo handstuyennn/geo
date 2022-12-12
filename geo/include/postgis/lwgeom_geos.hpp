@@ -24,13 +24,20 @@
 
 #pragma once
 #include "duckdb.hpp"
+#include "geos_c.hpp"
 #include "liblwgeom/liblwgeom.hpp"
 
 namespace duckdb {
+
+GSERIALIZED *GEOS2POSTGIS(GEOSGeom geom, char want3d);
+GEOSGeometry *POSTGIS2GEOS(const GSERIALIZED *g);
+
+extern void lwgeom_geos_error(const char *fmt, ...);
 
 GSERIALIZED *centroid(GSERIALIZED *geom);
 bool LWGEOM_isring(GSERIALIZED *geom);
 GSERIALIZED *ST_Difference(GSERIALIZED *geom1, GSERIALIZED *geom2);
 GSERIALIZED *ST_Union(GSERIALIZED *geom1, GSERIALIZED *geom2);
+GSERIALIZED *pgis_union_geometry_array(GSERIALIZED *gserArray[], int nelems);
 
 } // namespace duckdb
