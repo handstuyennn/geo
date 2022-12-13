@@ -4,11 +4,10 @@ This extension will provide a `GEO` type for DuckDB and enable basic GIS data an
 ## Supported functions
 
 **Constructors (3)**
-​
 - [x] [`ST_MAKEPOINT`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogpoint)  (Alias: `ST_GEOGPOINT`)
 - [x] [`ST_MAKELINE`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_makeline)  
 - [x] [`ST_MAKEPOLYGON`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_makepolygon)  
-​
+
 **Formatters (4)**
 - [x] [`ST_ASBINARY`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_asbinary)  
 - [x] [`ST_ASGEOJSON`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_asgeojson)  
@@ -61,18 +60,17 @@ This extension will provide a `GEO` type for DuckDB and enable basic GIS data an
 - [ ] [`ST_INTERSECTS`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_intersects)  
 - [ ] [`ST_TOUCHES`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_touches)  
 - [ ] [`ST_WITHIN`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_within)
-​
+
 **Measures (9)**:
 - [ ] [`ST_ANGLE`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_angle)  
 - [ ] [`ST_AREA`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_area)  
 - [ ] [`ST_AZIMUTH`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_azimuth)  
 - [ ] [`ST_BOUNDINGBOX`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_boundingbox)  (alias: `ST_ENVELOPE`)
 - [ ] [`ST_DISTANCE`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_distance)  
-- [ ] [`ST_EXTENT`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_extent)  (Aggregate)  
+- [ ] [`ST_EXTENT`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_extent)
 - [ ] [`ST_LENGTH`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_length)  
 - [ ] [`ST_MAXDISTANCE`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_maxdistance)  
 - [ ] [`ST_PERIMETER`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_perimeter)
-​
-​
+
 **Other (1)**
 - [ ] [`ST_CLUSTERDBSCAN`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_clusterdbscan)
