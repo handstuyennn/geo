@@ -55,6 +55,8 @@ struct GeoFunctions {
 	static void GeometryClosestPointFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryUnionFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryUnionArrayFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryIntersectionFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometrySimplifyFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

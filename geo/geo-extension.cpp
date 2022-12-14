@@ -148,15 +148,6 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo distance_func_info(distance);
 	catalog.AddFunction(*con.context, &distance_func_info);
 
-	// ST_CENTROID
-	ScalarFunctionSet centroid("st_centroid");
-	centroid.AddFunction(ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryCentroidFunction));
-	centroid.AddFunction(
-	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, geo_type, GeoFunctions::GeometryCentroidFunction));
-
-	CreateScalarFunctionInfo centroid_func_info(centroid);
-	catalog.AddFunction(*con.context, &centroid_func_info);
-
 	// ST_GEOMFROMTEXT
 	ScalarFunctionSet from_text("st_geomfromtext");
 	from_text.AddFunction(ScalarFunction({LogicalType::VARCHAR}, geo_type, GeoFunctions::GeometryFromTextFunction));
@@ -324,6 +315,31 @@ void GeoExtension::Load(DuckDB &db) {
 
 	CreateScalarFunctionInfo union_func_info(geom_union);
 	catalog.AddFunction(*con.context, &union_func_info);
+
+	// ST_INTERSECTION
+	ScalarFunctionSet intersection("st_intersection");
+	intersection.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, geo_type, GeoFunctions::GeometryIntersectionFunction));
+
+	CreateScalarFunctionInfo intersection_func_info(intersection);
+	catalog.AddFunction(*con.context, &intersection_func_info);
+
+	// ST_CENTROID
+	ScalarFunctionSet centroid("st_centroid");
+	centroid.AddFunction(ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryCentroidFunction));
+	centroid.AddFunction(
+	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, geo_type, GeoFunctions::GeometryCentroidFunction));
+
+	CreateScalarFunctionInfo centroid_func_info(centroid);
+	catalog.AddFunction(*con.context, &centroid_func_info);
+
+	// ST_SIMPLIFY
+	ScalarFunctionSet simplify("st_simplify");
+	simplify.AddFunction(
+	    ScalarFunction({geo_type, LogicalType::DOUBLE}, geo_type, GeoFunctions::GeometrySimplifyFunction));
+
+	CreateScalarFunctionInfo simplify_func_info(simplify);
+	catalog.AddFunction(*con.context, &simplify_func_info);
 
 	con.Commit();
 }

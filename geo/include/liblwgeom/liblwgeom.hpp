@@ -733,6 +733,14 @@ extern uint32_t lwgeom_count_vertices(const LWGEOM *geom);
 lwvarlena_t *lwgeom_geohash(const LWGEOM *lwgeom, int precision);
 
 /**
+ * Call this function to drop BBOX and SRID
+ * from LWGEOM. If LWGEOM type is *not* flagged
+ * with the HASBBOX flag and has a bbox, it
+ * will be released.
+ */
+extern void lwgeom_drop_bbox(LWGEOM *lwgeom);
+
+/**
  * Compute a bbox if not already computed
  *
  * After calling this function lwgeom->bbox is only
@@ -1239,11 +1247,24 @@ extern lwvarlena_t *lwgeom_to_geojson(const LWGEOM *geo, const char *srs, int pr
 
 extern int lwgeom_startpoint(const LWGEOM *lwgeom, POINT4D *pt);
 
+/****************************************************************
+ * READ/WRITE FUNCTIONS
+ *
+ * Coordinate writing functions, which will alter the coordinates
+ * and potentially the structure of the input geometry. When
+ * called from within PostGIS, the LWGEOM argument should be built
+ * on top of a gserialized copy, created using
+ * PG_GETARG_GSERIALIZED_P_COPY()
+ ****************************************************************/
+
+extern int lwgeom_simplify_in_place(LWGEOM *igeom, double dist, int preserve_collapsed);
+
 /*******************************************************************************
  * GEOS proxy functions on LWGEOM
  ******************************************************************************/
 
 LWGEOM *lwgeom_difference_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
+LWGEOM *lwgeom_intersection_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
 LWGEOM *lwgeom_union_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
 
 #endif /* !defined _LIBLWGEOM_H  */

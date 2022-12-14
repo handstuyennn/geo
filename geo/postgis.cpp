@@ -4,6 +4,7 @@
 #include "postgis/geography_measurement.hpp"
 #include "postgis/lwgeom_dump.hpp"
 #include "postgis/lwgeom_export.hpp"
+#include "postgis/lwgeom_functions_analytic.hpp"
 #include "postgis/lwgeom_functions_basic.hpp"
 #include "postgis/lwgeom_geos.hpp"
 #include "postgis/lwgeom_in_geohash.hpp"
@@ -115,6 +116,14 @@ GSERIALIZED *Postgis::ST_Union(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 
 GSERIALIZED *Postgis::pgis_union_geometry_array(GSERIALIZED *gserArray[], int nelems) {
 	return duckdb::pgis_union_geometry_array(gserArray, nelems);
+}
+
+GSERIALIZED *Postgis::ST_Intersection(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::ST_Intersection(geom1, geom2);
+}
+
+GSERIALIZED *Postgis::LWGEOM_simplify2d(GSERIALIZED *geom, double dist) {
+	return duckdb::LWGEOM_simplify2d(geom, dist);
 }
 
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {

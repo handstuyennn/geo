@@ -690,4 +690,167 @@ void ptarray_remove_repeated_points_in_place(POINTARRAY *pa, double tolerance, u
 	return;
 }
 
+/* O(N) simplification for tolearnce = 0 */
+static void ptarray_simplify_in_place_tolerance0(POINTARRAY *pa) {
+	uint32_t kept_it = 0;
+	uint32_t last_it = pa->npoints - 1;
+	const POINT2D *kept_pt = getPoint2d_cp(pa, 0);
+	const size_t pt_size = ptarray_point_size(pa);
+
+	for (uint32_t i = 1; i < last_it; i++) {
+		const POINT2D *curr_pt = getPoint2d_cp(pa, i);
+		const POINT2D *next_pt = getPoint2d_cp(pa, i + 1);
+
+		double ba_x = next_pt->x - kept_pt->x;
+		double ba_y = next_pt->y - kept_pt->y;
+		double ab_length_sqr = ba_x * ba_x + ba_y * ba_y;
+
+		double ca_x = curr_pt->x - kept_pt->x;
+		double ca_y = curr_pt->y - kept_pt->y;
+		double dot_ac_ab = ca_x * ba_x + ca_y * ba_y;
+		double s_numerator = ca_x * ba_y - ca_y * ba_x;
+
+		if (dot_ac_ab < 0.0 || dot_ac_ab > ab_length_sqr || s_numerator != 0) {
+			kept_it++;
+			kept_pt = curr_pt;
+			if (kept_it != i)
+				memcpy(pa->serialized_pointlist + pt_size * kept_it, pa->serialized_pointlist + pt_size * i, pt_size);
+		}
+	}
+
+	/* Append last point */
+	kept_it++;
+	if (kept_it != last_it)
+		memcpy(pa->serialized_pointlist + pt_size * kept_it, pa->serialized_pointlist + pt_size * last_it, pt_size);
+	pa->npoints = kept_it + 1;
+}
+
+/* Out of the points in pa [itfist .. itlast], finds the one that's farthest away from
+ * the segment determined by pts[itfist] and pts[itlast].
+ * Returns itfirst if no point was found futher away than max_distance_sqr
+ */
+static uint32_t ptarray_dp_findsplit_in_place(const POINTARRAY *pts, uint32_t it_first, uint32_t it_last,
+                                              double max_distance_sqr) {
+	uint32_t split = it_first;
+	if ((it_first - it_last) < 2)
+		return it_first;
+
+	const POINT2D *A = getPoint2d_cp(pts, it_first);
+	const POINT2D *B = getPoint2d_cp(pts, it_last);
+
+	if (distance2d_sqr_pt_pt(A, B) < DBL_EPSILON) {
+		/* If p1 == p2, we can just calculate the distance from each point to A */
+		for (uint32_t itk = it_first + 1; itk < it_last; itk++) {
+			const POINT2D *pk = getPoint2d_cp(pts, itk);
+			double distance_sqr = distance2d_sqr_pt_pt(pk, A);
+			if (distance_sqr > max_distance_sqr) {
+				split = itk;
+				max_distance_sqr = distance_sqr;
+			}
+		}
+		return split;
+	}
+
+	/* This is based on distance2d_sqr_pt_seg, but heavily inlined here to avoid recalculations */
+	double ba_x = (B->x - A->x);
+	double ba_y = (B->y - A->y);
+	double ab_length_sqr = (ba_x * ba_x + ba_y * ba_y);
+	/* To avoid the division by ab_length_sqr in the 3rd path, we normalize here
+	 * and multiply in the first two paths [(dot_ac_ab < 0) and (> ab_length_sqr)] */
+	max_distance_sqr *= ab_length_sqr;
+	for (uint32_t itk = it_first + 1; itk < it_last; itk++) {
+		const POINT2D *C = getPoint2d_cp(pts, itk);
+		double distance_sqr;
+		double ca_x = (C->x - A->x);
+		double ca_y = (C->y - A->y);
+		double dot_ac_ab = (ca_x * ba_x + ca_y * ba_y);
+
+		if (dot_ac_ab <= 0.0) {
+			distance_sqr = distance2d_sqr_pt_pt(C, A) * ab_length_sqr;
+		} else if (dot_ac_ab >= ab_length_sqr) {
+			distance_sqr = distance2d_sqr_pt_pt(C, B) * ab_length_sqr;
+		} else {
+			double s_numerator = ca_x * ba_y - ca_y * ba_x;
+			distance_sqr = s_numerator * s_numerator; /* Missing division by ab_length_sqr on purpose */
+		}
+
+		if (distance_sqr > max_distance_sqr) {
+			split = itk;
+			max_distance_sqr = distance_sqr;
+		}
+	}
+	return split;
+}
+
+void ptarray_simplify_in_place(POINTARRAY *pa, double tolerance, uint32_t minpts) {
+	/* Do not try to simplify really short things */
+	if (pa->npoints < 3 || pa->npoints <= minpts)
+		return;
+
+	if (tolerance == 0 && minpts <= 2) {
+		ptarray_simplify_in_place_tolerance0(pa);
+		return;
+	}
+
+	/* We use this array to keep track of the points we are keeping, so
+	 * we store just TRUE / FALSE in their position */
+	uint8_t *kept_points = (uint8_t *)lwalloc(sizeof(uint8_t) * pa->npoints);
+	memset(kept_points, LW_FALSE, sizeof(uint8_t) * pa->npoints);
+	kept_points[0] = LW_TRUE;
+	kept_points[pa->npoints - 1] = LW_TRUE;
+	uint32_t keptn = 2;
+
+	/* We use this array as a stack to store the iterators that we are going to need
+	 * in the following steps.
+	 * This is ~10% faster than iterating over @kept_points looking for them
+	 */
+	uint32_t *iterator_stack = (uint32_t *)lwalloc(sizeof(uint32_t) * pa->npoints);
+	iterator_stack[0] = 0;
+	uint32_t iterator_stack_size = 1;
+
+	uint32_t it_first = 0;
+	uint32_t it_last = pa->npoints - 1;
+
+	const double tolerance_sqr = tolerance * tolerance;
+	/* For the first @minpts points we ignore the tolerance */
+	double it_tol = keptn >= minpts ? tolerance_sqr : -1.0;
+
+	while (iterator_stack_size) {
+		uint32_t split = ptarray_dp_findsplit_in_place(pa, it_first, it_last, it_tol);
+		if (split == it_first) {
+			it_first = it_last;
+			it_last = iterator_stack[--iterator_stack_size];
+		} else {
+			kept_points[split] = LW_TRUE;
+			keptn++;
+
+			iterator_stack[iterator_stack_size++] = it_last;
+			it_last = split;
+			it_tol = keptn >= minpts ? tolerance_sqr : -1.0;
+		}
+	}
+
+	const size_t pt_size = ptarray_point_size(pa);
+	/* The first point is already in place, so we don't need to copy it */
+	size_t kept_it = 1;
+	if (keptn == 2) {
+		/* If there are 2 points remaining, it has to be first and last as
+		 * we added those at the start */
+		memcpy(pa->serialized_pointlist + pt_size * kept_it, pa->serialized_pointlist + pt_size * (pa->npoints - 1),
+		       pt_size);
+	} else if (pa->npoints != keptn) /* We don't need to move any points if we are keeping them all */
+	{
+		for (uint32_t i = 1; i < pa->npoints; i++) {
+			if (kept_points[i]) {
+				memcpy(pa->serialized_pointlist + pt_size * kept_it, pa->serialized_pointlist + pt_size * i, pt_size);
+				kept_it++;
+			}
+		}
+	}
+	pa->npoints = keptn;
+
+	lwfree(kept_points);
+	lwfree(iterator_stack);
+}
+
 } // namespace duckdb

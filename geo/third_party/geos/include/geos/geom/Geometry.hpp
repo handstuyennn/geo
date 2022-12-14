@@ -457,6 +457,17 @@ public:
 	 */
 	virtual std::unique_ptr<Geometry> getBoundary() const = 0; // Abstract
 
+	/** \brief
+	 * Returns a Geometry representing the points shared by
+	 * this Geometry and other.
+	 *
+	 * @throws util::TopologyException if a robustness error occurs
+	 * @throws util::IllegalArgumentException if either input is a
+	 *         non-empty GeometryCollection
+	 *
+	 */
+	std::unique_ptr<Geometry> intersection(const Geometry *other) const;
+
 protected:
 	/// The bounding box of this Geometry
 	mutable std::unique_ptr<Envelope> envelope;

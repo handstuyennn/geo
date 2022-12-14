@@ -397,5 +397,15 @@ double LineIntersector::getEdgeDistance(std::size_t segmentIndex, std::size_t in
 	return dist;
 }
 
+/* public static */
+bool LineIntersector::hasIntersection(const CoordinateXY &p, const CoordinateXY &p1, const CoordinateXY &p2) {
+	if (Envelope::intersects(p1, p2, p)) {
+		if ((Orientation::index(p1, p2, p) == 0) && (Orientation::index(p2, p1, p) == 0)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 } // namespace algorithm
 } // namespace geos

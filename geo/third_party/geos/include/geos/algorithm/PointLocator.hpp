@@ -78,6 +78,14 @@ private:
 	void computeLocation(const geom::CoordinateXY &p, const geom::Geometry *geom);
 
 	void updateLocationInfo(geom::Location loc);
+
+	geom::Location locate(const geom::CoordinateXY &p, const geom::Point *pt);
+
+	geom::Location locate(const geom::CoordinateXY &p, const geom::LineString *l);
+
+	geom::Location locateInPolygonRing(const geom::CoordinateXY &p, const geom::LinearRing *ring);
+
+	geom::Location locate(const geom::CoordinateXY &p, const geom::Polygon *poly);
 };
 
 } // namespace algorithm

@@ -16,6 +16,7 @@ set(GEO_EXTENSION_FILES
     geometry.cpp
     postgis/lwgeom_inout.cpp
     postgis/lwgeom_functions_basic.cpp
+    postgis/lwgeom_functions_analytic.cpp
     postgis/geography_measurement.cpp
     postgis/geography_measurement_trees.cpp
     postgis/lwgeom_ogc.cpp

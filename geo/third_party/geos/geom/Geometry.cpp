@@ -211,5 +211,18 @@ std::unique_ptr<Geometry> Geometry::difference(const Geometry *other) const
 	return HeuristicOverlay(this, other, OverlayOp::opDIFFERENCE);
 }
 
+std::unique_ptr<Geometry> Geometry::intersection(const Geometry *other) const {
+	/*
+	 * TODO: MD - add optimization for P-A case using Point-In-Polygon
+	 */
+
+	// special case: if one input is empty ==> empty
+	if (isEmpty() || other->isEmpty()) {
+		return OverlayOp::createEmptyResult(OverlayOp::opINTERSECTION, this, other, getFactory());
+	}
+
+	return HeuristicOverlay(this, other, OverlayOp::opINTERSECTION);
+}
+
 } // namespace geom
 } // namespace geos

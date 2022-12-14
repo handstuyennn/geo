@@ -672,4 +672,30 @@ Geometry *GEOSBoundary_r(GEOSContextHandle_t extHandle, const Geometry *g1) {
 	});
 }
 
+Geometry *GEOSIntersection_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2) {
+	return execute(extHandle, [&]() {
+		auto g3 = g1->intersection(g2);
+		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
+}
+
+Geometry *GEOSIntersectionPrec_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2,
+                                 double gridSize) {
+	return execute(extHandle, [&]() {
+		using geos::geom::PrecisionModel;
+
+		std::unique_ptr<PrecisionModel> pm;
+		if (gridSize != 0) {
+			pm.reset(new PrecisionModel(1.0 / gridSize));
+		} else {
+			pm.reset(new PrecisionModel());
+		}
+		auto g3 = gridSize != 0 ? OverlayNG::overlay(g1, g2, OverlayNG::INTERSECTION, pm.get())
+		                        : OverlayNGRobust::Overlay(g1, g2, OverlayNG::INTERSECTION);
+		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
+}
+
 } /* extern "C" */

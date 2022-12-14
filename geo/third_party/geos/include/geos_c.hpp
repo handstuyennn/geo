@@ -311,6 +311,14 @@ extern GEOSGeometry GEOS_DLL *GEOSDifferencePrec_r(GEOSContextHandle_t handle, c
 /** \see GEOSBoundary */
 extern GEOSGeometry GEOS_DLL *GEOSBoundary_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
 
+/** \see GEOSIntersection */
+extern GEOSGeometry GEOS_DLL *GEOSIntersection_r(GEOSContextHandle_t handle, const GEOSGeometry *g1,
+                                                 const GEOSGeometry *g2);
+
+/** \see GEOSIntersectionPrec */
+extern GEOSGeometry GEOS_DLL *GEOSIntersectionPrec_r(GEOSContextHandle_t handle, const GEOSGeometry *g1,
+                                                     const GEOSGeometry *g2, double gridSize);
+
 /*
  * External code to GEOS can define GEOS_USE_ONLY_R_API
  * to strip the non-reentrant API functions from this header,
@@ -715,6 +723,42 @@ extern GEOSGeometry GEOS_DLL *GEOSDifferencePrec(const GEOSGeometry *ga, const G
  * Caller is responsible for freeing with GEOSGeom_destroy().
  */
 extern GEOSGeometry GEOS_DLL *GEOSBoundary(const GEOSGeometry *g);
+
+///@}
+
+/* ========== Overlay functions ========== */
+/** @name Overlay
+ * Functions for computing boolean set-theoretic
+ * values from overlay pairs of geometries.
+ */
+///@{
+
+/**
+ * Returns the intersection of two geometries: the set of points
+ * that fall within **both** geometries.
+ * \param g1 one of the geometries
+ * \param g2 the other geometry
+ * \return A newly allocated geometry of the intersection. NULL on exception.
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ * \see geos::operation::overlayng::OverlayNG
+ */
+extern GEOSGeometry GEOS_DLL *GEOSIntersection(const GEOSGeometry *g1, const GEOSGeometry *g2);
+
+/**
+ * Returns the intersection of two geometries: the set of points
+ * that fall within **both** geometries. All the vertices of the output
+ * geometry must fall on the grid defined by the gridSize, and the
+ * output will be a valid geometry.
+ * \param g1 one of the geometries
+ * \param g2 the other geometry
+ * \param gridSize the cell size of the precision grid
+ * \return A newly allocated geometry of the intersection. NULL on exception.
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ * \see geos::operation::overlayng::OverlayNG
+ */
+extern GEOSGeometry GEOS_DLL *GEOSIntersectionPrec(const GEOSGeometry *g1, const GEOSGeometry *g2, double gridSize);
+
+///@}
 
 #endif /* #ifndef GEOS_USE_ONLY_R_API */
 

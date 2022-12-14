@@ -278,4 +278,22 @@ GSERIALIZED *pgis_union_geometry_array(GSERIALIZED *gserArray[], int nelems) {
 	return gser_out;
 }
 
+GSERIALIZED *ST_Intersection(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GSERIALIZED *result;
+	LWGEOM *lwgeom1, *lwgeom2, *lwresult;
+	double prec = -1;
+
+	lwgeom1 = lwgeom_from_gserialized(geom1);
+	lwgeom2 = lwgeom_from_gserialized(geom2);
+
+	lwresult = lwgeom_intersection_prec(lwgeom1, lwgeom2, prec);
+	result = geometry_serialize(lwresult);
+
+	lwgeom_free(lwgeom1);
+	lwgeom_free(lwgeom2);
+	lwgeom_free(lwresult);
+
+	return result;
+}
+
 } // namespace duckdb

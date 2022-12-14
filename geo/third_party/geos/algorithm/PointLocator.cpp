@@ -67,6 +67,82 @@ Location PointLocator::locate(const CoordinateXY &p, const Geometry *geom) {
 }
 
 /* private */
+Location PointLocator::locate(const CoordinateXY &p, const Point *pt) {
+	// no point in doing envelope test, since equality test is just as fast
+	const Coordinate *ptCoord = pt->getCoordinate();
+	if (ptCoord != nullptr && ptCoord->equals2D(p)) {
+		return Location::INTERIOR;
+	}
+	return Location::EXTERIOR;
+}
+
+/* private */
+Location PointLocator::locate(const CoordinateXY &p, const LineString *l) {
+	if (!l->getEnvelopeInternal()->intersects(p)) {
+		return Location::EXTERIOR;
+	}
+
+	const CoordinateSequence *seq = l->getCoordinatesRO();
+	if (!l->isClosed()) {
+		if ((p == seq->getAt(0)) || (p == seq->getAt(seq->getSize() - 1))) {
+			return Location::BOUNDARY;
+		}
+	}
+	if (PointLocation::isOnLine(p, seq)) {
+		return Location::INTERIOR;
+	}
+	return Location::EXTERIOR;
+}
+
+/* private */
+Location PointLocator::locateInPolygonRing(const CoordinateXY &p, const LinearRing *ring) {
+	if (!ring->getEnvelopeInternal()->intersects(p)) {
+		return Location::EXTERIOR;
+	}
+
+	const CoordinateSequence *cl = ring->getCoordinatesRO();
+
+	if (PointLocation::isOnLine(p, cl)) {
+		return Location::BOUNDARY;
+	}
+	if (PointLocation::isInRing(p, cl)) {
+		return Location::INTERIOR;
+	}
+	return Location::EXTERIOR;
+}
+
+/* private */
+Location PointLocator::locate(const CoordinateXY &p, const Polygon *poly) {
+	if (poly->isEmpty()) {
+		return Location::EXTERIOR;
+	}
+
+	const LinearRing *shell = poly->getExteriorRing();
+	assert(shell);
+
+	Location shellLoc = locateInPolygonRing(p, shell);
+	if (shellLoc == Location::EXTERIOR) {
+		return Location::EXTERIOR;
+	}
+	if (shellLoc == Location::BOUNDARY) {
+		return Location::BOUNDARY;
+	}
+
+	// now test if the point lies in or on the holes
+	for (std::size_t i = 0, n = poly->getNumInteriorRing(); i < n; ++i) {
+		const LinearRing *hole = poly->getInteriorRingN(i);
+		Location holeLoc = locateInPolygonRing(p, hole);
+		if (holeLoc == Location::INTERIOR) {
+			return Location::EXTERIOR;
+		}
+		if (holeLoc == Location::BOUNDARY) {
+			return Location::BOUNDARY;
+		}
+	}
+	return Location::INTERIOR;
+}
+
+/* private */
 void PointLocator::computeLocation(const CoordinateXY &p, const Geometry *geom) {
 
 	GeometryTypeId geomTypeId = geom->getGeometryTypeId();

@@ -65,6 +65,8 @@ public:
 	static GSERIALIZED *ClosestPoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static GSERIALIZED *GeometryUnion(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static GSERIALIZED *GeometryUnionGArray(GSERIALIZED *gserArray[], int nelems);
+	static GSERIALIZED *GeometryIntersection(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	static GSERIALIZED *GeometrySimplify(GSERIALIZED *geom, double dist);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

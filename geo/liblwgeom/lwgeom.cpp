@@ -310,6 +310,13 @@ int lwgeom_has_srid(const LWGEOM *geom) {
 	return LW_FALSE;
 }
 
+void lwgeom_drop_bbox(LWGEOM *lwgeom) {
+	if (lwgeom->bbox)
+		lwfree(lwgeom->bbox);
+	lwgeom->bbox = NULL;
+	FLAGS_SET_BBOX(lwgeom->flags, 0);
+}
+
 /**
  * Ensure there's a box in the LWGEOM.
  * If the box is already there just return,
@@ -566,6 +573,121 @@ LWGEOM *lwgeom_construct_empty(uint8_t type, int32_t srid, char hasz, char hasm)
 		lwerror("lwgeom_construct_empty: unsupported geometry type: %s", lwtype_name(type));
 		return NULL;
 	}
+}
+
+/**************************************************************/
+
+int lwgeom_simplify_in_place(LWGEOM *geom, double epsilon, int preserve_collapsed) {
+	int modified = LW_FALSE;
+	switch (geom->type) {
+	/* No-op! Cannot simplify points or triangles */
+	case POINTTYPE:
+		return modified;
+	case TRIANGLETYPE: {
+		if (preserve_collapsed)
+			return modified;
+		LWTRIANGLE *t = lwgeom_as_lwtriangle(geom);
+		POINTARRAY *pa = t->points;
+		ptarray_simplify_in_place(pa, epsilon, 0);
+		if (pa->npoints < 3) {
+			pa->npoints = 0;
+			modified = LW_TRUE;
+		}
+		break;
+	}
+	case LINETYPE: {
+		LWLINE *g = (LWLINE *)(geom);
+		POINTARRAY *pa = g->points;
+		uint32_t in_npoints = pa->npoints;
+		ptarray_simplify_in_place(pa, epsilon, 2);
+		modified = in_npoints != pa->npoints;
+		/* Invalid output */
+		if (pa->npoints == 1 && pa->maxpoints > 1) {
+			/* Use first point as last point */
+			if (preserve_collapsed) {
+				pa->npoints = 2;
+				ptarray_copy_point(pa, 0, 1);
+			}
+			/* Finish the collapse process */
+			else {
+				pa->npoints = 0;
+			}
+		}
+		/* Duped output, force collapse */
+		if (pa->npoints == 2 && !preserve_collapsed) {
+			if (p2d_same(getPoint2d_cp(pa, 0), getPoint2d_cp(pa, 1)))
+				pa->npoints = 0;
+		}
+		break;
+	}
+	case POLYGONTYPE: {
+		uint32_t i, j = 0;
+		LWPOLY *g = (LWPOLY *)(geom);
+		for (i = 0; i < g->nrings; i++) {
+			POINTARRAY *pa = g->rings[i];
+			/* Only stop collapse on first ring */
+			int minpoints = (preserve_collapsed && i == 0) ? 4 : 0;
+			/* Skip zero'ed out rings */
+			if (!pa)
+				continue;
+			uint32_t in_npoints = pa->npoints;
+			ptarray_simplify_in_place(pa, epsilon, minpoints);
+			modified |= in_npoints != pa->npoints;
+			/* Drop collapsed rings */
+			if (pa->npoints < 4) {
+				if (i == 0) {
+					/* If the outter ring is dropped, all can be dropped */
+					for (i = 0; i < g->nrings; i++) {
+						pa = g->rings[i];
+						ptarray_free(pa);
+					}
+					break;
+				} else {
+					/* Drop this inner ring only */
+					ptarray_free(pa);
+					continue;
+				}
+			}
+			g->rings[j++] = pa;
+		}
+		/* Update ring count */
+		g->nrings = j;
+		break;
+	}
+	/* Can process all multi* types as generic collection */
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE: {
+		uint32_t i, j = 0;
+		LWCOLLECTION *col = (LWCOLLECTION *)geom;
+		for (i = 0; i < col->ngeoms; i++) {
+			LWGEOM *g = col->geoms[i];
+			if (!g)
+				continue;
+			modified |= lwgeom_simplify_in_place(g, epsilon, preserve_collapsed);
+			/* Drop zero'ed out geometries */
+			if (lwgeom_is_empty(g)) {
+				lwgeom_free(g);
+				continue;
+			}
+			col->geoms[j++] = g;
+		}
+		/* Update geometry count */
+		col->ngeoms = j;
+		break;
+	}
+	default: {
+		lwerror("%s: unsupported geometry type: %s", __func__, lwtype_name(geom->type));
+		break;
+	}
+	}
+
+	if (modified) {
+		lwgeom_drop_bbox(geom);
+	}
+	return modified;
 }
 
 } // namespace duckdb

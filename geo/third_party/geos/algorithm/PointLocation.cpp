@@ -30,6 +30,34 @@ namespace geos {
 namespace algorithm { // geos.algorithm
 
 /* public static */
+bool PointLocation::isOnLine(const geom::CoordinateXY &p, const geom::CoordinateSequence *pt) {
+	std::size_t ptsize = pt->getSize();
+	if (ptsize == 0) {
+		return false;
+	}
+
+	const geom::Coordinate *pp = &(pt->getAt(0));
+	for (std::size_t i = 1; i < ptsize; ++i) {
+		const geom::Coordinate &p1 = pt->getAt(i);
+		if (LineIntersector::hasIntersection(p, *pp, p1)) {
+			return true;
+		}
+		pp = &p1;
+	}
+	return false;
+}
+
+/* public static */
+bool PointLocation::isInRing(const geom::CoordinateXY &p, const std::vector<const geom::Coordinate *> &ring) {
+	return PointLocation::locateInRing(p, ring) != geom::Location::EXTERIOR;
+}
+
+/* public static */
+bool PointLocation::isInRing(const geom::CoordinateXY &p, const geom::CoordinateSequence *ring) {
+	return PointLocation::locateInRing(p, *ring) != geom::Location::EXTERIOR;
+}
+
+/* public static */
 geom::Location PointLocation::locateInRing(const geom::CoordinateXY &p,
                                            const std::vector<const geom::Coordinate *> &ring) {
 	return RayCrossingCounter::locatePointInRing(p, ring);

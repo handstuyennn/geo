@@ -200,6 +200,16 @@ GSERIALIZED *Geometry::GeometryUnionGArray(GSERIALIZED *gserArray[], int nelems)
 	return postgis.pgis_union_geometry_array(gserArray, nelems);
 }
 
+GSERIALIZED *Geometry::GeometryIntersection(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.ST_Intersection(geom1, geom2);
+}
+
+GSERIALIZED *Geometry::GeometrySimplify(GSERIALIZED *geom, double dist) {
+	Postgis postgis;
+	return postgis.LWGEOM_simplify2d(geom, dist);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

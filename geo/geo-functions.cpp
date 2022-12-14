@@ -1472,4 +1472,82 @@ void GeoFunctions::GeometryUnionArrayFunction(DataChunk &args, ExpressionState &
 	}
 }
 
+template <typename TA, typename TB, typename TR>
+static TR IntersectionScalarFunction(Vector &result, TA geom1, TB geom2) {
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+		return string_t();
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	if (!gser1 || !gser2) {
+		throw ConversionException("Failure in geometry get intersection: could not getting intersection from geom");
+		return string_t();
+	}
+	auto gserIntersection = Geometry::GeometryIntersection(gser1, gser2);
+	idx_t rv_size = Geometry::GetGeometrySize(gserIntersection);
+	auto base = Geometry::GetBase(gserIntersection);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	Geometry::DestroyGeometry(gserIntersection);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryIntersectionBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom1_vec, geom2_vec, result, count, [&](TA geom1, TB geom2) {
+		return IntersectionScalarFunction<TA, TB, TR>(result, geom1, geom2);
+	});
+}
+
+void GeoFunctions::GeometryIntersectionFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryIntersectionBinaryExecutor<string_t, string_t, string_t>(geom1_arg, geom2_arg, result, args.size());
+}
+
+template <typename TA, typename TB, typename TR>
+static TR SimplifyScalarFunction(Vector &result, TA geom, TB dist) {
+	if (geom.GetSize() == 0) {
+		return string_t();
+	}
+	auto gser = Geometry::GetGserialized(geom);
+	if (!gser) {
+		throw ConversionException("Failure in geometry get simplify: could not getting simplify from geom");
+		return string_t();
+	}
+	auto gserSimplify = Geometry::GeometrySimplify(gser, dist);
+	if (!gserSimplify) {
+		Geometry::DestroyGeometry(gser);
+		return string_t();
+	}
+	if (gser == gserSimplify) {
+		Geometry::DestroyGeometry(gser);
+		return geom;
+	}
+	idx_t rv_size = Geometry::GetGeometrySize(gserSimplify);
+	auto base = Geometry::GetBase(gserSimplify);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser);
+	Geometry::DestroyGeometry(gserSimplify);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometrySimplifyBinaryExecutor(Vector &geom_vec, Vector &dist_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, dist_vec, result, count, [&](TA geom, TB dist) {
+		return SimplifyScalarFunction<TA, TB, TR>(result, geom, dist);
+	});
+}
+
+void GeoFunctions::GeometrySimplifyFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	auto &dist_arg = args.data[1];
+	GeometrySimplifyBinaryExecutor<string_t, double, string_t>(geom_arg, dist_arg, result, args.size());
+}
+
 } // namespace duckdb

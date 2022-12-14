@@ -196,6 +196,12 @@ POINTARRAY *ptarray_clone(const POINTARRAY *ptarray);
 GBOX *gbox_clone(const GBOX *gbox);
 
 /*
+ * Support for in place modification of point arrays, fast
+ * function to move coordinate values around
+ */
+void ptarray_copy_point(POINTARRAY *pa, uint32_t from, uint32_t to);
+
+/*
  * Startpoint
  */
 int lwpoly_startpoint(const LWPOLY *lwpoly, POINT4D *pt);
@@ -226,6 +232,15 @@ void lwcollection_reserve(LWCOLLECTION *col, uint32_t ngeoms);
 
 /** Check if subtype is allowed in collectiontype */
 int lwcollection_allows_subtype(int collectiontype, int subtype);
+
+/*
+ * DP simplification
+ */
+
+/**
+ * @param minpts minimum number of points to retain, if possible.
+ */
+void ptarray_simplify_in_place(POINTARRAY *pa, double tolerance, uint32_t minpts);
 
 #endif /* !defined _LIBLWGEOM_INTERNAL_H  */
 
