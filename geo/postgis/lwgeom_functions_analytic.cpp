@@ -65,9 +65,51 @@ GSERIALIZED *LWGEOM_simplify2d(GSERIALIZED *geom, double dist) {
 
 	result = geometry_serialize(in);
 
-    lwgeom_free(in);
+	lwgeom_free(in);
 
 	return result;
+}
+
+GSERIALIZED *LWGEOM_snaptogrid(GSERIALIZED *in_geom, double ipx, double ipy, double xsize, double ysize) {
+	LWGEOM *in_lwgeom;
+	GSERIALIZED *out_geom = NULL;
+	LWGEOM *out_lwgeom;
+	gridspec grid;
+
+	/* Set grid values to zero to start */
+	memset(&grid, 0, sizeof(gridspec));
+
+	grid.ipx = ipx;
+	grid.ipy = ipy;
+	grid.xsize = xsize;
+	grid.ysize = ysize;
+
+	/* Return input geometry if input geometry is empty */
+	if (gserialized_is_empty(in_geom)) {
+		return in_geom;
+	}
+
+	/* Return input geometry if input grid is meaningless */
+	if (grid.xsize == 0 && grid.ysize == 0 && grid.zsize == 0 && grid.msize == 0) {
+		return in_geom;
+	}
+
+	in_lwgeom = lwgeom_from_gserialized(in_geom);
+
+	out_lwgeom = lwgeom_grid(in_lwgeom, &grid);
+	if (out_lwgeom == NULL)
+		return nullptr;
+
+	/* COMPUTE_BBOX TAINTING */
+	if (in_lwgeom->bbox)
+		lwgeom_refresh_bbox(out_lwgeom);
+
+	out_geom = geometry_serialize(out_lwgeom);
+
+	lwgeom_free(in_lwgeom);
+	lwgeom_free(out_lwgeom);
+
+	return out_geom;
 }
 
 } // namespace duckdb

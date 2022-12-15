@@ -210,6 +210,11 @@ GSERIALIZED *Geometry::GeometrySimplify(GSERIALIZED *geom, double dist) {
 	return postgis.LWGEOM_simplify2d(geom, dist);
 }
 
+GSERIALIZED *Geometry::GeometrySnapToGrid(GSERIALIZED *geom, double size) {
+	Postgis postgis;
+	return postgis.LWGEOM_snaptogrid(geom, size);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

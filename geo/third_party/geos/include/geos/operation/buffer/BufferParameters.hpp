@@ -92,6 +92,35 @@ public:
 	///
 	static const double DEFAULT_MITRE_LIMIT; // 5.0 (in .cpp file)
 
+	/// Creates a default set of parameters
+	BufferParameters();
+
+	/// Creates a set of parameters with the given quadrantSegments value.
+	///
+	/// @param quadrantSegments the number of quadrant segments to use
+	///
+	BufferParameters(int quadrantSegments);
+
+	/// \brief
+	/// Creates a set of parameters with the
+	/// given quadrantSegments and endCapStyle values.
+	///
+	/// @param quadrantSegments the number of quadrant segments to use
+	/// @param endCapStyle the end cap style to use
+	///
+	BufferParameters(int quadrantSegments, EndCapStyle endCapStyle);
+
+	/// \brief
+	/// Creates a set of parameters with the
+	/// given parameter values.
+	///
+	/// @param quadrantSegments the number of quadrant segments to use
+	/// @param endCapStyle the end cap style to use
+	/// @param joinStyle the join style to use
+	/// @param mitreLimit the mitre limit to use
+	///
+	BufferParameters(int quadrantSegments, EndCapStyle endCapStyle, JoinStyle joinStyle, double mitreLimit);
+
 	/// \brief
 	/// Sets the number of line segments used to approximate
 	/// an angle fillet.
@@ -142,12 +171,63 @@ public:
 		return joinStyle;
 	}
 
+	/// \brief
+	/// Sets the join style for outside (reflex) corners between
+	/// line segments.
+	///
+	/// Allowable values are JOIN_ROUND (which is the default),
+	/// JOIN_MITRE and JOIN_BEVEL.
+	///
+	/// @param style the code for the join style
+	///
+	void setJoinStyle(JoinStyle style) {
+		joinStyle = style;
+	}
+
 	/// Gets the mitre ratio limit.
 	///
 	/// @return the limit value
 	///
 	double getMitreLimit() const {
 		return mitreLimit;
+	}
+
+	/// Sets the limit on the mitre ratio used for very sharp corners.
+	///
+	/// The mitre ratio is the ratio of the distance from the corner
+	/// to the end of the mitred offset corner.
+	/// When two line segments meet at a sharp angle,
+	/// a miter join will extend far beyond the original geometry.
+	/// (and in the extreme case will be infinitely far.)
+	/// To prevent unreasonable geometry, the mitre limit
+	/// allows controlling the maximum length of the join corner.
+	/// Corners with a ratio which exceed the limit will be beveled.
+	///
+	/// @param limit the mitre ratio limit
+	///
+	void setMitreLimit(double limit) {
+		mitreLimit = limit;
+	}
+
+	/**
+	 * Sets whether the computed buffer should be single-sided.
+	 * A single-sided buffer is constructed on only one side of each input line.
+	 *
+	 * The side used is determined by the sign of the buffer distance:
+	 * - a positive distance indicates the left-hand side
+	 * - a negative distance indicates the right-hand side
+	 *
+	 * The single-sided buffer of point geometries is
+	 * the same as the regular buffer.
+	 *
+	 * The End Cap Style for single-sided buffers is
+	 * always ignored,
+	 * and forced to the equivalent of <tt>CAP_FLAT</tt>.
+	 *
+	 * @param p_isSingleSided true if a single-sided buffer should be constructed
+	 */
+	void setSingleSided(bool p_isSingleSided) {
+		_isSingleSided = p_isSingleSided;
 	}
 
 	/**

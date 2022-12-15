@@ -44,6 +44,7 @@ public:
 	GSERIALIZED *ST_Intersection(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	GSERIALIZED *LWGEOM_simplify2d(GSERIALIZED *geom, double dist);
 	GSERIALIZED *convexhull(GSERIALIZED *geom);
+	GSERIALIZED *LWGEOM_snaptogrid(GSERIALIZED *geom, double size);
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

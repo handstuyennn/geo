@@ -24,6 +24,8 @@
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/LineString.hpp>
 #include <geos/geom/Point.hpp>
+#include <geos/operation/buffer/BufferOp.hpp>
+#include <geos/operation/buffer/BufferParameters.hpp>
 #include <geos/operation/overlayng/OverlayNG.hpp>
 #include <geos/operation/overlayng/OverlayNGRobust.hpp>
 #include <geos/util/IllegalArgumentException.hpp>
@@ -47,6 +49,7 @@
 // for cross-checking of types in header.
 #define GEOSGeometry      geos::geom::Geometry
 #define GEOSCoordSequence geos::geom::CoordinateSequence
+#define GEOSBufferParams  geos::operation::buffer::BufferParameters
 
 #include "geos_c.hpp"
 
@@ -72,6 +75,8 @@ using geos::geom::PrecisionModel;
 
 using geos::operation::overlayng::OverlayNG;
 using geos::operation::overlayng::OverlayNGRobust;
+
+using geos::operation::buffer::BufferParameters;
 
 using geos::util::IllegalArgumentException;
 
@@ -719,5 +724,9 @@ Geometry *GEOSIntersectionPrec_r(GEOSContextHandle_t extHandle, const Geometry *
 		return g3.release();
 	});
 }
+
+//-----------------------------------------------------------------
+// STRtree
+//-----------------------------------------------------------------
 
 } /* extern "C" */

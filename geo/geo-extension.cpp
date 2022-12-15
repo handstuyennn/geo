@@ -348,6 +348,14 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo convexhull_func_info(convexhull);
 	catalog.AddFunction(*con.context, &convexhull_func_info);
 
+	// ST_SNAPTOGRID
+	ScalarFunctionSet snaptogrid("st_snaptogrid");
+	snaptogrid.AddFunction(
+	    ScalarFunction({geo_type, LogicalType::DOUBLE}, geo_type, GeoFunctions::GeometrySnapToGridFunction));
+
+	CreateScalarFunctionInfo snaptogrid_func_info(snaptogrid);
+	catalog.AddFunction(*con.context, &snaptogrid_func_info);
+
 	con.Commit();
 }
 

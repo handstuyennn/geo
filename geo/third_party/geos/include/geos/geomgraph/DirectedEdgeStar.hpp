@@ -54,6 +54,9 @@ public:
 
 	~DirectedEdgeStar() override = default;
 
+	/// Insert a directed edge in the list
+	void insert(EdgeEnd *ee) override;
+
 	Label &getLabel() {
 		return label;
 	}

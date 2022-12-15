@@ -70,6 +70,7 @@ public:
 	static GSERIALIZED *Centroid(GSERIALIZED *g);
 	static GSERIALIZED *Centroid(GSERIALIZED *g, bool use_spheroid);
 	static GSERIALIZED *Convexhull(GSERIALIZED *g);
+	static GSERIALIZED *GeometrySnapToGrid(GSERIALIZED *geom, double size);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

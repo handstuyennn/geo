@@ -24,6 +24,7 @@
 // Some extra magic to make type declarations in geos_c.h work - for cross-checking of types in header.
 #define GEOSGeometry      geos::geom::Geometry
 #define GEOSCoordSequence geos::geom::CoordinateSequence
+typedef struct GEOSBufParams_t GEOSBufferParams;
 
 #include "geos_c.hpp"
 

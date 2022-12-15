@@ -340,6 +340,11 @@ void lwgeom_add_bbox(LWGEOM *lwgeom) {
 	lwgeom_calculate_gbox(lwgeom, lwgeom->bbox);
 }
 
+void lwgeom_refresh_bbox(LWGEOM *lwgeom) {
+	lwgeom_drop_bbox(lwgeom);
+	lwgeom_add_bbox(lwgeom);
+}
+
 void lwgeom_free(LWGEOM *lwgeom) {
 	/* There's nothing here to free... */
 	if (!lwgeom)
@@ -694,6 +699,97 @@ int lwgeom_simplify_in_place(LWGEOM *geom, double epsilon, int preserve_collapse
 		lwgeom_drop_bbox(geom);
 	}
 	return modified;
+}
+
+void lwgeom_grid_in_place(LWGEOM *geom, const gridspec *grid) {
+	if (!geom)
+		return;
+	switch (geom->type) {
+	case POINTTYPE: {
+		LWPOINT *pt = (LWPOINT *)(geom);
+		ptarray_grid_in_place(pt->point, grid);
+		return;
+	}
+	case CIRCSTRINGTYPE:
+	case TRIANGLETYPE:
+	case LINETYPE: {
+		LWLINE *ln = (LWLINE *)(geom);
+		ptarray_grid_in_place(ln->points, grid);
+		/* For invalid line, return an EMPTY */
+		if (ln->points->npoints < 2)
+			ln->points->npoints = 0;
+		return;
+	}
+	case POLYGONTYPE: {
+		LWPOLY *ply = (LWPOLY *)(geom);
+		if (!ply->rings)
+			return;
+
+		/* Check first the external ring */
+		uint32_t i = 0;
+		POINTARRAY *pa = ply->rings[0];
+		ptarray_grid_in_place(pa, grid);
+		if (pa->npoints < 4) {
+			/* External ring collapsed: free everything */
+			for (i = 0; i < ply->nrings; i++) {
+				ptarray_free(ply->rings[i]);
+			}
+			ply->nrings = 0;
+			return;
+		}
+
+		/* Check the other rings */
+		uint32_t j = 1;
+		for (i = 1; i < ply->nrings; i++) {
+			POINTARRAY *pa = ply->rings[i];
+			ptarray_grid_in_place(pa, grid);
+
+			/* Skip bad rings */
+			if (pa->npoints >= 4) {
+				ply->rings[j++] = pa;
+			} else {
+				ptarray_free(pa);
+			}
+		}
+		/* Adjust ring count appropriately */
+		ply->nrings = j;
+		return;
+	}
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case TINTYPE:
+	case COLLECTIONTYPE:
+	case COMPOUNDTYPE: {
+		LWCOLLECTION *col = (LWCOLLECTION *)(geom);
+		uint32_t i, j = 0;
+		if (!col->geoms)
+			return;
+		for (i = 0; i < col->ngeoms; i++) {
+			LWGEOM *g = col->geoms[i];
+			lwgeom_grid_in_place(g, grid);
+			/* Empty geoms need to be freed */
+			/* before we move on */
+			if (lwgeom_is_empty(g)) {
+				lwgeom_free(g);
+				continue;
+			}
+			col->geoms[j++] = g;
+		}
+		col->ngeoms = j;
+		return;
+	}
+	default: {
+		lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(geom->type));
+		return;
+	}
+	}
+}
+
+LWGEOM *lwgeom_grid(const LWGEOM *lwgeom, const gridspec *grid) {
+	LWGEOM *lwgeom_out = lwgeom_clone_deep(lwgeom);
+	lwgeom_grid_in_place(lwgeom_out, grid);
+	return lwgeom_out;
 }
 
 } // namespace duckdb

@@ -46,6 +46,7 @@ add_library(
   operation/overlay/MaximalEdgeRing.cpp
   operation/overlay/MinimalEdgeRing.cpp
   operation/overlay/ElevationMatrixCell.cpp
+  operation/overlay/OverlayNodeFactory.cpp
   operation/overlayng/OverlayNGRobust.cpp
   operation/overlayng/InputGeometry.cpp
   operation/overlayng/PrecisionUtil.cpp

@@ -853,4 +853,70 @@ void ptarray_simplify_in_place(POINTARRAY *pa, double tolerance, uint32_t minpts
 	lwfree(iterator_stack);
 }
 
+/*
+ * Stick an array of points to the given gridspec.
+ * Return "gridded" points in *outpts and their number in *outptsn.
+ *
+ * Two consecutive points falling on the same grid cell are collapsed
+ * into one single point.
+ *
+ */
+void ptarray_grid_in_place(POINTARRAY *pa, const gridspec *grid) {
+	uint32_t j = 0;
+	POINT4D *p, *p_out = NULL;
+	double x, y, z = 0, m = 0;
+	uint32_t ndims = FLAGS_NDIMS(pa->flags);
+	uint32_t has_z = FLAGS_GET_Z(pa->flags);
+	uint32_t has_m = FLAGS_GET_M(pa->flags);
+
+	for (uint32_t i = 0; i < pa->npoints; i++) {
+		/* Look straight into the abyss */
+		p = (POINT4D *)(getPoint_internal(pa, i));
+		x = p->x;
+		y = p->y;
+		if (ndims > 2)
+			z = p->z;
+		if (ndims > 3)
+			m = p->m;
+
+		if (grid->xsize > 0)
+			x = rint((x - grid->ipx) / grid->xsize) * grid->xsize + grid->ipx;
+
+		if (grid->ysize > 0)
+			y = rint((y - grid->ipy) / grid->ysize) * grid->ysize + grid->ipy;
+
+		/* Read and round this point */
+		/* Z is always in third position */
+		if (has_z && grid->zsize > 0)
+			z = rint((z - grid->ipz) / grid->zsize) * grid->zsize + grid->ipz;
+
+		/* M might be in 3rd or 4th position */
+		if (has_m && grid->msize > 0) {
+			/* In POINT ZM, M is in 4th position, in POINT M, M is in 3rd position which is Z in POINT4D */
+			if (has_z)
+				m = rint((m - grid->ipm) / grid->msize) * grid->msize + grid->ipm;
+			else
+				z = rint((z - grid->ipm) / grid->msize) * grid->msize + grid->ipm;
+		}
+
+		/* Skip duplicates */
+		if (p_out && p_out->x == x && p_out->y == y && (ndims > 2 ? p_out->z == z : 1) &&
+		    (ndims > 3 ? p_out->m == m : 1))
+			continue;
+
+		/* Write rounded values into the next available point */
+		p_out = (POINT4D *)(getPoint_internal(pa, j++));
+		p_out->x = x;
+		p_out->y = y;
+		if (ndims > 2)
+			p_out->z = z;
+		if (ndims > 3)
+			p_out->m = m;
+	}
+
+	/* Update output ptarray length */
+	pa->npoints = j;
+	return;
+}
+
 } // namespace duckdb

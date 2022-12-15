@@ -220,6 +220,11 @@ int lwcompound_is_closed(const LWCOMPOUND *curve);
 int lwpsurface_is_closed(const LWPSURFACE *psurface);
 int lwtin_is_closed(const LWTIN *tin);
 
+/**
+ * Snap to grid
+ */
+void ptarray_grid_in_place(POINTARRAY *pa, const gridspec *grid);
+
 /*
  * Number of vertices?
  */

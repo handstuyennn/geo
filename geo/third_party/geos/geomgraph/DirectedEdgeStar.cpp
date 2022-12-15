@@ -40,6 +40,13 @@ namespace geos {
 namespace geomgraph { // geos.geomgraph
 
 /*public*/
+void DirectedEdgeStar::insert(EdgeEnd *ee) {
+	assert(ee);
+	DirectedEdge *de = detail::down_cast<DirectedEdge *>(ee);
+	insertEdgeEnd(de);
+}
+
+/*public*/
 void DirectedEdgeStar::mergeSymLabels() {
 	EdgeEndStar::iterator endIt = end();
 	for (EdgeEndStar::iterator it = begin(); it != endIt; ++it) {

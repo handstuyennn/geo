@@ -29,5 +29,6 @@
 namespace duckdb {
 
 GSERIALIZED *LWGEOM_simplify2d(GSERIALIZED *geom, double dist);
+GSERIALIZED *LWGEOM_snaptogrid(GSERIALIZED *geom, double ipx, double ipy, double xsize, double ysize);
 
 } // namespace duckdb

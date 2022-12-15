@@ -130,6 +130,10 @@ GSERIALIZED *Postgis::convexhull(GSERIALIZED *geom) {
 	return duckdb::convexhull(geom);
 }
 
+GSERIALIZED *Postgis::LWGEOM_snaptogrid(GSERIALIZED *geom, double size) {
+	return duckdb::LWGEOM_snaptogrid(geom, 0, 0, size, size);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

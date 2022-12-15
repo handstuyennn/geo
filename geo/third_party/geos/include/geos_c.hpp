@@ -710,12 +710,6 @@ extern GEOSGeometry GEOS_DLL *GEOSDifferencePrec(const GEOSGeometry *ga, const G
 
 ///@}
 
-/* ========== Buffer related functions ========== */
-/** @name Buffer and Offset Curves
- * Functions for creating distance-based buffers and offset curves.
- */
-///@{
-
 /**
  * Returns the "boundary" of a geometry, as defined by the DE9IM:
  *

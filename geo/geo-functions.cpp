@@ -1589,4 +1589,46 @@ void GeoFunctions::GeometryConvexhullFunction(DataChunk &args, ExpressionState &
 	GeometryConvexhullUnaryExecutor<string_t, string_t>(geom_arg, result, args.size());
 }
 
+template <typename TA, typename TB, typename TR>
+static TR SnapToGridScalarFunction(Vector &result, TA geom, TB size) {
+	if (geom.GetSize() == 0) {
+		return string_t();
+	}
+	auto gser = Geometry::GetGserialized(geom);
+	if (!gser) {
+		throw ConversionException("Failure in geometry get snap to grid: could not getting snap to grid from geom");
+		return string_t();
+	}
+	auto gserSnapTogrid = Geometry::GeometrySnapToGrid(gser, size);
+	if (!gserSnapTogrid) {
+		Geometry::DestroyGeometry(gser);
+		return string_t();
+	}
+	if (gser == gserSnapTogrid) {
+		Geometry::DestroyGeometry(gser);
+		return geom;
+	}
+	idx_t rv_size = Geometry::GetGeometrySize(gserSnapTogrid);
+	auto base = Geometry::GetBase(gserSnapTogrid);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser);
+	Geometry::DestroyGeometry(gserSnapTogrid);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometrySnapToGridBinaryExecutor(Vector &geom_vec, Vector &size_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, size_vec, result, count, [&](TA geom, TB size) {
+		return SnapToGridScalarFunction<TA, TB, TR>(result, geom, size);
+	});
+}
+
+void GeoFunctions::GeometrySnapToGridFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	auto &size_arg = args.data[1];
+	GeometrySnapToGridBinaryExecutor<string_t, double, string_t>(geom_arg, size_arg, result, args.size());
+}
+
 } // namespace duckdb

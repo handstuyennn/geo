@@ -40,7 +40,13 @@ namespace overlay {   // geos::operation::overlay
  * Creates nodes for use in the geomgraph::PlanarGraph constructed during
  * overlay operations. NOTE: also used by operation::valid
  */
-class GEOS_DLL OverlayNodeFactory : public geomgraph::NodeFactory {};
+class GEOS_DLL OverlayNodeFactory : public geomgraph::NodeFactory {
+public:
+	OverlayNodeFactory() : geomgraph::NodeFactory() {
+	}
+	geomgraph::Node *createNode(const geom::Coordinate &coord) const override;
+	static const geomgraph::NodeFactory &instance();
+};
 
 } // namespace overlay
 } // namespace operation

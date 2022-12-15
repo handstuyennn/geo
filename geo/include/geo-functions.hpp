@@ -58,6 +58,7 @@ struct GeoFunctions {
 	static void GeometrySimplifyFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryCentroidFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryConvexhullFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometrySnapToGridFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

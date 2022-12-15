@@ -761,6 +761,11 @@ extern void lwgeom_drop_bbox(LWGEOM *lwgeom);
 extern void lwgeom_add_bbox(LWGEOM *lwgeom);
 
 /**
+ * Drop current bbox and calculate a fresh one.
+ */
+extern void lwgeom_refresh_bbox(LWGEOM *lwgeom);
+
+/**
  * Return true or false depending on whether a geometry has
  * a valid SRID set.
  */
@@ -1266,6 +1271,23 @@ void lwerror(const char *fmt, ...);
 extern lwvarlena_t *lwgeom_to_geojson(const LWGEOM *geo, const char *srs, int precision, int has_bbox);
 
 extern int lwgeom_startpoint(const LWGEOM *lwgeom, POINT4D *pt);
+
+/**
+ * Snap-to-grid
+ */
+typedef struct gridspec_t {
+	double ipx;
+	double ipy;
+	double ipz;
+	double ipm;
+	double xsize;
+	double ysize;
+	double zsize;
+	double msize;
+} gridspec;
+
+extern LWGEOM *lwgeom_grid(const LWGEOM *lwgeom, const gridspec *grid);
+extern void lwgeom_grid_in_place(LWGEOM *lwgeom, const gridspec *grid);
 
 /****************************************************************
  * READ/WRITE FUNCTIONS
