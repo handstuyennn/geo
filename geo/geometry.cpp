@@ -305,4 +305,9 @@ GSERIALIZED *Geometry::Centroid(GSERIALIZED *g, bool use_spheroid) {
 	return postgis.geography_centroid(g, use_spheroid);
 }
 
+GSERIALIZED *Geometry::Convexhull(GSERIALIZED *g) {
+	Postgis postgis;
+	return postgis.convexhull(g);
+}
+
 } // namespace duckdb

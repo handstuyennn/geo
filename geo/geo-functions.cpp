@@ -621,20 +621,23 @@ void GeoFunctions::GeometryDistanceFunction(DataChunk &args, ExpressionState &st
 
 struct CentroidUnaryOperator {
 	template <class TA, class TR>
-	static inline TR Operation(TA geom) {
-		return geom;
-		// if (geom.GetSize() == 0) {
-		// 	return NULL;
-		// }
-		// auto gser = Geometry::GetGserialized(geom);
-		// if (!gser) {
-		// 	throw ConversionException("Failure in geometry centroid: could not calculate centroid from geometry");
-		// }
-		// auto result = Geometry::Centroid(gser);
-		// idx_t rv_size = Geometry::GetGeometrySize(result);
-		// auto base = Geometry::GetBase(result);
-		// Geometry::DestroyGeometry(result);
-		// return string_t((const char *)base, rv_size);
+	static inline TR Operation(TA geom, Vector &result) {
+		if (geom.GetSize() == 0) {
+			return NULL;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry centroid: could not calculate centroid from geometry");
+		}
+		auto gserCentroid = Geometry::Centroid(gser);
+		idx_t rv_size = Geometry::GetGeometrySize(gserCentroid);
+		auto base = Geometry::GetBase(gserCentroid);
+		auto result_str = StringVector::EmptyString(result, rv_size);
+		memcpy(result_str.GetDataWriteable(), base, rv_size);
+		result_str.Finalize();
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserCentroid);
+		return result_str;
 	}
 };
 
@@ -659,7 +662,7 @@ struct CentroidBinaryOperator {
 
 template <typename TA, typename TR>
 static void GeometryCentroidUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
-	UnaryExecutor::Execute<TA, TR, CentroidUnaryOperator>(geom, result, count);
+	UnaryExecutor::ExecuteString<TA, TR, CentroidUnaryOperator>(geom, result, count);
 }
 
 template <typename TA, typename TB, typename TR>
@@ -1548,6 +1551,42 @@ void GeoFunctions::GeometrySimplifyFunction(DataChunk &args, ExpressionState &st
 	auto &geom_arg = args.data[0];
 	auto &dist_arg = args.data[1];
 	GeometrySimplifyBinaryExecutor<string_t, double, string_t>(geom_arg, dist_arg, result, args.size());
+}
+
+struct ConvexhullUnaryOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA geom) {
+		if (geom.GetSize() == 0) {
+			return geom;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			return string_t();
+		}
+		auto gserConvex = Geometry::Convexhull(gser);
+		if (!gserConvex) {
+			throw ConversionException("Failure in geometry convex hull: could not getting convex hull from geom");
+		}
+		if (gser == gserConvex) {
+			Geometry::DestroyGeometry(gser);
+			return string_t();
+		}
+		idx_t size = Geometry::GetGeometrySize(gserConvex);
+		auto base = Geometry::GetBase(gserConvex);
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserConvex);
+		return string_t((const char *)base, size);
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryConvexhullUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, ConvexhullUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryConvexhullFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryConvexhullUnaryExecutor<string_t, string_t>(geom_arg, result, args.size());
 }
 
 } // namespace duckdb

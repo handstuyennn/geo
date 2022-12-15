@@ -40,5 +40,6 @@ GSERIALIZED *ST_Difference(GSERIALIZED *geom1, GSERIALIZED *geom2);
 GSERIALIZED *ST_Union(GSERIALIZED *geom1, GSERIALIZED *geom2);
 GSERIALIZED *pgis_union_geometry_array(GSERIALIZED *gserArray[], int nelems);
 GSERIALIZED *ST_Intersection(GSERIALIZED *geom1, GSERIALIZED *geom2);
+GSERIALIZED *convexhull(GSERIALIZED *geom);
 
 } // namespace duckdb

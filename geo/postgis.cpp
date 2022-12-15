@@ -126,6 +126,10 @@ GSERIALIZED *Postgis::LWGEOM_simplify2d(GSERIALIZED *geom, double dist) {
 	return duckdb::LWGEOM_simplify2d(geom, dist);
 }
 
+GSERIALIZED *Postgis::convexhull(GSERIALIZED *geom) {
+	return duckdb::convexhull(geom);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

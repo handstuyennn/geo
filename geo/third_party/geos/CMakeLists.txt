@@ -16,6 +16,8 @@ add_library(
   algorithm/Area.cpp
   algorithm/Angle.cpp
   algorithm/Intersection.cpp
+  algorithm/Centroid.cpp
+  algorithm/ConvexHull.cpp
   edgegraph/HalfEdge.cpp
   math/DD.cpp
   io/WKTWriter.cpp

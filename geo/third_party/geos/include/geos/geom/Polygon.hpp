@@ -139,6 +139,8 @@ public:
 	 */
 	std::unique_ptr<Geometry> getBoundary() const override;
 
+	std::unique_ptr<Geometry> convexHull() const override;
+
 protected:
 	Polygon(const Polygon &p);
 

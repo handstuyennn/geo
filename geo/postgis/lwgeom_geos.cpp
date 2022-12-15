@@ -70,11 +70,17 @@ GEOSGeometry *POSTGIS2GEOS(const GSERIALIZED *pglwgeom) {
 
 GSERIALIZED *centroid(GSERIALIZED *geom) {
 	GSERIALIZED *result;
-	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	LWGEOM *lwgeom, *lwresult;
 
-	result = geometry_serialize(lwgeom);
+	lwgeom = lwgeom_from_gserialized(geom);
+	lwresult = lwgeom_centroid(lwgeom);
 	lwgeom_free(lwgeom);
 
+	if (!lwresult)
+		return nullptr;
+
+	result = geometry_serialize(lwresult);
+	lwgeom_free(lwresult);
 	return result;
 }
 
@@ -292,6 +298,60 @@ GSERIALIZED *ST_Intersection(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	lwgeom_free(lwgeom1);
 	lwgeom_free(lwgeom2);
 	lwgeom_free(lwresult);
+
+	return result;
+}
+
+GSERIALIZED *convexhull(GSERIALIZED *geom1) {
+	GEOSGeometry *g1, *g3;
+	GSERIALIZED *result;
+	LWGEOM *lwout;
+	int32_t srid;
+	GBOX bbox;
+
+	/* Empty.ConvexHull() == Empty */
+	if (gserialized_is_empty(geom1))
+		return geom1;
+
+	srid = gserialized_get_srid(geom1);
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g1 = POSTGIS2GEOS(geom1);
+
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+
+	g3 = GEOSConvexHull(g1);
+	GEOSGeom_destroy(g1);
+
+	if (!g3)
+		throw "GEOSConvexHull";
+
+	GEOSSetSRID(g3, srid);
+
+	lwout = GEOS2LWGEOM(g3, gserialized_has_z(geom1));
+	GEOSGeom_destroy(g3);
+
+	if (!lwout) {
+		throw "convexhull() failed to convert GEOS geometry to LWGEOM";
+		return nullptr;
+	}
+
+	/* Copy input bbox if any */
+	if (gserialized_get_gbox_p(geom1, &bbox)) {
+		/* Force the box to have the same dimensionality as the lwgeom */
+		bbox.flags = lwout->flags;
+		lwout->bbox = gbox_copy(&bbox);
+	}
+
+	result = geometry_serialize(lwout);
+	lwgeom_free(lwout);
+
+	if (!result) {
+		throw "GEOS convexhull() threw an error (result postgis geometry formation)!";
+		return nullptr;
+	}
 
 	return result;
 }

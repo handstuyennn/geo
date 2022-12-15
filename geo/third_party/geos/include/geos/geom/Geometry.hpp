@@ -468,6 +468,28 @@ public:
 	 */
 	std::unique_ptr<Geometry> intersection(const Geometry *other) const;
 
+	/** \brief
+	 * Computes the centroid of this <code>Geometry</code>.
+	 *
+	 * The centroid is equal to the centroid of the set of component
+	 * Geometries of highest dimension (since the lower-dimension geometries
+	 * contribute zero "weight" to the centroid)
+	 *
+	 * @return a {@link Point} which is the centroid of this Geometry
+	 */
+	virtual std::unique_ptr<Point> getCentroid() const;
+
+	/// Computes the centroid of this Geometry as a Coordinate
+	//
+	/// Returns false if centroid cannot be computed (EMPTY geometry)
+	///
+	virtual bool getCentroid(Coordinate &ret) const;
+
+	/// \brief
+	/// Returns the smallest convex Polygon that contains
+	/// all the points in the Geometry.
+	virtual std::unique_ptr<Geometry> convexHull() const;
+
 protected:
 	/// The bounding box of this Geometry
 	mutable std::unique_ptr<Envelope> envelope;

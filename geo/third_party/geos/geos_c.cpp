@@ -207,12 +207,20 @@ Geometry *GEOSBoundary(const Geometry *g) {
 	return GEOSBoundary_r(handle, g);
 }
 
+Geometry *GEOSConvexHull(const Geometry *g) {
+	return GEOSConvexHull_r(handle, g);
+}
+
 Geometry *GEOSIntersection(const Geometry *g1, const Geometry *g2) {
 	return GEOSIntersection_r(handle, g1, g2);
 }
 
 Geometry *GEOSIntersectionPrec(const Geometry *g1, const Geometry *g2, double gridSize) {
 	return GEOSIntersectionPrec_r(handle, g1, g2, gridSize);
+}
+
+Geometry *GEOSGetCentroid(const Geometry *g) {
+	return GEOSGetCentroid_r(handle, g);
 }
 
 } /* extern "C" */

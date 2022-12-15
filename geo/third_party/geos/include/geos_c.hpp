@@ -293,6 +293,9 @@ extern GEOSGeometry GEOS_DLL *GEOSUnion_r(GEOSContextHandle_t handle, const GEOS
 /** \see GEOSUnaryUnion */
 extern GEOSGeometry GEOS_DLL *GEOSUnaryUnion_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
 
+/** \see GEOSGetCentroid */
+extern GEOSGeometry GEOS_DLL *GEOSGetCentroid_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
+
 /* ========= Memory management ========= */
 
 /** \see GEOSGeom_destroy */
@@ -310,6 +313,9 @@ extern GEOSGeometry GEOS_DLL *GEOSDifferencePrec_r(GEOSContextHandle_t handle, c
 
 /** \see GEOSBoundary */
 extern GEOSGeometry GEOS_DLL *GEOSBoundary_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
+
+/** \see GEOSConvexHull */
+extern GEOSGeometry GEOS_DLL *GEOSConvexHull_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
 
 /** \see GEOSIntersection */
 extern GEOSGeometry GEOS_DLL *GEOSIntersection_r(GEOSContextHandle_t handle, const GEOSGeometry *g1,
@@ -724,6 +730,16 @@ extern GEOSGeometry GEOS_DLL *GEOSDifferencePrec(const GEOSGeometry *ga, const G
  */
 extern GEOSGeometry GEOS_DLL *GEOSBoundary(const GEOSGeometry *g);
 
+/**
+ * Returns convex hull of a geometry. The smallest convex Geometry
+ * that contains all the points in the input Geometry
+ * \param g The input geometry
+ * \return A newly allocated geometry of the convex hull. NULL on exception.
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ * \see geos::operation::overlayng::OverlayNG
+ */
+extern GEOSGeometry GEOS_DLL *GEOSConvexHull(const GEOSGeometry *g);
+
 ///@}
 
 /* ========== Overlay functions ========== */
@@ -759,6 +775,21 @@ extern GEOSGeometry GEOS_DLL *GEOSIntersection(const GEOSGeometry *g1, const GEO
 extern GEOSGeometry GEOS_DLL *GEOSIntersectionPrec(const GEOSGeometry *g1, const GEOSGeometry *g2, double gridSize);
 
 ///@}
+
+/* ========== Construction Operations ========== */
+/** @name Geometric Constructions
+ * Functions for computing geometric constructions.
+ */
+///@{
+
+/**
+ * Returns a point at the center of mass of the input.
+ * \param g The input geometry
+ * \return A point at the center of mass of the input
+ * Caller is responsible for freeing with GEOSGeom_destroy().
+ * \see geos::algorithm::Centroid
+ */
+extern GEOSGeometry GEOS_DLL *GEOSGetCentroid(const GEOSGeometry *g);
 
 #endif /* #ifndef GEOS_USE_ONLY_R_API */
 

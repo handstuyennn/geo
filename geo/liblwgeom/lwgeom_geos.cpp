@@ -572,4 +572,37 @@ LWGEOM *lwgeom_intersection_prec(const LWGEOM *geom1, const LWGEOM *geom2, doubl
 	return result;
 }
 
+LWGEOM *lwgeom_centroid(const LWGEOM *geom) {
+	LWGEOM *result;
+	int32_t srid = RESULT_SRID(geom);
+	uint8_t is3d = FLAGS_GET_Z(geom->flags);
+	GEOSGeometry *g1, *g3;
+
+	if (srid == SRID_INVALID)
+		return NULL;
+
+	if (lwgeom_is_empty(geom)) {
+		LWPOINT *lwp = lwpoint_construct_empty(srid, is3d, lwgeom_has_m(geom));
+		return lwpoint_as_lwgeom(lwp);
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	if (!(g1 = LWGEOM2GEOS(geom, AUTOFIX)))
+		GEOS_FAIL();
+
+	g3 = GEOSGetCentroid(g1);
+
+	if (!g3)
+		GEOS_FREE_AND_FAIL(g1);
+	GEOSSetSRID(g3, srid);
+
+	if (!(result = GEOS2LWGEOM(g3, is3d)))
+		GEOS_FREE_AND_FAIL(g1);
+
+	GEOS_FREE(g1, g3);
+
+	return result;
+}
+
 } // namespace duckdb

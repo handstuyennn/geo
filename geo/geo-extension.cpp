@@ -341,6 +341,13 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo simplify_func_info(simplify);
 	catalog.AddFunction(*con.context, &simplify_func_info);
 
+	// ST_CONVEXHULL
+	ScalarFunctionSet convexhull("st_convexhull");
+	convexhull.AddFunction(ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryConvexhullFunction));
+
+	CreateScalarFunctionInfo convexhull_func_info(convexhull);
+	catalog.AddFunction(*con.context, &convexhull_func_info);
+
 	con.Commit();
 }
 

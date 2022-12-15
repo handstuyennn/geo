@@ -191,6 +191,12 @@ int lwgeom_has_z(const LWGEOM *geom) {
 	return FLAGS_GET_Z(geom->flags);
 }
 
+int lwgeom_has_m(const LWGEOM *geom) {
+	if (!geom)
+		return LW_FALSE;
+	return FLAGS_GET_M(geom->flags);
+}
+
 int lwgeom_needs_bbox(const LWGEOM *geom) {
 	assert(geom);
 	if (geom->type == POINTTYPE) {

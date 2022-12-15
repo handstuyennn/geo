@@ -384,4 +384,22 @@ int lwgeom_calculate_gbox_cartesian(const LWGEOM *lwgeom, GBOX *gbox) {
 	return LW_FAILURE;
 }
 
+void gbox_float_round(GBOX *gbox) {
+	gbox->xmin = next_float_down(gbox->xmin);
+	gbox->xmax = next_float_up(gbox->xmax);
+
+	gbox->ymin = next_float_down(gbox->ymin);
+	gbox->ymax = next_float_up(gbox->ymax);
+
+	if (FLAGS_GET_M(gbox->flags)) {
+		gbox->mmin = next_float_down(gbox->mmin);
+		gbox->mmax = next_float_up(gbox->mmax);
+	}
+
+	if (FLAGS_GET_Z(gbox->flags)) {
+		gbox->zmin = next_float_down(gbox->zmin);
+		gbox->zmax = next_float_up(gbox->zmax);
+	}
+}
+
 } // namespace duckdb

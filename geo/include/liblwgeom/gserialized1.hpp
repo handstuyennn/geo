@@ -86,4 +86,13 @@ LWGEOM *lwgeom_from_gserialized1(const GSERIALIZED *g);
 
 int gserialized1_peek_first_point(const GSERIALIZED *g, POINT4D *out_point);
 
+int gserialized1_peek_gbox_p(const GSERIALIZED *g, GBOX *gbox);
+
+/**
+ * Read the box from the #GSERIALIZED or calculate it if necessary.
+ * Return #LWFAILURE if box cannot be calculated (NULL or EMPTY
+ * input).
+ */
+int gserialized1_get_gbox_p(const GSERIALIZED *g, GBOX *gbox);
+
 } // namespace duckdb

@@ -27,7 +27,6 @@ struct GeoFunctions {
 	static void GeometryGeogFromFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryGeomFromGeoJsonFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryDistanceFunction(DataChunk &args, ExpressionState &state, Vector &result);
-	static void GeometryCentroidFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromTextFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromWKBFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result);
@@ -57,6 +56,8 @@ struct GeoFunctions {
 	static void GeometryUnionArrayFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryIntersectionFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometrySimplifyFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryCentroidFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryConvexhullFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

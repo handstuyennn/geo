@@ -67,6 +67,9 @@ public:
 	static GSERIALIZED *GeometryUnionGArray(GSERIALIZED *gserArray[], int nelems);
 	static GSERIALIZED *GeometryIntersection(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static GSERIALIZED *GeometrySimplify(GSERIALIZED *geom, double dist);
+	static GSERIALIZED *Centroid(GSERIALIZED *g);
+	static GSERIALIZED *Centroid(GSERIALIZED *g, bool use_spheroid);
+	static GSERIALIZED *Convexhull(GSERIALIZED *g);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
@@ -86,9 +89,5 @@ public:
 
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
-
-	static GSERIALIZED *Centroid(GSERIALIZED *g);
-
-	static GSERIALIZED *Centroid(GSERIALIZED *g, bool use_spheroid);
 };
 } // namespace duckdb

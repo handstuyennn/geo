@@ -25,6 +25,7 @@
 
 #include "liblwgeom/gserialized1.hpp"
 
+#include "liblwgeom/gserialized.hpp"
 #include "liblwgeom/liblwgeom_internal.hpp"
 
 #include <cassert>
@@ -527,6 +528,197 @@ int gserialized1_peek_first_point(const GSERIALIZED *g, POINT4D *out_point) {
 
 	gserialized1_copy_point(double_array_start, g->gflags, out_point);
 	return LW_SUCCESS;
+}
+
+/**
+ * Read the bounding box off a serialization and calculate one if
+ * it is not already there.
+ */
+int gserialized1_get_gbox_p(const GSERIALIZED *g, GBOX *box) {
+	/* Try to just read the serialized box. */
+	if (gserialized1_read_gbox_p(g, box) == LW_SUCCESS) {
+		return LW_SUCCESS;
+	}
+	/* No box? Try to peek into simpler geometries and */
+	/* derive a box without creating an lwgeom */
+	else if (gserialized1_peek_gbox_p(g, box) == LW_SUCCESS) {
+		return LW_SUCCESS;
+	}
+	/* Damn! Nothing for it but to create an lwgeom... */
+	/* See http://trac.osgeo.org/postgis/ticket/1023 */
+	else {
+		LWGEOM *lwgeom = lwgeom_from_gserialized(g);
+		int ret = lwgeom_calculate_gbox(lwgeom, box);
+		gbox_float_round(box);
+		lwgeom_free(lwgeom);
+		return ret;
+	}
+}
+
+/*
+ * Populate a bounding box *without* allocating an LWGEOM. Useful
+ * for some performance purposes.
+ */
+int gserialized1_peek_gbox_p(const GSERIALIZED *g, GBOX *gbox) {
+	uint32_t type = gserialized1_get_type(g);
+
+	/* Peeking doesn't help if you already have a box or are geodetic */
+	if (G1FLAGS_GET_GEODETIC(g->gflags) || G1FLAGS_GET_BBOX(g->gflags)) {
+		return LW_FAILURE;
+	}
+
+	/* Boxes of points are easy peasy */
+	if (type == POINTTYPE) {
+		int i = 1; /* Start past <pointtype><padding> */
+		double *dptr = (double *)(g->data);
+
+		/* Read the empty flag */
+		int32_t *iptr = (int32_t *)(g->data);
+		int isempty = (iptr[1] == 0);
+
+		/* EMPTY point has no box */
+		if (isempty)
+			return LW_FAILURE;
+
+		gbox->xmin = gbox->xmax = dptr[i++];
+		gbox->ymin = gbox->ymax = dptr[i++];
+		gbox->flags = gserialized1_get_lwflags(g);
+		if (G1FLAGS_GET_Z(g->gflags)) {
+			gbox->zmin = gbox->zmax = dptr[i++];
+		}
+		if (G1FLAGS_GET_M(g->gflags)) {
+			gbox->mmin = gbox->mmax = dptr[i++];
+		}
+		gbox_float_round(gbox);
+		return LW_SUCCESS;
+	}
+	/* We can calculate the box of a two-point cartesian line trivially */
+	else if (type == LINETYPE) {
+		int ndims = G1FLAGS_NDIMS(g->gflags);
+		int i = 0; /* Start at <linetype><npoints> */
+		double *dptr = (double *)(g->data);
+		int32_t *iptr = (int32_t *)(g->data);
+		int npoints = iptr[1]; /* Read the npoints */
+
+		/* This only works with 2-point lines */
+		if (npoints != 2)
+			return LW_FAILURE;
+
+		/* Advance to X */
+		/* Past <linetype><npoints> */
+		i++;
+		gbox->xmin = FP_MIN(dptr[i], dptr[i + ndims]);
+		gbox->xmax = FP_MAX(dptr[i], dptr[i + ndims]);
+
+		/* Advance to Y */
+		i++;
+		gbox->ymin = FP_MIN(dptr[i], dptr[i + ndims]);
+		gbox->ymax = FP_MAX(dptr[i], dptr[i + ndims]);
+
+		gbox->flags = gserialized1_get_lwflags(g);
+		if (G1FLAGS_GET_Z(g->gflags)) {
+			/* Advance to Z */
+			i++;
+			gbox->zmin = FP_MIN(dptr[i], dptr[i + ndims]);
+			gbox->zmax = FP_MAX(dptr[i], dptr[i + ndims]);
+		}
+		if (G1FLAGS_GET_M(g->gflags)) {
+			/* Advance to M */
+			i++;
+			gbox->mmin = FP_MIN(dptr[i], dptr[i + ndims]);
+			gbox->mmax = FP_MAX(dptr[i], dptr[i + ndims]);
+		}
+		gbox_float_round(gbox);
+		return LW_SUCCESS;
+	}
+	/* We can also do single-entry multi-points */
+	else if (type == MULTIPOINTTYPE) {
+		int i = 0; /* Start at <multipointtype><ngeoms> */
+		double *dptr = (double *)(g->data);
+		int32_t *iptr = (int32_t *)(g->data);
+		int ngeoms = iptr[1]; /* Read the ngeoms */
+		int npoints;
+
+		/* This only works with single-entry multipoints */
+		if (ngeoms != 1)
+			return LW_FAILURE;
+
+		/* Npoints is at <multipointtype><ngeoms><pointtype><npoints> */
+		npoints = iptr[3];
+
+		/* The check below is necessary because we can have a MULTIPOINT
+		 * that contains a single, empty POINT (ngeoms = 1, npoints = 0) */
+		if (npoints != 1)
+			return LW_FAILURE;
+
+		/* Move forward two doubles (four ints) */
+		/* Past <multipointtype><ngeoms> */
+		/* Past <pointtype><npoints> */
+		i += 2;
+
+		/* Read the doubles from the one point */
+		gbox->xmin = gbox->xmax = dptr[i++];
+		gbox->ymin = gbox->ymax = dptr[i++];
+		gbox->flags = gserialized1_get_lwflags(g);
+		if (G1FLAGS_GET_Z(g->gflags)) {
+			gbox->zmin = gbox->zmax = dptr[i++];
+		}
+		if (G1FLAGS_GET_M(g->gflags)) {
+			gbox->mmin = gbox->mmax = dptr[i++];
+		}
+		gbox_float_round(gbox);
+		return LW_SUCCESS;
+	}
+	/* And we can do single-entry multi-lines with two vertices (!!!) */
+	else if (type == MULTILINETYPE) {
+		int ndims = G1FLAGS_NDIMS(g->gflags);
+		int i = 0; /* Start at <multilinetype><ngeoms> */
+		double *dptr = (double *)(g->data);
+		int32_t *iptr = (int32_t *)(g->data);
+		int ngeoms = iptr[1]; /* Read the ngeoms */
+		int npoints;
+
+		/* This only works with 1-line multilines */
+		if (ngeoms != 1)
+			return LW_FAILURE;
+
+		/* Npoints is at <multilinetype><ngeoms><linetype><npoints> */
+		npoints = iptr[3];
+
+		if (npoints != 2)
+			return LW_FAILURE;
+
+		/* Advance to X */
+		/* Move forward two doubles (four ints) */
+		/* Past <multilinetype><ngeoms> */
+		/* Past <linetype><npoints> */
+		i += 2;
+		gbox->xmin = FP_MIN(dptr[i], dptr[i + ndims]);
+		gbox->xmax = FP_MAX(dptr[i], dptr[i + ndims]);
+
+		/* Advance to Y */
+		i++;
+		gbox->ymin = FP_MIN(dptr[i], dptr[i + ndims]);
+		gbox->ymax = FP_MAX(dptr[i], dptr[i + ndims]);
+
+		gbox->flags = gserialized1_get_lwflags(g);
+		if (G1FLAGS_GET_Z(g->gflags)) {
+			/* Advance to Z */
+			i++;
+			gbox->zmin = FP_MIN(dptr[i], dptr[i + ndims]);
+			gbox->zmax = FP_MAX(dptr[i], dptr[i + ndims]);
+		}
+		if (G1FLAGS_GET_M(g->gflags)) {
+			/* Advance to M */
+			i++;
+			gbox->mmin = FP_MIN(dptr[i], dptr[i + ndims]);
+			gbox->mmax = FP_MAX(dptr[i], dptr[i + ndims]);
+		}
+		gbox_float_round(gbox);
+		return LW_SUCCESS;
+	}
+
+	return LW_FAILURE;
 }
 
 } // namespace duckdb

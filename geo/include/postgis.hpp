@@ -43,6 +43,7 @@ public:
 	GSERIALIZED *pgis_union_geometry_array(GSERIALIZED *gserArray[], int nelems);
 	GSERIALIZED *ST_Intersection(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	GSERIALIZED *LWGEOM_simplify2d(GSERIALIZED *geom, double dist);
+	GSERIALIZED *convexhull(GSERIALIZED *geom);
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

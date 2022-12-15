@@ -125,4 +125,16 @@ int gserialized_has_z(const GSERIALIZED *g) {
 		return gserialized1_has_z(g);
 }
 
+/**
+ * Read the box from the #GSERIALIZED or calculate it if necessary.
+ * Return #LWFAILURE if box cannot be calculated (NULL or EMPTY
+ * input).
+ */
+int gserialized_get_gbox_p(const GSERIALIZED *g, GBOX *gbox) {
+	if (GFLAGS_GET_VERSION(g->gflags))
+		return gserialized2_get_gbox_p(g, gbox);
+	else
+		return gserialized1_get_gbox_p(g, gbox);
+}
+
 } // namespace duckdb

@@ -265,5 +265,9 @@ std::unique_ptr<Geometry> Polygon::getBoundary() const {
 	return getFactory()->createMultiLineString(std::move(rings));
 }
 
+std::unique_ptr<Geometry> Polygon::convexHull() const {
+	return getExteriorRing()->convexHull();
+}
+
 } // namespace geom
 } // namespace geos

@@ -20,8 +20,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <geos/algorithm/Centroid.hpp>
 #include <geos/geom/Geometry.hpp>
 #include <geos/geom/GeometryComponentFilter.hpp>
+#include <geos/algorithm/ConvexHull.hpp>
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/GeometryFilter.hpp>
 #include <geos/geom/HeuristicOverlay.hpp>
@@ -38,6 +40,7 @@
 
 #define SHORTCIRCUIT_PREDICATES 1
 
+using namespace geos::algorithm;
 using namespace geos::operation::overlay;
 using namespace geos::operation::valid;
 using namespace geos::operation::buffer;
@@ -222,6 +225,34 @@ std::unique_ptr<Geometry> Geometry::intersection(const Geometry *other) const {
 	}
 
 	return HeuristicOverlay(this, other, OverlayOp::opINTERSECTION);
+}
+
+/*public*/
+std::unique_ptr<Point> Geometry::getCentroid() const {
+	Coordinate centPt;
+	if (!getCentroid(centPt)) {
+		return getFactory()->createPoint(getCoordinateDimension());
+	}
+
+	// We don't use createPointFromInternalCoord here
+	// because ::getCentroid() takes care about rounding
+	return std::unique_ptr<Point>(getFactory()->createPoint(centPt));
+}
+
+/*public*/
+bool Geometry::getCentroid(Coordinate &ret) const {
+	if (isEmpty()) {
+		return false;
+	}
+	if (!Centroid::getCentroid(*this, ret)) {
+		return false;
+	}
+	getPrecisionModel()->makePrecise(ret); // not in JTS
+	return true;
+}
+
+std::unique_ptr<Geometry> Geometry::convexHull() const {
+	return ConvexHull(this).getConvexHull();
 }
 
 } // namespace geom

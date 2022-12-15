@@ -666,6 +666,11 @@ extern int32_t lwgeom_get_srid(const LWGEOM *geom);
  */
 extern int lwgeom_has_z(const LWGEOM *geom);
 
+/**
+ * Return #LW_TRUE if geometry has M ordinates.
+ */
+extern int lwgeom_has_m(const LWGEOM *geom);
+
 /****************************************************************
  * MEMORY MANAGEMENT
  ****************************************************************/
@@ -731,6 +736,13 @@ extern uint32_t lwgeom_count_vertices(const LWGEOM *geom);
  * Calculate the GeoHash (http://geohash.org) string for a geometry. Caller must free.
  */
 lwvarlena_t *lwgeom_geohash(const LWGEOM *lwgeom, int precision);
+
+/**
+ * Pull a #GBOX from the header of a #GSERIALIZED, if one is available. If
+ * it is not, calculate it from the geometry. If that doesn't work (null
+ * or empty) return LW_FAILURE.
+ */
+extern int gserialized_get_gbox_p(const GSERIALIZED *g, GBOX *box);
 
 /**
  * Call this function to drop BBOX and SRID
@@ -1182,6 +1194,14 @@ extern void gbox_duplicate(const GBOX *original, GBOX *duplicate);
 extern size_t gbox_serialized_size(lwflags_t flags);
 
 /**
+ * Round given GBOX to float boundaries
+ *
+ * This turns a GBOX into the version it would become
+ * after a serialize/deserialize round trip.
+ */
+extern void gbox_float_round(GBOX *gbox);
+
+/**
  * Extract the geometry type from the serialized form (it hides in
  * the anonymous data area, so this is a handy function).
  */
@@ -1266,6 +1286,7 @@ extern int lwgeom_simplify_in_place(LWGEOM *igeom, double dist, int preserve_col
 LWGEOM *lwgeom_difference_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
 LWGEOM *lwgeom_intersection_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
 LWGEOM *lwgeom_union_prec(const LWGEOM *geom1, const LWGEOM *geom2, double gridSize);
+LWGEOM *lwgeom_centroid(const LWGEOM *geom);
 
 #endif /* !defined _LIBLWGEOM_H  */
 

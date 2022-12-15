@@ -606,6 +606,20 @@ Geometry *GEOSUnaryUnion_r(GEOSContextHandle_t extHandle, const Geometry *g) {
 	});
 }
 
+Geometry *GEOSGetCentroid_r(GEOSContextHandle_t extHandle, const Geometry *g) {
+	return execute(extHandle, [&]() -> Geometry * {
+		auto ret = g->getCentroid();
+
+		if (ret == nullptr) {
+			// TODO check if getCentroid() can really return null
+			const GeometryFactory *gf = g->getFactory();
+			ret = gf->createPoint();
+		}
+		ret->setSRID(g->getSRID());
+		return ret.release();
+	});
+}
+
 //-------------------------------------------------------------------
 // memory management functions
 //------------------------------------------------------------------
@@ -667,6 +681,14 @@ GEOSMessageHandler GEOSContext_setErrorHandler_r(GEOSContextHandle_t extHandle, 
 Geometry *GEOSBoundary_r(GEOSContextHandle_t extHandle, const Geometry *g1) {
 	return execute(extHandle, [&]() {
 		auto g3 = g1->getBoundary();
+		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
+}
+
+Geometry *GEOSConvexHull_r(GEOSContextHandle_t extHandle, const Geometry *g1) {
+	return execute(extHandle, [&]() {
+		auto g3 = g1->convexHull();
 		g3->setSRID(g1->getSRID());
 		return g3.release();
 	});
