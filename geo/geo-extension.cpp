@@ -356,6 +356,15 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo snaptogrid_func_info(snaptogrid);
 	catalog.AddFunction(*con.context, &snaptogrid_func_info);
 
+	// ST_BUFFER
+	ScalarFunctionSet buffer("st_buffer");
+	buffer.AddFunction(ScalarFunction({geo_type, LogicalType::DOUBLE}, geo_type, GeoFunctions::GeometryBufferFunction));
+	buffer.AddFunction(ScalarFunction({geo_type, LogicalType::DOUBLE, LogicalType::VARCHAR}, geo_type,
+	                                  GeoFunctions::GeometryBufferTextFunction));
+
+	CreateScalarFunctionInfo buffer_func_info(buffer);
+	catalog.AddFunction(*con.context, &buffer_func_info);
+
 	con.Commit();
 }
 

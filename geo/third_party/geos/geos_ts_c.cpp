@@ -729,4 +729,67 @@ Geometry *GEOSIntersectionPrec_r(GEOSContextHandle_t extHandle, const Geometry *
 // STRtree
 //-----------------------------------------------------------------
 
+BufferParameters *GEOSBufferParams_create_r(GEOSContextHandle_t extHandle) {
+	return execute(extHandle, [&]() { return new BufferParameters(); });
+}
+
+void GEOSBufferParams_destroy_r(GEOSContextHandle_t extHandle, BufferParameters *p) {
+	(void)extHandle;
+	delete p;
+}
+
+int GEOSBufferParams_setEndCapStyle_r(GEOSContextHandle_t extHandle, GEOSBufferParams *p, int style) {
+	return execute(extHandle, 0, [&]() {
+		if (style > BufferParameters::CAP_SQUARE) {
+			throw IllegalArgumentException("Invalid buffer endCap style");
+		}
+		p->setEndCapStyle(static_cast<BufferParameters::EndCapStyle>(style));
+		return 1;
+	});
+}
+
+int GEOSBufferParams_setJoinStyle_r(GEOSContextHandle_t extHandle, GEOSBufferParams *p, int style) {
+	return execute(extHandle, 0, [&]() {
+		if (style > BufferParameters::JOIN_BEVEL) {
+			throw IllegalArgumentException("Invalid buffer join style");
+		}
+		p->setJoinStyle(static_cast<BufferParameters::JoinStyle>(style));
+
+		return 1;
+	});
+}
+
+int GEOSBufferParams_setMitreLimit_r(GEOSContextHandle_t extHandle, GEOSBufferParams *p, double limit) {
+	return execute(extHandle, 0, [&]() {
+		p->setMitreLimit(limit);
+		return 1;
+	});
+}
+
+int GEOSBufferParams_setQuadrantSegments_r(GEOSContextHandle_t extHandle, GEOSBufferParams *p, int segs) {
+	return execute(extHandle, 0, [&]() {
+		p->setQuadrantSegments(segs);
+		return 1;
+	});
+}
+
+int GEOSBufferParams_setSingleSided_r(GEOSContextHandle_t extHandle, GEOSBufferParams *p, int ss) {
+	return execute(extHandle, 0, [&]() {
+		p->setSingleSided((ss != 0));
+		return 1;
+	});
+}
+
+Geometry *GEOSBufferWithParams_r(GEOSContextHandle_t extHandle, const Geometry *g1, const BufferParameters *bp,
+                                 double width) {
+	using geos::operation::buffer::BufferOp;
+
+	return execute(extHandle, [&]() {
+		BufferOp op(g1, *bp);
+		std::unique_ptr<Geometry> g3 = op.getResultGeometry(width);
+		g3->setSRID(g1->getSRID());
+		return g3.release();
+	});
+}
+
 } /* extern "C" */

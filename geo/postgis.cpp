@@ -134,6 +134,10 @@ GSERIALIZED *Postgis::LWGEOM_snaptogrid(GSERIALIZED *geom, double size) {
 	return duckdb::LWGEOM_snaptogrid(geom, 0, 0, size, size);
 }
 
+GSERIALIZED *Postgis::buffer(GSERIALIZED *geom, double radius, string styles_text) {
+	return duckdb::buffer(geom, radius, styles_text);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

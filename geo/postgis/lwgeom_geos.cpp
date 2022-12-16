@@ -356,4 +356,155 @@ GSERIALIZED *convexhull(GSERIALIZED *geom1) {
 	return result;
 }
 
+GSERIALIZED *buffer(GSERIALIZED *geom1, double size, string styles_text) {
+	GEOSBufferParams *bufferparams;
+	GEOSGeometry *g1, *g3 = NULL;
+	GSERIALIZED *result;
+	LWGEOM *lwg;
+	int quadsegs = 8;   /* the default */
+	int singleside = 0; /* the default */
+	enum { ENDCAP_ROUND = 1, ENDCAP_FLAT = 2, ENDCAP_SQUARE = 3 };
+	enum { JOIN_ROUND = 1, JOIN_MITRE = 2, JOIN_BEVEL = 3 };
+	const double DEFAULT_MITRE_LIMIT = 5.0;
+	const int DEFAULT_ENDCAP_STYLE = ENDCAP_ROUND;
+	const int DEFAULT_JOIN_STYLE = JOIN_ROUND;
+	double mitreLimit = DEFAULT_MITRE_LIMIT;
+	int endCapStyle = DEFAULT_ENDCAP_STYLE;
+	int joinStyle = DEFAULT_JOIN_STYLE;
+
+	/* Empty.Buffer() == Empty[polygon] */
+	if (gserialized_is_empty(geom1)) {
+		lwg = lwpoly_as_lwgeom(
+		    lwpoly_construct_empty(gserialized_get_srid(geom1), 0, 0)); // buffer wouldn't give back z or m anyway
+		result = geometry_serialize(lwg);
+		lwgeom_free(lwg);
+		return result;
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g1 = POSTGIS2GEOS(geom1);
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+
+	char *param;
+	int n = styles_text.size();
+ 
+    // declaring character array
+    char params[n + 1];
+
+	strcpy(params, styles_text.c_str());
+
+	for (param = params;; param = NULL) {
+		char *key, *val;
+		param = strtok(param, " ");
+		if (!param)
+			break;
+
+		key = param;
+		val = strchr(key, '=');
+		if (!val || *(val + 1) == '\0') {
+			lwerror("Missing value for buffer parameter %s", key);
+			break;
+		}
+		*val = '\0';
+		++val;
+
+		if (!strcmp(key, "endcap")) {
+			/* Supported end cap styles:
+			 *   "round", "flat", "square"
+			 */
+			if (!strcmp(val, "round")) {
+				endCapStyle = ENDCAP_ROUND;
+			} else if (!strcmp(val, "flat") || !strcmp(val, "butt")) {
+				endCapStyle = ENDCAP_FLAT;
+			} else if (!strcmp(val, "square")) {
+				endCapStyle = ENDCAP_SQUARE;
+			} else {
+				lwerror("Invalid buffer end cap "
+				        "style: %s (accept: "
+				        "'round', 'flat', 'butt' "
+				        "or 'square'"
+				        ")",
+				        val);
+				break;
+			}
+
+		} else if (!strcmp(key, "join")) {
+			if (!strcmp(val, "round")) {
+				joinStyle = JOIN_ROUND;
+			} else if (!strcmp(val, "mitre") || !strcmp(val, "miter")) {
+				joinStyle = JOIN_MITRE;
+			} else if (!strcmp(val, "bevel")) {
+				joinStyle = JOIN_BEVEL;
+			} else {
+				lwerror("Invalid buffer end cap "
+				        "style: %s (accept: "
+				        "'round', 'mitre', 'miter' "
+				        " or 'bevel'"
+				        ")",
+				        val);
+				break;
+			}
+		} else if (!strcmp(key, "mitre_limit") || !strcmp(key, "miter_limit")) {
+			/* mitreLimit is a float */
+			mitreLimit = atof(val);
+		} else if (!strcmp(key, "quad_segs")) {
+			/* quadrant segments is an int */
+			quadsegs = atoi(val);
+		} else if (!strcmp(key, "side")) {
+			if (!strcmp(val, "both")) {
+				singleside = 0;
+			} else if (!strcmp(val, "left")) {
+				singleside = 1;
+			} else if (!strcmp(val, "right")) {
+				singleside = 1;
+				size *= -1;
+			} else {
+				lwerror("Invalid side parameter: %s (accept: 'right', 'left', 'both')", val);
+				break;
+			}
+		} else {
+			lwerror("Invalid buffer parameter: %s (accept: 'endcap', 'join', 'mitre_limit', 'miter_limit', "
+			        "'quad_segs' and 'side')",
+			        key);
+			break;
+		}
+	}
+	// lwfree(params); /* was pstrduped */
+
+	bufferparams = GEOSBufferParams_create();
+	if (bufferparams) {
+		if (GEOSBufferParams_setEndCapStyle(bufferparams, endCapStyle) &&
+		    GEOSBufferParams_setJoinStyle(bufferparams, joinStyle) &&
+		    GEOSBufferParams_setMitreLimit(bufferparams, mitreLimit) &&
+		    GEOSBufferParams_setQuadrantSegments(bufferparams, quadsegs) &&
+		    GEOSBufferParams_setSingleSided(bufferparams, singleside)) {
+			g3 = GEOSBufferWithParams(g1, bufferparams, size);
+		} else {
+			lwerror("Error setting buffer parameters.");
+		}
+		GEOSBufferParams_destroy(bufferparams);
+	} else {
+		lwerror("Error setting buffer parameters.");
+	}
+
+	GEOSGeom_destroy(g1);
+
+	if (!g3)
+		throw "GEOSBuffer";
+
+	GEOSSetSRID(g3, gserialized_get_srid(geom1));
+
+	result = GEOS2POSTGIS(g3, gserialized_has_z(geom1));
+	GEOSGeom_destroy(g3);
+
+	if (!result) {
+		throw "GEOS buffer() threw an error (result postgis geometry formation)!";
+		return nullptr;
+	}
+
+	return result;
+}
+
 } // namespace duckdb

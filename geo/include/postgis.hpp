@@ -45,6 +45,7 @@ public:
 	GSERIALIZED *LWGEOM_simplify2d(GSERIALIZED *geom, double dist);
 	GSERIALIZED *convexhull(GSERIALIZED *geom);
 	GSERIALIZED *LWGEOM_snaptogrid(GSERIALIZED *geom, double size);
+	GSERIALIZED *buffer(GSERIALIZED *geom, double radius, string styles_text = "");
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

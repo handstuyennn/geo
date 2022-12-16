@@ -215,6 +215,16 @@ GSERIALIZED *Geometry::GeometrySnapToGrid(GSERIALIZED *geom, double size) {
 	return postgis.LWGEOM_snaptogrid(geom, size);
 }
 
+GSERIALIZED *Geometry::GeometryBuffer(GSERIALIZED *geom, double radius) {
+	Postgis postgis;
+	return postgis.buffer(geom, radius);
+}
+
+GSERIALIZED *Geometry::GeometryBufferText(GSERIALIZED *geom, double radius, string styles_text) {
+	Postgis postgis;
+	return postgis.buffer(geom, radius, styles_text);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

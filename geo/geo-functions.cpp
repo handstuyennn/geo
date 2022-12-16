@@ -1631,4 +1631,88 @@ void GeoFunctions::GeometrySnapToGridFunction(DataChunk &args, ExpressionState &
 	GeometrySnapToGridBinaryExecutor<string_t, double, string_t>(geom_arg, size_arg, result, args.size());
 }
 
+template <typename TA, typename TB, typename TR>
+static TR BufferScalarFunction(Vector &result, TA geom, TB radius) {
+	if (geom.GetSize() == 0) {
+		return string_t();
+	}
+	auto gser = Geometry::GetGserialized(geom);
+	if (!gser) {
+		throw ConversionException("Failure in geometry get buffer: could not getting buffer from geom");
+		return string_t();
+	}
+	auto gserBuffer = Geometry::GeometryBuffer(gser, radius);
+	if (!gserBuffer) {
+		Geometry::DestroyGeometry(gser);
+		return string_t();
+	}
+	if (gser == gserBuffer) {
+		Geometry::DestroyGeometry(gser);
+		return geom;
+	}
+	idx_t rv_size = Geometry::GetGeometrySize(gserBuffer);
+	auto base = Geometry::GetBase(gserBuffer);
+	auto result_str = StringVector::EmptyString(result, rv_size);
+	memcpy(result_str.GetDataWriteable(), base, rv_size);
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser);
+	Geometry::DestroyGeometry(gserBuffer);
+	return result_str;
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryBufferBinaryExecutor(Vector &geom_vec, Vector &radius_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, radius_vec, result, count, [&](TA geom, TB radius) {
+		return BufferScalarFunction<TA, TB, TR>(result, geom, radius);
+	});
+}
+
+void GeoFunctions::GeometryBufferFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	auto &radius_arg = args.data[1];
+	GeometryBufferBinaryExecutor<string_t, double, string_t>(geom_arg, radius_arg, result, args.size());
+}
+
+struct BufferTextTernaryOperator {
+	template <class TA, class TB, class TC, class TR>
+	static inline TR Operation(TA geom, TB radius, TC styles) {
+		if (geom.GetSize() == 0) {
+			return string_t();
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry get buffer: could not getting buffer from geom");
+			return string_t();
+		}
+		auto gserBuffer = Geometry::GeometryBufferText(gser, radius, styles.GetString());
+		if (!gserBuffer) {
+			Geometry::DestroyGeometry(gser);
+			return string_t();
+		}
+		if (gser == gserBuffer) {
+			Geometry::DestroyGeometry(gser);
+			return geom;
+		}
+		idx_t rv_size = Geometry::GetGeometrySize(gser);
+		auto base = Geometry::GetBase(gser);
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserBuffer);
+		return string_t((const char *)base, rv_size);
+	}
+};
+
+template <typename TA, typename TB, typename TC, typename TR>
+static void BufferTextTernaryExecutor(Vector &geom, Vector &radius, Vector &styles, Vector &result, idx_t count) {
+	TernaryExecutor::Execute<TA, TB, TC, TR>(geom, radius, styles, result, count,
+	                                         BufferTextTernaryOperator::Operation<TA, TB, TC, TR>);
+}
+
+void GeoFunctions::GeometryBufferTextFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	auto &radius_arg = args.data[1];
+	auto &styles_arg = args.data[2];
+	BufferTextTernaryExecutor<string_t, double, string_t, string_t>(geom_arg, radius_arg, styles_arg, result,
+	                                                                args.size());
+}
+
 } // namespace duckdb
