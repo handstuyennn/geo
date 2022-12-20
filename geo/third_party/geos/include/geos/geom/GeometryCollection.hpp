@@ -139,6 +139,13 @@ public:
 
 	std::unique_ptr<Geometry> getBoundary() const override;
 
+	/**
+	 * \brief
+	 * Returns the maximum boundary dimension of geometries in
+	 * this collection.
+	 */
+	int getBoundaryDimension() const override;
+
 protected:
 	GeometryCollection(const GeometryCollection &gc);
 

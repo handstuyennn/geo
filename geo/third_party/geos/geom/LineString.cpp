@@ -205,6 +205,13 @@ std::unique_ptr<Geometry> LineString::getBoundary() const {
 	return bop.getBoundary();
 }
 
+int LineString::getBoundaryDimension() const {
+	if (isClosed()) {
+		return Dimension::False;
+	}
+	return 0;
+}
+
 std::unique_ptr<Point> LineString::getPointN(std::size_t n) const {
 	assert(getFactory());
 	assert(points.get());

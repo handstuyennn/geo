@@ -1199,6 +1199,12 @@ extern void gbox_duplicate(const GBOX *original, GBOX *duplicate);
 extern size_t gbox_serialized_size(lwflags_t flags);
 
 /**
+ * Check if two given GBOX are the same in x and y, or would round to the same
+ * GBOX in x and if serialized in GSERIALIZED
+ */
+extern int gbox_same_2d_float(const GBOX *g1, const GBOX *g2);
+
+/**
  * Round given GBOX to float boundaries
  *
  * This turns a GBOX into the version it would become

@@ -236,6 +236,11 @@ extern char GEOS_DLL GEOSisRing_r(GEOSContextHandle_t handle, const GEOSGeometry
 /** \see GEOSHasZ */
 extern char GEOS_DLL GEOSHasZ_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
 
+/* ========= Binary predicates ========= */
+
+/** \see GEOSEquals */
+extern char GEOS_DLL GEOSEquals_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
+
 /* ========== Coordinate Sequence functions ========== */
 
 /** \see GEOSCoordSeq_create */
@@ -893,6 +898,23 @@ extern GEOSGeometry GEOS_DLL *GEOSIntersectionPrec(const GEOSGeometry *g1, const
  * \see geos::algorithm::Centroid
  */
 extern GEOSGeometry GEOS_DLL *GEOSGetCentroid(const GEOSGeometry *g);
+
+///@}
+
+/* ============================================================== */
+/** @name Spatial Predicates
+ * Functions computing binary spatial predicates using the DE-9IM topology model.
+ */
+///@{
+
+/**
+ * True if geometries cover the same space on the place.
+ * \param g1 Input geometry
+ * \param g2 Input geometry
+ * \returns 1 on true, 0 on false, 2 on exception
+ * \see geos::geom::Geometry::equals
+ */
+extern char GEOS_DLL GEOSEquals(const GEOSGeometry *g1, const GEOSGeometry *g2);
 
 #endif /* #ifndef GEOS_USE_ONLY_R_API */
 

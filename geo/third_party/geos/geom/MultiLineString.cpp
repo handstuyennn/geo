@@ -61,5 +61,25 @@ std::unique_ptr<Geometry> MultiLineString::getBoundary() const {
 	return bop.getBoundary();
 }
 
+int MultiLineString::getBoundaryDimension() const {
+	if (isClosed()) {
+		return Dimension::False;
+	}
+	return 0;
+}
+
+bool MultiLineString::isClosed() const {
+	if (isEmpty()) {
+		return false;
+	}
+	for (const auto &g : geometries) {
+		const LineString *ls = detail::down_cast<const LineString *>(g.get());
+		if (!ls->isClosed()) {
+			return false;
+		}
+	}
+	return true;
+}
+
 } // namespace geom
 } // namespace geos

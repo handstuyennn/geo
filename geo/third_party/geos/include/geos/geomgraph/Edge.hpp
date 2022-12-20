@@ -54,6 +54,7 @@ namespace geomgraph { // geos.geomgraph
 
 /** The edge component of a geometry graph */
 class GEOS_DLL Edge : public GraphComponent {
+	using GraphComponent::updateIM;
 
 private:
 	/// Lazily-created, owned by Edge.
@@ -72,6 +73,8 @@ public:
 		assert(pts);
 		assert(pts->size() > 1);
 	}
+
+	static void updateIM(const Label &lbl, geom::IntersectionMatrix &im);
 
 	/// Takes ownership of CoordinateSequence
 	Edge(geom::CoordinateSequence *newPts, const Label &newLabel);
@@ -172,6 +175,21 @@ public:
 	///
 	virtual void addIntersection(algorithm::LineIntersector *li, std::size_t segmentIndex, std::size_t geomIndex,
 	                             std::size_t intIndex);
+
+	/// Update the IM with the contribution for this component.
+	//
+	/// A component only contributes if it has a labelling for both
+	/// parent geometries
+	///
+	void computeIM(geom::IntersectionMatrix &im) override {
+		updateIM(label, im);
+		testInvariant();
+	}
+
+	virtual EdgeIntersectionList &getEdgeIntersectionList() {
+		testInvariant();
+		return eiList;
+	}
 };
 } // namespace geomgraph
 } // namespace geos

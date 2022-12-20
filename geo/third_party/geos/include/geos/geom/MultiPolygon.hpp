@@ -30,11 +30,6 @@
 namespace geos {
 namespace geom { // geos::geom
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4250) // T1 inherits T2 via dominance
-#endif
-
 /// Models a collection of {@link Polygon}s.
 ///
 /// As per the OGC SFS specification,
@@ -69,6 +64,9 @@ public:
 	 * @see Geometry#getBoundary
 	 */
 	std::unique_ptr<Geometry> getBoundary() const override;
+
+	/// Returns 1 (MultiPolygon boundary is MultiLineString)
+	int getBoundaryDimension() const override;
 
 protected:
 	/**

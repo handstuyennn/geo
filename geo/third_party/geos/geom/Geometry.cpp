@@ -21,15 +21,17 @@
 #include <algorithm>
 #include <cassert>
 #include <geos/algorithm/Centroid.hpp>
+#include <geos/algorithm/ConvexHull.hpp>
 #include <geos/geom/Geometry.hpp>
 #include <geos/geom/GeometryComponentFilter.hpp>
-#include <geos/algorithm/ConvexHull.hpp>
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/GeometryFilter.hpp>
 #include <geos/geom/HeuristicOverlay.hpp>
+#include <geos/geom/IntersectionMatrix.hpp>
 #include <geos/operation/buffer/BufferOp.hpp>
 #include <geos/operation/overlay/OverlayOp.hpp>
 #include <geos/operation/overlayng/OverlayNGRobust.hpp>
+#include <geos/operation/relate/RelateOp.hpp>
 #include <geos/operation/union/UnaryUnionOp.hpp>
 #include <geos/operation/valid/IsSimpleOp.hpp>
 #include <geos/operation/valid/IsValidOp.hpp>
@@ -44,6 +46,7 @@ using namespace geos::algorithm;
 using namespace geos::operation::overlay;
 using namespace geos::operation::valid;
 using namespace geos::operation::buffer;
+using namespace geos::operation::relate;
 
 namespace geos {
 namespace geom { // geos::geom
@@ -253,6 +256,39 @@ bool Geometry::getCentroid(Coordinate &ret) const {
 
 std::unique_ptr<Geometry> Geometry::convexHull() const {
 	return ConvexHull(this).getConvexHull();
+}
+
+bool Geometry::relate(const Geometry *g, const std::string &intersectionPattern) const {
+	std::unique_ptr<IntersectionMatrix> im(relate(g));
+	bool res = im->matches(intersectionPattern);
+	return res;
+}
+
+std::unique_ptr<IntersectionMatrix> Geometry::relate(const Geometry *other) const {
+	return RelateOp::relate(this, other);
+}
+
+std::unique_ptr<IntersectionMatrix> Geometry::relate(const Geometry &other) const {
+	return relate(&other);
+}
+
+bool Geometry::equals(const Geometry *g) const {
+#ifdef SHORTCIRCUIT_PREDICATES
+	// short-circuit test
+	if (!getEnvelopeInternal()->equals(g->getEnvelopeInternal())) {
+		return false;
+	}
+#endif
+
+	if (isEmpty()) {
+		return g->isEmpty();
+	} else if (g->isEmpty()) {
+		return isEmpty();
+	}
+
+	std::unique_ptr<IntersectionMatrix> im(relate(g));
+	bool res = im->isEquals(getDimension(), g->getDimension());
+	return res;
 }
 
 } // namespace geom

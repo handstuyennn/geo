@@ -40,6 +40,20 @@ namespace geomgraph { // geos.geomgraph
 using namespace geos::geomgraph::index;
 using namespace geos::algorithm;
 
+/**
+ * Updates an IM from the label for an edge.
+ * Handles edges from both L and A geometrys.
+ */
+void Edge::updateIM(const Label &lbl, IntersectionMatrix &im) {
+	im.setAtLeastIfValid(lbl.getLocation(0, Position::ON), lbl.getLocation(1, Position::ON), 1);
+	if (lbl.isArea()) {
+
+		im.setAtLeastIfValid(lbl.getLocation(0, Position::LEFT), lbl.getLocation(1, Position::LEFT), 2);
+
+		im.setAtLeastIfValid(lbl.getLocation(0, Position::RIGHT), lbl.getLocation(1, Position::RIGHT), 2);
+	}
+}
+
 /*public*/
 Edge::~Edge() = default;
 

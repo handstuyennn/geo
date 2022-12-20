@@ -74,6 +74,12 @@ public:
 
 	virtual void setLabel(uint8_t argIndex, geom::Location onLocation);
 
+	/** \brief
+	 * Updates the label of a node to BOUNDARY,
+	 * obeying the mod-2 boundaryDetermination rule.
+	 */
+	virtual void setLabelBoundary(uint8_t argIndex);
+
 	virtual void addZ(double);
 
 	/** \brief
@@ -105,6 +111,12 @@ protected:
 	geom::Coordinate coord;
 
 	EdgeEndStar *edges;
+
+	/** \brief
+	 * Basic nodes do not compute IMs
+	 */
+	void computeIM(geom::IntersectionMatrix & /*im*/) override {
+	}
 
 private:
 	std::vector<double> zvals;

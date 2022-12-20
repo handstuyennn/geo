@@ -389,9 +389,9 @@ GSERIALIZED *buffer(GSERIALIZED *geom1, double size, string styles_text) {
 
 	char *param;
 	int n = styles_text.size();
- 
-    // declaring character array
-    char params[n + 1];
+
+	// declaring character array
+	char params[n + 1];
 
 	strcpy(params, styles_text.c_str());
 
@@ -503,6 +503,60 @@ GSERIALIZED *buffer(GSERIALIZED *geom1, double size, string styles_text) {
 		throw "GEOS buffer() threw an error (result postgis geometry formation)!";
 		return nullptr;
 	}
+
+	return result;
+}
+
+bool ST_Equals(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GEOSGeometry *g1, *g2;
+	char result;
+	GBOX box1, box2;
+
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	/* Empty == Empty */
+	if (gserialized_is_empty(geom1) && gserialized_is_empty(geom2))
+		return true;
+
+	/*
+	 * short-circuit: If geom1 and geom2 do not have the same bounding box
+	 * we can return FALSE.
+	 */
+	if (gserialized_get_gbox_p(geom1, &box1) && gserialized_get_gbox_p(geom2, &box2)) {
+		if (gbox_same_2d_float(&box1, &box2) == LW_FALSE) {
+			return false;
+		}
+	}
+
+	/*
+	 * short-circuit: if geom1 and geom2 are binary-equivalent, we can return
+	 * TRUE.  This is much faster than doing the comparison using GEOS.
+	 */
+	if (VARSIZE(geom1) == VARSIZE(geom2) && !memcmp(geom1, geom2, VARSIZE(geom1))) {
+		return true;
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g1 = POSTGIS2GEOS(geom1);
+
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+
+	g2 = POSTGIS2GEOS(geom2);
+
+	if (!g2) {
+		GEOSGeom_destroy(g1);
+		throw "Second argument geometry could not be converted to GEOS";
+	}
+
+	result = GEOSEquals(g1, g2);
+
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+
+	if (result == 2)
+		throw "GEOSEquals";
 
 	return result;
 }

@@ -132,6 +132,14 @@ Dimension::DimensionType GeometryCollection::getDimension() const {
 	return dimension;
 }
 
+int GeometryCollection::getBoundaryDimension() const {
+	int dimension = Dimension::False;
+	for (const auto &g : geometries) {
+		dimension = std::max(dimension, g->getBoundaryDimension());
+	}
+	return dimension;
+}
+
 bool GeometryCollection::isDimensionStrict(Dimension::DimensionType d) const {
 	return std::all_of(geometries.begin(), geometries.end(),
 	                   [&d](const std::unique_ptr<Geometry> &g) { return g->getDimension() == d; });

@@ -394,5 +394,9 @@ std::vector<Node *> *GeometryGraph::getBoundaryNodes() {
 	return boundaryNodes.get();
 }
 
+std::vector<Edge *> *GeometryGraph::getEdges() {
+	return edges;
+}
+
 } // namespace geomgraph
 } // namespace geos

@@ -65,6 +65,10 @@ void LinearRing::validateConstruction() {
 	}
 }
 
+int LinearRing::getBoundaryDimension() const {
+	return Dimension::False;
+}
+
 std::string LinearRing::getGeometryType() const {
 	return "LinearRing";
 }

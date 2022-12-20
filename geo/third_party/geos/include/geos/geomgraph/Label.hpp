@@ -181,6 +181,11 @@ public:
 		elt[geomIndex].setLocation(Position::ON, location);
 	};
 
+	void setAllLocations(uint32_t geomIndex, geom::Location location) {
+		assert(geomIndex < 2);
+		elt[geomIndex].setAllLocations(location);
+	};
+
 	void setAllLocationsIfNull(uint32_t geomIndex, geom::Location location) {
 		assert(geomIndex < 2);
 		elt[geomIndex].setAllLocationsIfNull(location);

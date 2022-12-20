@@ -47,6 +47,8 @@ public:
 	GSERIALIZED *LWGEOM_snaptogrid(GSERIALIZED *geom, double size);
 	GSERIALIZED *buffer(GSERIALIZED *geom, double radius, string styles_text = "");
 
+	bool ST_Equals(GSERIALIZED *geom1, GSERIALIZED *geom2);
+
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
 	GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);

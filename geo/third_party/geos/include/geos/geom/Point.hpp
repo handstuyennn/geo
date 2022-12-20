@@ -121,6 +121,9 @@ public:
 	 */
 	std::unique_ptr<Geometry> getBoundary() const override;
 
+	/// Returns Dimension::False (Point has no boundary)
+	int getBoundaryDimension() const override;
+
 protected:
 	/**
 	 * \brief

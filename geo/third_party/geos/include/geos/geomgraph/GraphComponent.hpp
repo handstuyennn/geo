@@ -41,7 +41,6 @@ namespace geomgraph { // geos.geomgraph
  */
 class GEOS_DLL GraphComponent {
 public:
-public:
 	GraphComponent();
 
 	/*
@@ -83,8 +82,12 @@ public:
 		isVisitedVar = p_isVisited;
 	}
 
+	virtual void updateIM(geom::IntersectionMatrix &im);
+
 protected:
 	Label label;
+
+	virtual void computeIM(geom::IntersectionMatrix &im) = 0;
 
 private:
 	bool isInResultVar;

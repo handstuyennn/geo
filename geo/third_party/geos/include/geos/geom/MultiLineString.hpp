@@ -48,6 +48,8 @@ public:
 
 	GeometryTypeId getGeometryTypeId() const override;
 
+	bool isClosed() const;
+
 	/// Returns line dimension (1)
 	Dimension::DimensionType getDimension() const override;
 
@@ -57,6 +59,13 @@ public:
 
 	/// Returns a (possibly empty) [MultiPoint](@ref geom::MultiPoint)
 	std::unique_ptr<Geometry> getBoundary() const override;
+
+	/**
+	 * \brief
+	 * Returns Dimension::False if all [LineStrings](@ref geom::LineString) in the collection
+	 * are closed, 0 otherwise.
+	 */
+	int getBoundaryDimension() const override;
 
 protected:
 	/**

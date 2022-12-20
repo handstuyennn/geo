@@ -87,6 +87,13 @@ add_library(
   operation/buffer/RightmostEdgeFinder.cpp
   operation/buffer/OffsetSegmentGenerator.cpp
   operation/buffer/BufferInputLineSimplifier.cpp
+  operation/relate/RelateComputer.cpp
+  operation/relate/RelateOp.cpp
+  operation/relate/RelateNodeFactory.cpp
+  operation/relate/EdgeEndBundleStar.cpp
+  operation/relate/EdgeEndBuilder.cpp
+  operation/relate/RelateNode.cpp
+  operation/relate/EdgeEndBundle.cpp
   noding/MCIndexNoder.cpp
   noding/NodedSegmentString.cpp
   noding/SegmentNodeList.cpp
@@ -171,6 +178,8 @@ add_library(
   geom/util/GeometryCombiner.cpp
   geom/util/NoOpGeometryOperation.cpp
   geom/util/GeometryTransformer.cpp
+  geom/IntersectionMatrix.cpp
+  geom/Dimension.cpp
   geom/GeometryCollection.cpp)
 set(GEO_LIBRARY_FILES
     ${GEO_LIBRARY_FILES} $<TARGET_OBJECTS:duckdb_geo_geos>

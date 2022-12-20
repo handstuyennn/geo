@@ -96,8 +96,27 @@ public:
 		bdyNodes[1] = bdyNodes1;
 	};
 
+	/**
+	 * A proper intersection is an intersection which is interior to at least two
+	 * line segments.  Note that a proper intersection is not necessarily
+	 * in the interior of the entire Geometry, since another edge may have
+	 * an endpoint equal to the intersection, which according to SFS semantics
+	 * can result in the point being on the Boundary of the Geometry.
+	 */
+	bool hasProperIntersection() const {
+		return hasProper;
+	};
+
 	bool getIsDone() const {
 		return false;
+	};
+
+	/**
+	 * A proper interior intersection is a proper intersection which is <b>not</b>
+	 * contained in the set of boundary nodes set for this SegmentIntersector.
+	 */
+	bool hasProperInteriorIntersection() const {
+		return hasProperInterior;
 	};
 
 	void addIntersections(Edge *e0, std::size_t segIndex0, Edge *e1, std::size_t segIndex1);

@@ -47,7 +47,203 @@ namespace geom { // geos::geom
  *
  * \todo Suggestion: add equal and not-equal operator to this class.
  */
-class GEOS_DLL IntersectionMatrix {}; // class IntersectionMatrix
+class GEOS_DLL IntersectionMatrix {
+public:
+	/** \brief
+	 * Default constructor.
+	 *
+	 * Creates an IntersectionMatrix with Dimension::False
+	 * dimension values ('F').
+	 */
+	IntersectionMatrix();
+
+	/** \brief
+	 * Overriden constructor.
+	 *
+	 * Creates an IntersectionMatrix with the given dimension symbols.
+	 *
+	 * @param elements - reference to string containing pattern
+	 *                   of dimension values for elements.
+	 */
+	IntersectionMatrix(const std::string &elements);
+
+	/** \brief
+	 * Copy constructor.
+	 *
+	 * Creates an IntersectionMatrix with the same elements as other.
+	 *
+	 * \todo Add assignment operator to make this class fully copyable.
+	 */
+	IntersectionMatrix(const IntersectionMatrix &other);
+
+	/** \brief
+	 * Returns whether the elements of this IntersectionMatrix
+	 * satisfies the required dimension symbols.
+	 *
+	 * @param requiredDimensionSymbols - nine dimension symbols with
+	 *        which to compare the elements of this IntersectionMatrix.
+	 *        Possible values are {T, F, * , 0, 1, 2}.
+	 * @return true if this IntersectionMatrix matches the required
+	 *         dimension symbols.
+	 */
+	bool matches(const std::string &requiredDimensionSymbols) const;
+
+	/** \brief
+	 * Tests if given dimension value satisfies the dimension symbol.
+	 *
+	 * @param actualDimensionValue - valid dimension value stored in
+	 *        the IntersectionMatrix.
+	 *        Possible values are {TRUE, FALSE, DONTCARE, 0, 1, 2}.
+	 * @param requiredDimensionSymbol - a character used in the string
+	 *        representation of an IntersectionMatrix.
+	 *        Possible values are {T, F, * , 0, 1, 2}.
+	 * @return true if the dimension symbol encompasses the
+	 *         dimension value.
+	 */
+	static bool matches(int actualDimensionValue, char requiredDimensionSymbol);
+
+	/** \brief
+	 * Returns true if each of the actual dimension symbols satisfies
+	 * the corresponding required dimension symbol.
+	 *
+	 * @param actualDimensionSymbols - nine dimension symbols to validate.
+	 *        Possible values are {T, F, * , 0, 1, 2}.
+	 * @param requiredDimensionSymbols - nine dimension symbols to
+	 *        validate against.
+	 *        Possible values are {T, F, * , 0, 1, 2}.
+	 * @return true if each of the required dimension symbols encompass
+	 *         the corresponding actual dimension symbol.
+	 */
+	static bool matches(const std::string &actualDimensionSymbols, const std::string &requiredDimensionSymbols);
+
+	/** \brief
+	 * Changes the value of one of this IntersectionMatrixs elements.
+	 *
+	 * @param row - the row of this IntersectionMatrix, indicating
+	 *        the interior, boundary or exterior of the first Geometry.
+	 * @param column - the column of this IntersectionMatrix,
+	 *        indicating the interior, boundary or exterior of the
+	 *        second Geometry.
+	 * @param dimensionValue - the new value of the element.
+	 */
+	void set(Location row, Location column, int dimensionValue);
+
+	/** \brief
+	 * Changes the elements of this IntersectionMatrix to the dimension
+	 * symbols in dimensionSymbols.
+	 *
+	 * @param dimensionSymbols - nine dimension symbols to which to
+	 *        set this IntersectionMatrix elements.
+	 *        Possible values are {T, F, * , 0, 1, 2}.
+	 */
+	void set(const std::string &dimensionSymbols);
+
+	/** \brief
+	 * Changes the specified element to minimumDimensionValue if the
+	 * element is less.
+	 *
+	 * @param row - the row of this IntersectionMatrix, indicating
+	 *        the interior, boundary or exterior of the first Geometry.
+	 * @param column -  the column of this IntersectionMatrix, indicating
+	 *        the interior, boundary or exterior of the second Geometry.
+	 * @param minimumDimensionValue - the dimension value with which
+	 *        to compare the element.  The order of dimension values
+	 *        from least to greatest is {DONTCARE, TRUE, FALSE, 0, 1, 2}.
+	 */
+	void setAtLeast(Location row, Location column, int minimumDimensionValue);
+
+	/** \brief
+	 * If row >= 0 and column >= 0, changes the specified element
+	 * to minimumDimensionValue if the element is less.
+	 * Does nothing if row <0 or column < 0.
+	 *
+	 * @param row -
+	 *        the row of this IntersectionMatrix,
+	 *        indicating the interior, boundary or exterior of the
+	 *        first Geometry.
+	 *
+	 * @param column -
+	 *        the column of this IntersectionMatrix,
+	 *        indicating the interior, boundary or exterior of the
+	 *        second Geometry.
+	 *
+	 * @param minimumDimensionValue -
+	 *        the dimension value with which
+	 *        to compare the element. The order of dimension values
+	 *        from least to greatest is {DONTCARE, TRUE, FALSE, 0, 1, 2}.
+	 */
+	void setAtLeastIfValid(Location row, Location column, int minimumDimensionValue);
+
+	/** \brief
+	 * For each element in this IntersectionMatrix, changes the element to
+	 * the corresponding minimum dimension symbol if the element is less.
+	 *
+	 * @param minimumDimensionSymbols -
+	 *        nine dimension symbols with which
+	 *        to compare the elements of this IntersectionMatrix.
+	 *        The order of dimension values from least to greatest is
+	 *        {DONTCARE, TRUE, FALSE, 0, 1, 2}  .
+	 */
+	void setAtLeast(std::string minimumDimensionSymbols);
+
+	/** \brief
+	 * Changes the elements of this IntersectionMatrix to dimensionValue.
+	 *
+	 * @param dimensionValue -
+	 *        the dimension value to which to set this
+	 *        IntersectionMatrix elements. Possible values {TRUE,
+	 *        FALSE, DONTCARE, 0, 1, 2}.
+	 */
+	void setAll(int dimensionValue);
+
+	/** \brief
+	 * Returns the value of one of this IntersectionMatrixs elements.
+	 *
+	 * @param row -
+	 *        the row of this IntersectionMatrix, indicating the
+	 *        interior, boundary or exterior of the first Geometry.
+	 *
+	 * @param column -
+	 *        the column of this IntersectionMatrix, indicating the
+	 *        interior, boundary or exterior of the second Geometry.
+	 *
+	 * @return the dimension value at the given matrix position.
+	 */
+	int get(geom::Location row, geom::Location column) const {
+		return matrix[static_cast<size_t>(row)][static_cast<size_t>(column)];
+	}
+
+	/** \brief
+	 * Adds one matrix to another.
+	 *
+	 * Addition is defined by taking the maximum dimension value
+	 * of each position in the summand matrices.
+	 *
+	 * @param other - the matrix to add.
+	 *
+	 * \todo Why the 'other' matrix is not passed by const-reference?
+	 */
+	void add(IntersectionMatrix *other);
+
+	/** \brief
+	 * Returns true if this IntersectionMatrix is T*F**FFF*.
+	 *
+	 * @param dimensionOfGeometryA - he dimension of the first Geometry.
+	 * @param dimensionOfGeometryB - the dimension of the second Geometry.
+	 * @return true if the two Geometry's related by this
+	 *         IntersectionMatrix are equal; the Geometrys must have
+	 *         the same dimension for this function to return true
+	 */
+	bool isEquals(int dimensionOfGeometryA, int dimensionOfGeometryB) const;
+
+private:
+	static const int firstDim; // = 3;
+
+	static const int secondDim; // = 3;
+
+	// Internal buffer for 3x3 matrix.
+	std::array<std::array<int, 3>, 3> matrix;
+}; // class IntersectionMatrix
 
 } // namespace geom
 } // namespace geos

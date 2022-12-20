@@ -74,6 +74,8 @@ public:
 	static GSERIALIZED *GeometryBuffer(GSERIALIZED *geom, double radius);
 	static GSERIALIZED *GeometryBufferText(GSERIALIZED *geom, double radius, string styles_text);
 
+	static bool GeometryEquals(GSERIALIZED *geom1, GSERIALIZED *geom2);
+
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
 	static GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);

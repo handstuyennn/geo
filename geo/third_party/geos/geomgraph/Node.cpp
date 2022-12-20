@@ -124,6 +124,27 @@ void Node::setLabel(uint8_t argIndex, Location onLocation) {
 }
 
 /*public*/
+void Node::setLabelBoundary(uint8_t argIndex) {
+	Location loc = label.getLocation(argIndex);
+	// flip the loc
+	Location newLoc;
+	switch (loc) {
+	case Location::BOUNDARY:
+		newLoc = Location::INTERIOR;
+		break;
+	case Location::INTERIOR:
+		newLoc = Location::BOUNDARY;
+		break;
+	default:
+		newLoc = Location::BOUNDARY;
+		break;
+	}
+	label.setLocation(argIndex, newLoc);
+
+	testInvariant();
+}
+
+/*public*/
 void Node::addZ(double z) {
 	if (std::isnan(z)) {
 		return;

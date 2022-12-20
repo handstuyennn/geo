@@ -139,6 +139,9 @@ public:
 	 */
 	std::unique_ptr<Geometry> getBoundary() const override;
 
+	/// Returns 1 (Polygon boundary is a MultiLineString)
+	int getBoundaryDimension() const override;
+
 	std::unique_ptr<Geometry> convexHull() const override;
 
 protected:

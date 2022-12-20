@@ -265,6 +265,10 @@ std::unique_ptr<Geometry> Polygon::getBoundary() const {
 	return getFactory()->createMultiLineString(std::move(rings));
 }
 
+int Polygon::getBoundaryDimension() const {
+	return 1;
+}
+
 std::unique_ptr<Geometry> Polygon::convexHull() const {
 	return getExteriorRing()->convexHull();
 }

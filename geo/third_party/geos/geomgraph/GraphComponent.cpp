@@ -40,5 +40,10 @@ void GraphComponent::setCovered(bool p_isCovered) {
 	isCoveredSetVar = true;
 }
 
+void GraphComponent::updateIM(IntersectionMatrix &im) {
+	assert(label.getGeometryCount() >= 2); // found partial label
+	computeIM(im);
+}
+
 } // namespace geomgraph
 } // namespace geos

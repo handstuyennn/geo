@@ -146,6 +146,10 @@ public:
 		location[Position::RIGHT] = right;
 	};
 
+	void setAllLocations(Location locValue) {
+		location.fill(locValue);
+	};
+
 	void setAllLocationsIfNull(Location locValue) {
 		for (std::size_t i = 0; i < locationSize; ++i) {
 			if (location[i] == Location::NONE) {

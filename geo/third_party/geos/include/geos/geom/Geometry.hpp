@@ -457,6 +457,9 @@ public:
 	 */
 	virtual std::unique_ptr<Geometry> getBoundary() const = 0; // Abstract
 
+	/// Returns the dimension of this Geometrys inherent boundary.
+	virtual int getBoundaryDimension() const = 0; // Abstract
+
 	/** \brief
 	 * Returns a Geometry representing the points shared by
 	 * this Geometry and other.
@@ -489,6 +492,38 @@ public:
 	/// Returns the smallest convex Polygon that contains
 	/// all the points in the Geometry.
 	virtual std::unique_ptr<Geometry> convexHull() const;
+
+	/**
+	 * \brief
+	 * Returns true if the elements in the DE-9IM intersection matrix
+	 * for the two Geometrys match the elements in intersectionPattern.
+	 *
+	 * IntersectionPattern elements may be: 0 1 2 T ( = 0, 1 or 2)
+	 * F ( = -1) * ( = -1, 0, 1 or 2).
+	 *
+	 * For more information on the DE-9IM, see the OpenGIS Simple
+	 * Features Specification.
+	 *
+	 * @throws util::IllegalArgumentException if either arg is a collection
+	 *
+	 */
+	bool relate(const Geometry *g, const std::string &intersectionPattern) const;
+
+	bool relate(const Geometry &g, const std::string &intersectionPattern) const {
+		return relate(&g, intersectionPattern);
+	}
+
+	/// Returns the DE-9IM intersection matrix for the two Geometrys.
+	std::unique_ptr<IntersectionMatrix> relate(const Geometry *g) const;
+
+	std::unique_ptr<IntersectionMatrix> relate(const Geometry &g) const;
+
+	/**
+	 * \brief
+	 * Returns true if the DE-9IM intersection matrix for the two
+	 * Geometrys is T*F**FFF*.
+	 */
+	virtual bool equals(const Geometry *g) const;
 
 protected:
 	/// The bounding box of this Geometry

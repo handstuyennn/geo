@@ -225,6 +225,11 @@ GSERIALIZED *Geometry::GeometryBufferText(GSERIALIZED *geom, double radius, stri
 	return postgis.buffer(geom, radius, styles_text);
 }
 
+bool Geometry::GeometryEquals(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.ST_Equals(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

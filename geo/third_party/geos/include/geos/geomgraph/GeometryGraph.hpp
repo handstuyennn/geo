@@ -192,6 +192,8 @@ public:
 
 	void computeSplitEdges(std::vector<Edge *> *edgelist);
 
+	std::vector<Edge *> *getEdges();
+
 	const geom::Geometry *getGeometry() {
 		return parentGeom;
 	};

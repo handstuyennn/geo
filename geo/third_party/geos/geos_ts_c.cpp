@@ -792,4 +792,12 @@ Geometry *GEOSBufferWithParams_r(GEOSContextHandle_t extHandle, const Geometry *
 	});
 }
 
+//-----------------------------------------------------------------
+// general purpose
+//-----------------------------------------------------------------
+
+char GEOSEquals_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2) {
+	return execute(extHandle, 2, [&]() { return g1->equals(g2); });
+}
+
 } /* extern "C" */

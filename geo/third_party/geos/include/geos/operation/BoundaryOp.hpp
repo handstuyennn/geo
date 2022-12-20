@@ -53,6 +53,50 @@ public:
 	BoundaryOp(const geom::Geometry &geom);
 
 	/**
+	 * Creates a new instance for the given geometry.
+	 *
+	 * @param geom the input geometry
+	 * @param bnRule the Boundary Node Rule to use
+	 */
+	BoundaryOp(const geom::Geometry &geom, const algorithm::BoundaryNodeRule &bnRule);
+
+	/**
+	 * Computes a geometry representing the boundary of a geometry.
+	 *
+	 * @param g the input geometry
+	 * @return the computed boundary
+	 */
+	static std::unique_ptr<geom::Geometry> getBoundary(const geom::Geometry &g);
+
+	/**
+	 * Computes a geometry representing the boundary of a geometry,
+	 * using an explicit BoundaryNodeRule.
+	 *
+	 * @param g the input geometry
+	 * @param bnRule the Boundary Node Rule to use
+	 * @return the computed boundary
+	 */
+	static std::unique_ptr<geom::Geometry> getBoundary(const geom::Geometry &g,
+	                                                   const algorithm::BoundaryNodeRule &bnRule);
+
+	/**
+	 * Tests if a geometry has a boundary (it is non-empty).
+	 * The semantics are:
+	 * <ul>
+	 * <li>Empty geometries do not have boundaries.
+	 * <li>Points do not have boundaries.
+	 * <li>For linear geometries the existence of the boundary
+	 * is determined by the BoundaryNodeRule.
+	 * <li>Non-empty polygons always have a boundary.
+	 * </ul>
+	 *
+	 * @param geom the geometry providing the boundary
+	 * @param boundaryNodeRule  the Boundary Node Rule to use
+	 * @return true if the boundary exists
+	 */
+	static bool hasBoundary(const geom::Geometry &geom, const algorithm::BoundaryNodeRule &boundaryNodeRule);
+
+	/**
 	 * Gets the computed boundary.
 	 *
 	 * @return the boundary geometry

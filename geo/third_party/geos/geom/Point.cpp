@@ -171,5 +171,9 @@ std::unique_ptr<Geometry> Point::getBoundary() const {
 	return getFactory()->createGeometryCollection();
 }
 
+int Point::getBoundaryDimension() const {
+	return Dimension::False;
+}
+
 } // namespace geom
 } // namespace geos

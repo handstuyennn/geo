@@ -138,6 +138,10 @@ GSERIALIZED *Postgis::buffer(GSERIALIZED *geom, double radius, string styles_tex
 	return duckdb::buffer(geom, radius, styles_text);
 }
 
+bool Postgis::ST_Equals(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::ST_Equals(geom1, geom2);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

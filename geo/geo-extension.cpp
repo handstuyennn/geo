@@ -365,6 +365,14 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo buffer_func_info(buffer);
 	catalog.AddFunction(*con.context, &buffer_func_info);
 
+	// ST_EQUALS
+	ScalarFunctionSet equals("st_equals");
+	equals.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryEqualsFunction));
+
+	CreateScalarFunctionInfo equals_func_info(equals);
+	catalog.AddFunction(*con.context, &equals_func_info);
+
 	con.Commit();
 }
 

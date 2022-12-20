@@ -62,6 +62,10 @@ Dimension::DimensionType MultiPolygon::getDimension() const {
 	return Dimension::A; // area
 }
 
+int MultiPolygon::getBoundaryDimension() const {
+	return 1;
+}
+
 std::unique_ptr<Geometry> MultiPolygon::getBoundary() const {
 	if (isEmpty()) {
 		return std::unique_ptr<Geometry>(getFactory()->createMultiLineString());

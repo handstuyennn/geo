@@ -260,4 +260,12 @@ Geometry *GEOSBufferWithParams(const Geometry *g, const GEOSBufferParams *p, dou
 	return GEOSBufferWithParams_r(handle, g, p, w);
 }
 
+//-----------------------------------------------------------------
+// general purpose
+//-----------------------------------------------------------------
+
+char GEOSEquals(const Geometry *g1, const Geometry *g2) {
+	return GEOSEquals_r(handle, g1, g2);
+}
+
 } /* extern "C" */

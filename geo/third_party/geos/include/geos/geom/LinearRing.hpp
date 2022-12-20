@@ -79,6 +79,14 @@ public:
 
 	~LinearRing() override = default;
 
+	/** \brief
+	 * Returns <code>Dimension.FALSE</code>, since by definition
+	 * LinearRings do not have a boundary.
+	 *
+	 * @return Dimension::False
+	 */
+	int getBoundaryDimension() const override;
+
 	bool isClosed() const override;
 
 	std::string getGeometryType() const override;

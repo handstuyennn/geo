@@ -108,6 +108,13 @@ public:
 	/// Returns line dimension (1)
 	Dimension::DimensionType getDimension() const override;
 
+	/**
+	 * \brief
+	 * Returns Dimension::False for a closed LineString,
+	 * 0 otherwise (LineString boundary is a MultiPoint)
+	 */
+	int getBoundaryDimension() const override;
+
 	/// Returns coordinate dimension.
 	uint8_t getCoordinateDimension() const override;
 

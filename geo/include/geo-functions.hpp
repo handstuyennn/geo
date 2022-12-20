@@ -61,6 +61,9 @@ struct GeoFunctions {
 	static void GeometrySnapToGridFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryBufferFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryBufferTextFunction(DataChunk &args, ExpressionState &state, Vector &result);
+
+	// **Predicates (9)**
+	static void GeometryEqualsFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

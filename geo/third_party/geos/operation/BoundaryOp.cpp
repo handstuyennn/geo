@@ -39,6 +39,10 @@ BoundaryOp::BoundaryOp(const Geometry &geom)
     : m_geom(geom), m_geomFact(*geom.getFactory()), m_bnRule(BoundaryNodeRule::getBoundaryRuleMod2()) {
 }
 
+BoundaryOp::BoundaryOp(const geom::Geometry &geom, const algorithm::BoundaryNodeRule &bnRule)
+    : m_geom(geom), m_geomFact(*geom.getFactory()), m_bnRule(bnRule) {
+}
+
 std::unique_ptr<geom::Geometry> BoundaryOp::getBoundary() {
 	if (auto ls = dynamic_cast<const LineString *>(&m_geom)) {
 		return boundaryLineString(*ls);
@@ -49,6 +53,17 @@ std::unique_ptr<geom::Geometry> BoundaryOp::getBoundary() {
 	}
 
 	return m_geom.getBoundary();
+}
+
+std::unique_ptr<geom::Geometry> BoundaryOp::getBoundary(const geom::Geometry &g) {
+	BoundaryOp bop(g);
+	return bop.getBoundary();
+}
+
+std::unique_ptr<geom::Geometry> BoundaryOp::getBoundary(const geom::Geometry &g,
+                                                        const algorithm::BoundaryNodeRule &bnRule) {
+	BoundaryOp bop(g, bnRule);
+	return bop.getBoundary();
 }
 
 std::unique_ptr<Geometry> BoundaryOp::boundaryLineString(const geom::LineString &line) {
@@ -71,6 +86,28 @@ std::unique_ptr<Geometry> BoundaryOp::boundaryLineString(const geom::LineString 
 	pts[1] = line.getEndPoint();
 
 	return m_geomFact.createMultiPoint(std::move(pts));
+}
+
+bool BoundaryOp::hasBoundary(const geom::Geometry &geom, const algorithm::BoundaryNodeRule &boundaryNodeRule) {
+	// Note that this does not handle geometry collections with a non-empty linear element
+	if (geom.isEmpty()) {
+		return false;
+	}
+
+	switch (geom.getDimension()) {
+	case Dimension::P:
+		return false;
+	/**
+	 * Linear geometries might have an empty boundary due to boundary node rule.
+	 */
+	case Dimension::L: {
+
+		auto boundary = getBoundary(geom, boundaryNodeRule);
+		return !boundary->isEmpty();
+	}
+	default:
+		return true;
+	}
 }
 
 std::unique_ptr<Geometry> BoundaryOp::boundaryMultiLineString(const geom::MultiLineString &mLine) {

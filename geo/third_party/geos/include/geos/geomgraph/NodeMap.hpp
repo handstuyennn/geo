@@ -75,7 +75,28 @@ public:
 
 	Node *find(const geom::Coordinate &coord) const;
 
+	const_iterator begin() const {
+		return nodeMap.begin();
+	}
+
+	const_iterator end() const {
+		return nodeMap.end();
+	}
+
+	iterator begin() {
+		return nodeMap.begin();
+	}
+
+	iterator end() {
+		return nodeMap.end();
+	}
+
 	void getBoundaryNodes(uint8_t geomIndex, std::vector<Node *> &bdyNodes) const;
+
+private:
+	// Declare type as noncopyable
+	NodeMap(const NodeMap &other) = delete;
+	NodeMap &operator=(const NodeMap &rhs) = delete;
 };
 
 } // namespace geomgraph
