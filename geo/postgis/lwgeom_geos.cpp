@@ -30,7 +30,9 @@
 #include "liblwgeom/gserialized.hpp"
 #include "liblwgeom/liblwgeom.hpp"
 #include "liblwgeom/lwgeom_geos.hpp"
+#include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
+#include "postgis/lwgeom_functions_analytic.hpp" /* for point_in_polygon */
 
 namespace duckdb {
 
@@ -559,6 +561,121 @@ bool ST_Equals(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 		throw "GEOSEquals";
 
 	return result;
+}
+
+/* Utility function that checks a LWPOINT and a GSERIALIZED poly against a cache.
+ * Serialized poly may be a multipart.
+ */
+static int pip_short_circuit(LWPOINT *point, const GSERIALIZED *gpoly) {
+	int result;
+
+	LWGEOM *poly = lwgeom_from_gserialized(gpoly);
+	if (lwgeom_get_type(poly) == POLYGONTYPE) {
+		result = point_in_polygon(lwgeom_as_lwpoly(poly), point);
+	} else {
+		result = point_in_multipolygon(lwgeom_as_lwmpoly(poly), point);
+	}
+	lwgeom_free(poly);
+
+	return result;
+}
+
+static char is_poly(const GSERIALIZED *g) {
+	int type = gserialized_get_type(g);
+	return type == POLYGONTYPE || type == MULTIPOLYGONTYPE;
+}
+
+static char is_point(const GSERIALIZED *g) {
+	int type = gserialized_get_type(g);
+	return type == POINTTYPE || type == MULTIPOINTTYPE;
+}
+
+bool contains(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	int result;
+	GEOSGeometry *g1, *g2;
+	GBOX box1, box2;
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	/* A.Contains(Empty) == FALSE */
+	if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2))
+		return false;
+
+	/*
+	** short-circuit 1: if geom2 bounding box is not completely inside
+	** geom1 bounding box we can return FALSE.
+	*/
+	if (gserialized_get_gbox_p(geom1, &box1) && gserialized_get_gbox_p(geom2, &box2)) {
+		if (!gbox_contains_2d(&box1, &box2))
+			return false;
+	}
+
+	/*
+	** short-circuit 2: if geom2 is a point and geom1 is a polygon
+	** call the point-in-polygon function.
+	*/
+	if (is_poly(geom1) && is_point(geom2)) {
+		const GSERIALIZED *gpoly = geom1;
+		const GSERIALIZED *gpoint = geom2;
+		int retval;
+
+		if (gserialized_get_type(gpoint) == POINTTYPE) {
+			LWGEOM *point = lwgeom_from_gserialized(gpoint);
+			int pip_result = pip_short_circuit(lwgeom_as_lwpoint(point), gpoly);
+			lwgeom_free(point);
+
+			retval = (pip_result == 1); /* completely inside */
+		} else if (gserialized_get_type(gpoint) == MULTIPOINTTYPE) {
+			LWMPOINT *mpoint = lwgeom_as_lwmpoint(lwgeom_from_gserialized(gpoint));
+			uint32_t i;
+			int found_completely_inside = LW_FALSE;
+
+			retval = LW_TRUE;
+			for (i = 0; i < mpoint->ngeoms; i++) {
+				/* We need to find at least one point that's completely inside the
+				 * polygons (pip_result == 1).  As long as we have one point that's
+				 * completely inside, we can have as many as we want on the boundary
+				 * itself. (pip_result == 0)
+				 */
+				int pip_result = pip_short_circuit(mpoint->geoms[i], gpoly);
+				if (pip_result == 1)
+					found_completely_inside = LW_TRUE;
+
+				if (pip_result == -1) /* completely outside */
+				{
+					retval = LW_FALSE;
+					break;
+				}
+			}
+
+			retval = retval && found_completely_inside;
+			lwmpoint_free(mpoint);
+		} else {
+			/* Never get here */
+			throw "Type isn't point or multipoint!";
+			return false;
+		}
+
+		return retval > 0;
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g1 = POSTGIS2GEOS(geom1);
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+	g2 = POSTGIS2GEOS(geom2);
+	if (!g2) {
+		throw "Second argument geometry could not be converted to GEOS";
+		GEOSGeom_destroy(g1);
+	}
+	result = GEOSContains(g1, g2);
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+
+	if (result == 2)
+		throw "GEOSContains";
+
+	return result > 0;
 }
 
 } // namespace duckdb

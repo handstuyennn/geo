@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <geos/algorithm/Length.hpp>
 #include <geos/geom/CoordinateArraySequence.hpp>
 #include <geos/geom/CoordinateFilter.hpp>
 #include <geos/geom/CoordinateSequenceFactory.hpp>
@@ -31,6 +32,8 @@
 #include <geos/util/IllegalArgumentException.hpp>
 #include <memory>
 #include <typeinfo>
+
+using namespace geos::algorithm;
 
 namespace geos {
 namespace geom { // geos::geom
@@ -232,6 +235,10 @@ std::unique_ptr<Point> LineString::getEndPoint() const {
 		// return new Point(NULL,NULL);
 	}
 	return getPointN(getNumPoints() - 1);
+}
+
+double LineString::getLength() const {
+	return Length::ofLine(points.get());
 }
 
 } // namespace geom

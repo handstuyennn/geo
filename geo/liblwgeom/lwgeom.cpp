@@ -40,6 +40,24 @@ LWCOLLECTION *lwgeom_as_lwcollection(const LWGEOM *lwgeom) {
 		return NULL;
 }
 
+LWMPOLY *lwgeom_as_lwmpoly(const LWGEOM *lwgeom) {
+	if (lwgeom == NULL)
+		return NULL;
+	if (lwgeom->type == MULTIPOLYGONTYPE)
+		return (LWMPOLY *)lwgeom;
+	else
+		return NULL;
+}
+
+LWMPOINT *lwgeom_as_lwmpoint(const LWGEOM *lwgeom) {
+	if (lwgeom == NULL)
+		return NULL;
+	if (lwgeom->type == MULTIPOINTTYPE)
+		return (LWMPOINT *)lwgeom;
+	else
+		return NULL;
+}
+
 LWPOLY *lwgeom_as_lwpoly(const LWGEOM *lwgeom) {
 	if (lwgeom == NULL)
 		return NULL;

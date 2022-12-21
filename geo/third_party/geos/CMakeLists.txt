@@ -18,6 +18,7 @@ add_library(
   algorithm/Intersection.cpp
   algorithm/Centroid.cpp
   algorithm/ConvexHull.cpp
+  algorithm/Length.cpp
   edgegraph/HalfEdge.cpp
   math/DD.cpp
   io/WKTWriter.cpp
@@ -94,6 +95,7 @@ add_library(
   operation/relate/EdgeEndBuilder.cpp
   operation/relate/RelateNode.cpp
   operation/relate/EdgeEndBundle.cpp
+  operation/predicate/RectangleContains.cpp
   noding/MCIndexNoder.cpp
   noding/NodedSegmentString.cpp
   noding/SegmentNodeList.cpp

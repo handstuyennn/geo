@@ -144,6 +144,10 @@ public:
 
 	std::unique_ptr<Geometry> convexHull() const override;
 
+	double getLength() const override;
+
+	bool isRectangle() const override;
+
 protected:
 	Polygon(const Polygon &p);
 

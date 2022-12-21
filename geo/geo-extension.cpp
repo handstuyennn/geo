@@ -373,6 +373,14 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo equals_func_info(equals);
 	catalog.AddFunction(*con.context, &equals_func_info);
 
+	// ST_CONTAINS
+	ScalarFunctionSet contains("st_contains");
+	contains.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryContainsFunction));
+
+	CreateScalarFunctionInfo contains_func_info(contains);
+	catalog.AddFunction(*con.context, &contains_func_info);
+
 	con.Commit();
 }
 

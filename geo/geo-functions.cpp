@@ -1754,4 +1754,43 @@ void GeoFunctions::GeometryEqualsFunction(DataChunk &args, ExpressionState &stat
 	GeometryEqualsBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
 }
 
+struct ContainsBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+			return true;
+		}
+		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+			return false;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get equals: could not getting equals from geom");
+			return false;
+		}
+		auto equalsRv = Geometry::GeometryContains(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return equalsRv;
+	}
+};
+
+template <typename TA, typename TB, typename TR>
+static void GeometryContainsBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, ContainsBinaryOperator>(geom1, geom2, result, count);
+}
+
+void GeoFunctions::GeometryContainsFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryContainsBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
+}
+
 } // namespace duckdb

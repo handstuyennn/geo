@@ -176,5 +176,12 @@ bool IntersectionMatrix::isEquals(int dimensionOfGeometryA, int dimensionOfGeome
 	       get(Location::BOUNDARY, Location::EXTERIOR) == Dimension::False;
 }
 
+/*public*/
+bool IntersectionMatrix::isContains() const {
+	return matches(get(Location::INTERIOR, Location::INTERIOR), 'T') &&
+	       get(Location::EXTERIOR, Location::INTERIOR) == Dimension::False &&
+	       get(Location::EXTERIOR, Location::BOUNDARY) == Dimension::False;
+}
+
 } // namespace geom
 } // namespace geos

@@ -142,6 +142,10 @@ bool Postgis::ST_Equals(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::ST_Equals(geom1, geom2);
 }
 
+bool Postgis::contains(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::contains(geom1, geom2);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

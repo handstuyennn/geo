@@ -236,6 +236,13 @@ public:
 	 */
 	bool isEquals(int dimensionOfGeometryA, int dimensionOfGeometryB) const;
 
+	/** \brief
+     * Returns true if this IntersectionMatrix is T*****FF*.
+     *
+     * @return true if the first Geometry contains the second.
+     */
+    bool isContains() const;
+
 private:
 	static const int firstDim; // = 3;
 

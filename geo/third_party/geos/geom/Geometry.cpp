@@ -31,6 +31,7 @@
 #include <geos/operation/buffer/BufferOp.hpp>
 #include <geos/operation/overlay/OverlayOp.hpp>
 #include <geos/operation/overlayng/OverlayNGRobust.hpp>
+#include <geos/operation/predicate/RectangleContains.hpp>
 #include <geos/operation/relate/RelateOp.hpp>
 #include <geos/operation/union/UnaryUnionOp.hpp>
 #include <geos/operation/valid/IsSimpleOp.hpp>
@@ -47,6 +48,7 @@ using namespace geos::operation::overlay;
 using namespace geos::operation::valid;
 using namespace geos::operation::buffer;
 using namespace geos::operation::relate;
+using namespace geos::operation;
 
 namespace geos {
 namespace geom { // geos::geom
@@ -289,6 +291,54 @@ bool Geometry::equals(const Geometry *g) const {
 	std::unique_ptr<IntersectionMatrix> im(relate(g));
 	bool res = im->isEquals(getDimension(), g->getDimension());
 	return res;
+}
+
+bool Geometry::contains(const Geometry *g) const {
+	// optimization - lower dimension cannot contain areas
+	if (g->getDimension() == 2 && getDimension() < 2) {
+		return false;
+	}
+
+	// optimization - P cannot contain a non-zero-length L
+	// Note that a point can contain a zero-length lineal geometry,
+	// since the line has no boundary due to Mod-2 Boundary Rule
+	if (g->getDimension() == 1 && getDimension() < 1 && g->getLength() > 0.0) {
+		return false;
+	}
+
+#ifdef SHORTCIRCUIT_PREDICATES
+	// short-circuit test
+	if (!getEnvelopeInternal()->contains(g->getEnvelopeInternal())) {
+		return false;
+	}
+#endif
+
+	// optimization for rectangle arguments
+	if (isRectangle()) {
+		const Polygon *p = detail::down_cast<const Polygon *>(this);
+		return predicate::RectangleContains::contains(*p, *g);
+	}
+	// Incorrect: contains is not commutative
+	// if (g->isRectangle()) {
+	//	return predicate::RectangleContains::contains((const Polygon&)*g, *this);
+	//}
+
+	std::unique_ptr<IntersectionMatrix> im(relate(g));
+	bool res = im->isContains();
+	return res;
+}
+
+/**
+ *  Returns the length of this <code>Geometry</code>.
+ *  Linear geometries return their length.
+ *  Areal geometries return their perimeter.
+ *  They override this function to compute the area.
+ *  Others return 0.0
+ *
+ * @return the length of the Geometry
+ */
+double Geometry::getLength() const {
+	return 0.0;
 }
 
 } // namespace geom

@@ -238,6 +238,9 @@ extern char GEOS_DLL GEOSHasZ_r(GEOSContextHandle_t handle, const GEOSGeometry *
 
 /* ========= Binary predicates ========= */
 
+/** \see GEOSContains */
+extern char GEOS_DLL GEOSContains_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
+
 /** \see GEOSEquals */
 extern char GEOS_DLL GEOSEquals_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
 
@@ -906,6 +909,15 @@ extern GEOSGeometry GEOS_DLL *GEOSGetCentroid(const GEOSGeometry *g);
  * Functions computing binary spatial predicates using the DE-9IM topology model.
  */
 ///@{
+
+/**
+ * True if geometry g2 is completely within g1.
+ * \param g1 Input geometry
+ * \param g2 Input geometry
+ * \returns 1 on true, 0 on false, 2 on exception
+ * \see geos::geom::Geometry::contains
+ */
+extern char GEOS_DLL GEOSContains(const GEOSGeometry *g1, const GEOSGeometry *g2);
 
 /**
  * True if geometries cover the same space on the place.

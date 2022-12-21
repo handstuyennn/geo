@@ -230,6 +230,11 @@ bool Geometry::GeometryEquals(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.ST_Equals(geom1, geom2);
 }
 
+bool Geometry::GeometryContains(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.contains(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

@@ -525,6 +525,17 @@ public:
 	 */
 	virtual bool equals(const Geometry *g) const;
 
+	/// Returns true if other.within(this) returns true.
+	virtual bool contains(const Geometry *g) const;
+
+	/// Returns the length of this Geometry.
+	virtual double getLength() const;
+
+	/// Polygon overrides to check for actual rectangle
+	virtual bool isRectangle() const {
+		return false;
+	}
+
 protected:
 	/// The bounding box of this Geometry
 	mutable std::unique_ptr<Envelope> envelope;

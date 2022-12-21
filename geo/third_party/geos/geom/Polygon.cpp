@@ -273,5 +273,60 @@ std::unique_ptr<Geometry> Polygon::convexHull() const {
 	return getExteriorRing()->convexHull();
 }
 
+/**
+ * Returns the perimeter of this <code>Polygon</code>
+ *
+ * @return the perimeter of the polygon
+ */
+double Polygon::getLength() const {
+	double len = 0.0;
+	len += shell->getLength();
+	for (const auto &hole : holes) {
+		len += hole->getLength();
+	}
+	return len;
+}
+
+bool Polygon::isRectangle() const {
+	if (getNumInteriorRing() != 0) {
+		return false;
+	}
+	assert(shell != nullptr);
+	if (shell->getNumPoints() != 5) {
+		return false;
+	}
+
+	const CoordinateSequence &seq = *(shell->getCoordinatesRO());
+
+	// check vertices have correct values
+	const Envelope &env = *getEnvelopeInternal();
+	for (uint32_t i = 0; i < 5; i++) {
+		double x = seq.getX(i);
+		if (!(x == env.getMinX() || x == env.getMaxX())) {
+			return false;
+		}
+		double y = seq.getY(i);
+		if (!(y == env.getMinY() || y == env.getMaxY())) {
+			return false;
+		}
+	}
+
+	// check vertices are in right order
+	double prevX = seq.getX(0);
+	double prevY = seq.getY(0);
+	for (uint32_t i = 1; i <= 4; i++) {
+		double x = seq.getX(i);
+		double y = seq.getY(i);
+		bool xChanged = (x != prevX);
+		bool yChanged = (y != prevY);
+		if (xChanged == yChanged) {
+			return false;
+		}
+		prevX = x;
+		prevY = y;
+	}
+	return true;
+}
+
 } // namespace geom
 } // namespace geos

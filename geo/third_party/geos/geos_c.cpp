@@ -264,6 +264,14 @@ Geometry *GEOSBufferWithParams(const Geometry *g, const GEOSBufferParams *p, dou
 // general purpose
 //-----------------------------------------------------------------
 
+// call g1->contains(g2)
+// returns 0 = false
+//         1 = true
+//         2 = error was trapped
+char GEOSContains(const Geometry *g1, const Geometry *g2) {
+	return GEOSContains_r(handle, g1, g2);
+}
+
 char GEOSEquals(const Geometry *g1, const Geometry *g2) {
 	return GEOSEquals_r(handle, g1, g2);
 }

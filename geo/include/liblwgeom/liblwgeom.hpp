@@ -491,6 +491,8 @@ typedef struct {
 } LWTIN;
 
 /* Casts LWGEOM->LW* (return NULL if cast is illegal) */
+extern LWMPOLY *lwgeom_as_lwmpoly(const LWGEOM *lwgeom);
+extern LWMPOINT *lwgeom_as_lwmpoint(const LWGEOM *lwgeom);
 extern LWPOLY *lwgeom_as_lwpoly(const LWGEOM *lwgeom);
 extern LWLINE *lwgeom_as_lwline(const LWGEOM *lwgeom);
 extern LWCOLLECTION *lwgeom_as_lwcollection(const LWGEOM *lwgeom);
@@ -1186,6 +1188,11 @@ extern int gbox_merge_point3d(const POINT3D *p, GBOX *gbox);
  * Return true if the point is inside the gbox
  */
 extern int gbox_contains_point3d(const GBOX *gbox, const POINT3D *pt);
+
+/**
+ * Return #LW_TRUE if the first #GBOX contains the second on the 2d plane, #LW_FALSE otherwise.
+ */
+extern int gbox_contains_2d(const GBOX *g1, const GBOX *g2);
 
 /**
  * Copy the values of original #GBOX into duplicate.

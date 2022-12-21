@@ -155,6 +155,8 @@ public:
 	 */
 	std::unique_ptr<Geometry> getBoundary() const override;
 
+	double getLength() const override;
+
 protected:
 	LineString(const LineString &ls);
 

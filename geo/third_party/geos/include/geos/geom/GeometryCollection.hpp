@@ -146,6 +146,9 @@ public:
 	 */
 	int getBoundaryDimension() const override;
 
+	/// Returns the total length of this collection
+	double getLength() const override;
+
 protected:
 	GeometryCollection(const GeometryCollection &gc);
 

@@ -116,6 +116,13 @@ int gbox_merge_point3d(const POINT3D *p, GBOX *gbox) {
 	return LW_SUCCESS;
 }
 
+int gbox_contains_2d(const GBOX *g1, const GBOX *g2) {
+	if ((g2->xmin < g1->xmin) || (g2->xmax > g1->xmax) || (g2->ymin < g1->ymin) || (g2->ymax > g1->ymax)) {
+		return LW_FALSE;
+	}
+	return LW_TRUE;
+}
+
 void gbox_duplicate(const GBOX *original, GBOX *duplicate) {
 	assert(duplicate);
 	assert(original);

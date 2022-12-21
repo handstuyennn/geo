@@ -243,5 +243,16 @@ std::unique_ptr<Geometry> GeometryCollection::getBoundary() const {
 	throw util::IllegalArgumentException("Operation not supported by GeometryCollection\n");
 }
 
+/**
+ * @return the total length of this collection
+ */
+double GeometryCollection::getLength() const {
+	double sum = 0.0;
+	for (const auto &g : geometries) {
+		sum += g->getLength();
+	}
+	return sum;
+}
+
 } // namespace geom
 } // namespace geos
