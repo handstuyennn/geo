@@ -183,5 +183,24 @@ bool IntersectionMatrix::isContains() const {
 	       get(Location::EXTERIOR, Location::BOUNDARY) == Dimension::False;
 }
 
+/*public*/
+bool IntersectionMatrix::isTouches(int dimensionOfGeometryA, int dimensionOfGeometryB) const {
+	if (dimensionOfGeometryA > dimensionOfGeometryB) {
+		// no need to get transpose because pattern matrix is symmetrical
+		return isTouches(dimensionOfGeometryB, dimensionOfGeometryA);
+	}
+	if ((dimensionOfGeometryA == Dimension::A && dimensionOfGeometryB == Dimension::A) ||
+	    (dimensionOfGeometryA == Dimension::L && dimensionOfGeometryB == Dimension::L) ||
+	    (dimensionOfGeometryA == Dimension::L && dimensionOfGeometryB == Dimension::A) ||
+	    (dimensionOfGeometryA == Dimension::P && dimensionOfGeometryB == Dimension::A) ||
+	    (dimensionOfGeometryA == Dimension::P && dimensionOfGeometryB == Dimension::L)) {
+		return get(Location::INTERIOR, Location::INTERIOR) == Dimension::False &&
+		       (matches(get(Location::INTERIOR, Location::BOUNDARY), 'T') ||
+		        matches(get(Location::BOUNDARY, Location::INTERIOR), 'T') ||
+		        matches(get(Location::BOUNDARY, Location::BOUNDARY), 'T'));
+	}
+	return false;
+}
+
 } // namespace geom
 } // namespace geos

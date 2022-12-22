@@ -244,6 +244,9 @@ extern char GEOS_DLL GEOSContains_r(GEOSContextHandle_t handle, const GEOSGeomet
 /** \see GEOSEquals */
 extern char GEOS_DLL GEOSEquals_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
 
+/** \see GEOSTouches */
+extern char GEOS_DLL GEOSTouches_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
+
 /* ========== Coordinate Sequence functions ========== */
 
 /** \see GEOSCoordSeq_create */
@@ -927,6 +930,16 @@ extern char GEOS_DLL GEOSContains(const GEOSGeometry *g1, const GEOSGeometry *g2
  * \see geos::geom::Geometry::equals
  */
 extern char GEOS_DLL GEOSEquals(const GEOSGeometry *g1, const GEOSGeometry *g2);
+
+/**
+ * True if geometries share boundaries at one or more points, but do
+ * not have interior overlaps.
+ * \param g1 Input geometry
+ * \param g2 Input geometry
+ * \returns 1 on true, 0 on false, 2 on exception
+ * \see geos::geom::Geometry::touches
+ */
+extern char GEOS_DLL GEOSTouches(const GEOSGeometry *g1, const GEOSGeometry *g2);
 
 #endif /* #ifndef GEOS_USE_ONLY_R_API */
 

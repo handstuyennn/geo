@@ -49,6 +49,8 @@ public:
 
 	bool ST_Equals(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	bool contains(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	bool touches(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	bool within(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

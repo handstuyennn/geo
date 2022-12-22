@@ -276,4 +276,8 @@ char GEOSEquals(const Geometry *g1, const Geometry *g2) {
 	return GEOSEquals_r(handle, g1, g2);
 }
 
+char GEOSTouches(const Geometry *g1, const Geometry *g2) {
+	return GEOSTouches_r(handle, g1, g2);
+}
+
 } /* extern "C" */

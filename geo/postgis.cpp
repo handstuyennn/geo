@@ -146,6 +146,14 @@ bool Postgis::contains(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::contains(geom1, geom2);
 }
 
+bool Postgis::touches(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::touches(geom1, geom2);
+}
+
+bool Postgis::within(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::contains(geom2, geom1);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

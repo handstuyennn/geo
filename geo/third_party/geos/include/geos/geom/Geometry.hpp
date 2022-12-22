@@ -528,6 +528,12 @@ public:
 	/// Returns true if other.within(this) returns true.
 	virtual bool contains(const Geometry *g) const;
 
+	/** \brief
+	 * Returns true if the DE-9IM intersection matrix for the two
+	 * Geometrys is FT*******, F**T***** or F***T****.
+	 */
+	virtual bool touches(const Geometry *other) const;
+
 	/// Returns the length of this Geometry.
 	virtual double getLength() const;
 

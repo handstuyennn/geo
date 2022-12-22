@@ -381,6 +381,22 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo contains_func_info(contains);
 	catalog.AddFunction(*con.context, &contains_func_info);
 
+	// ST_TOUCHES
+	ScalarFunctionSet touches("st_touches");
+	touches.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryTouchesFunction));
+
+	CreateScalarFunctionInfo touches_func_info(touches);
+	catalog.AddFunction(*con.context, &touches_func_info);
+
+	// ST_WITHIN
+	ScalarFunctionSet within("st_within");
+	within.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryWithinFunction));
+
+	CreateScalarFunctionInfo within_func_info(within);
+	catalog.AddFunction(*con.context, &within_func_info);
+
 	con.Commit();
 }
 

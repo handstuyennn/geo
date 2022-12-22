@@ -328,6 +328,18 @@ bool Geometry::contains(const Geometry *g) const {
 	return res;
 }
 
+bool Geometry::touches(const Geometry *g) const {
+#ifdef SHORTCIRCUIT_PREDICATES
+	// short-circuit test
+	if (!getEnvelopeInternal()->intersects(g->getEnvelopeInternal())) {
+		return false;
+	}
+#endif
+	std::unique_ptr<IntersectionMatrix> im(relate(g));
+	bool res = im->isTouches(getDimension(), g->getDimension());
+	return res;
+}
+
 /**
  *  Returns the length of this <code>Geometry</code>.
  *  Linear geometries return their length.

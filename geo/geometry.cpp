@@ -235,6 +235,16 @@ bool Geometry::GeometryContains(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.contains(geom1, geom2);
 }
 
+bool Geometry::GeometryTouches(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.touches(geom1, geom2);
+}
+
+bool Geometry::GeometryWithin(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.within(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

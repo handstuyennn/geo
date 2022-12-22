@@ -678,4 +678,48 @@ bool contains(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return result > 0;
 }
 
+bool touches(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GEOSGeometry *g1, *g2;
+	char result;
+	GBOX box1, box2;
+
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	/* A.Touches(Empty) == FALSE */
+	if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2))
+		return false;
+
+	/*
+	 * short-circuit 1: if geom2 bounding box does not overlap
+	 * geom1 bounding box we can return FALSE.
+	 */
+	if (gserialized_get_gbox_p(geom1, &box1) && gserialized_get_gbox_p(geom2, &box2)) {
+		if (gbox_overlaps_2d(&box1, &box2) == LW_FALSE) {
+			return false;
+		}
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g1 = POSTGIS2GEOS(geom1);
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+
+	g2 = POSTGIS2GEOS(geom2);
+	if (!g2) {
+		GEOSGeom_destroy(g1);
+		throw "Second argument geometry could not be converted to GEOS";
+	}
+
+	result = GEOSTouches(g1, g2);
+
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+
+	if (result == 2)
+		throw "GEOSTouches";
+
+	return result;
+}
+
 } // namespace duckdb

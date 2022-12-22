@@ -237,11 +237,25 @@ public:
 	bool isEquals(int dimensionOfGeometryA, int dimensionOfGeometryB) const;
 
 	/** \brief
-     * Returns true if this IntersectionMatrix is T*****FF*.
-     *
-     * @return true if the first Geometry contains the second.
-     */
-    bool isContains() const;
+	 * Returns true if this IntersectionMatrix is T*****FF*.
+	 *
+	 * @return true if the first Geometry contains the second.
+	 */
+	bool isContains() const;
+
+	/** \brief
+	 * Returns true if this IntersectionMatrix is FT*******, F**T*****
+	 * or F***T****.
+	 *
+	 * @param dimensionOfGeometryA - the dimension of the first Geometry.
+	 *
+	 * @param dimensionOfGeometryB - the dimension of the second Geometry.
+	 *
+	 * @return true if the two Geometry's related by this
+	 *         IntersectionMatrix touch, false if both Geometrys
+	 *         are points.
+	 */
+	bool isTouches(int dimensionOfGeometryA, int dimensionOfGeometryB) const;
 
 private:
 	static const int firstDim; // = 3;
