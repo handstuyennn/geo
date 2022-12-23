@@ -722,4 +722,84 @@ bool touches(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return result;
 }
 
+bool ST_Intersects(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	int result;
+	GBOX box1, box2;
+
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	/* A.Intersects(Empty) == FALSE */
+	if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2))
+		return false;
+
+	/*
+	 * short-circuit 1: if geom2 bounding box does not overlap
+	 * geom1 bounding box we can return FALSE.
+	 */
+	if (gserialized_get_gbox_p(geom1, &box1) && gserialized_get_gbox_p(geom2, &box2)) {
+		if (gbox_overlaps_2d(&box1, &box2) == LW_FALSE)
+			return false;
+	}
+
+	/*
+	 * short-circuit 2: if the geoms are a point and a polygon,
+	 * call the point_outside_polygon function.
+	 */
+	if ((is_point(geom1) && is_poly(geom2)) || (is_poly(geom1) && is_point(geom2))) {
+		const GSERIALIZED *gpoly = is_poly(geom1) ? geom1 : geom2;
+		const GSERIALIZED *gpoint = is_point(geom1) ? geom1 : geom2;
+		int retval;
+
+		if (gserialized_get_type(gpoint) == POINTTYPE) {
+			LWGEOM *point = lwgeom_from_gserialized(gpoint);
+			int pip_result = pip_short_circuit(lwgeom_as_lwpoint(point), gpoly);
+			lwgeom_free(point);
+
+			retval = (pip_result != -1); /* not outside */
+		} else if (gserialized_get_type(gpoint) == MULTIPOINTTYPE) {
+			LWMPOINT *mpoint = lwgeom_as_lwmpoint(lwgeom_from_gserialized(gpoint));
+			uint32_t i;
+
+			retval = LW_FALSE;
+			for (i = 0; i < mpoint->ngeoms; i++) {
+				int pip_result = pip_short_circuit(mpoint->geoms[i], gpoly);
+				if (pip_result != -1) /* not outside */
+				{
+					retval = LW_TRUE;
+					break;
+				}
+			}
+
+			lwmpoint_free(mpoint);
+		} else {
+			/* Never get here */
+			throw "Type isn't point or multipoint!";
+			return false;
+		}
+
+		return retval;
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	GEOSGeometry *g1;
+	GEOSGeometry *g2;
+	g1 = POSTGIS2GEOS(geom1);
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+	g2 = POSTGIS2GEOS(geom2);
+	if (!g2) {
+		GEOSGeom_destroy(g1);
+		throw "Second argument geometry could not be converted to GEOS";
+	}
+	result = GEOSIntersects(g1, g2);
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+
+	if (result == 2)
+		throw "GEOSIntersects";
+
+	return result;
+}
+
 } // namespace duckdb

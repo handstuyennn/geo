@@ -32,6 +32,7 @@
 #include <geos/operation/overlay/OverlayOp.hpp>
 #include <geos/operation/overlayng/OverlayNGRobust.hpp>
 #include <geos/operation/predicate/RectangleContains.hpp>
+#include <geos/operation/predicate/RectangleIntersects.hpp>
 #include <geos/operation/relate/RelateOp.hpp>
 #include <geos/operation/union/UnaryUnionOp.hpp>
 #include <geos/operation/valid/IsSimpleOp.hpp>
@@ -337,6 +338,45 @@ bool Geometry::touches(const Geometry *g) const {
 #endif
 	std::unique_ptr<IntersectionMatrix> im(relate(g));
 	bool res = im->isTouches(getDimension(), g->getDimension());
+	return res;
+}
+
+bool Geometry::intersects(const Geometry *g) const {
+#ifdef SHORTCIRCUIT_PREDICATES
+	// short-circuit test
+	if (!getEnvelopeInternal()->intersects(g->getEnvelopeInternal())) {
+		return false;
+	}
+#endif
+
+	/*
+	 * TODO: (MD) Add optimizations:
+	 *
+	 * - for P-A case:
+	 * If P is in env(A), test for point-in-poly
+	 *
+	 * - for A-A case:
+	 * If env(A1).overlaps(env(A2))
+	 * test for overlaps via point-in-poly first (both ways)
+	 * Possibly optimize selection of point to test by finding point of A1
+	 * closest to centre of env(A2).
+	 * (Is there a test where we shouldn't bother - e.g. if env A
+	 * is much smaller than env B, maybe there's no point in testing
+	 * pt(B) in env(A)?
+	 */
+
+	// optimization for rectangle arguments
+	if (isRectangle()) {
+		const Polygon *p = detail::down_cast<const Polygon *>(this);
+		return predicate::RectangleIntersects::intersects(*p, *g);
+	}
+	if (g->isRectangle()) {
+		const Polygon *p = detail::down_cast<const Polygon *>(g);
+		return predicate::RectangleIntersects::intersects(*p, *this);
+	}
+
+	std::unique_ptr<IntersectionMatrix> im(relate(g));
+	bool res = im->isIntersects();
 	return res;
 }
 

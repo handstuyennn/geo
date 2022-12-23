@@ -397,6 +397,14 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo within_func_info(within);
 	catalog.AddFunction(*con.context, &within_func_info);
 
+	// ST_INTERSECTS
+	ScalarFunctionSet intersects("st_intersects");
+	intersects.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIntersectsFunction));
+
+	CreateScalarFunctionInfo intersects_func_info(intersects);
+	catalog.AddFunction(*con.context, &intersects_func_info);
+
 	con.Commit();
 }
 

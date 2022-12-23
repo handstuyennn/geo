@@ -78,6 +78,7 @@ public:
 	static bool GeometryContains(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static bool GeometryTouches(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static bool GeometryWithin(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	static bool GeometryIntersects(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

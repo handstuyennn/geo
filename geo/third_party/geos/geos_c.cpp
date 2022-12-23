@@ -280,4 +280,8 @@ char GEOSTouches(const Geometry *g1, const Geometry *g2) {
 	return GEOSTouches_r(handle, g1, g2);
 }
 
+char GEOSIntersects(const Geometry *g1, const Geometry *g2) {
+	return GEOSIntersects_r(handle, g1, g2);
+}
+
 } /* extern "C" */

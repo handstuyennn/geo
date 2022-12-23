@@ -534,6 +534,9 @@ public:
 	 */
 	virtual bool touches(const Geometry *other) const;
 
+	/// Returns true if disjoint returns false.
+	virtual bool intersects(const Geometry *g) const;
+
 	/// Returns the length of this Geometry.
 	virtual double getLength() const;
 

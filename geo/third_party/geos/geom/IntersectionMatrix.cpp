@@ -184,6 +184,19 @@ bool IntersectionMatrix::isContains() const {
 }
 
 /*public*/
+bool IntersectionMatrix::isDisjoint() const {
+	return get(Location::INTERIOR, Location::INTERIOR) == Dimension::False &&
+	       get(Location::INTERIOR, Location::BOUNDARY) == Dimension::False &&
+	       get(Location::BOUNDARY, Location::INTERIOR) == Dimension::False &&
+	       get(Location::BOUNDARY, Location::BOUNDARY) == Dimension::False;
+}
+
+/*public*/
+bool IntersectionMatrix::isIntersects() const {
+	return !isDisjoint();
+}
+
+/*public*/
 bool IntersectionMatrix::isTouches(int dimensionOfGeometryA, int dimensionOfGeometryB) const {
 	if (dimensionOfGeometryA > dimensionOfGeometryB) {
 		// no need to get transpose because pattern matrix is symmetrical

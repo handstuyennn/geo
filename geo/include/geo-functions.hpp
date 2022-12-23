@@ -67,6 +67,7 @@ struct GeoFunctions {
 	static void GeometryContainsFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryTouchesFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryWithinFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryIntersectsFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

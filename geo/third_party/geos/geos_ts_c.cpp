@@ -808,4 +808,8 @@ char GEOSTouches_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geom
 	return execute(extHandle, 2, [&]() { return g1->touches(g2); });
 }
 
+char GEOSIntersects_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2) {
+	return execute(extHandle, 2, [&]() { return g1->intersects(g2); });
+}
+
 } /* extern "C" */

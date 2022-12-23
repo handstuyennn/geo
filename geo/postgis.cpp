@@ -154,6 +154,10 @@ bool Postgis::within(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::contains(geom2, geom1);
 }
 
+bool Postgis::ST_Intersects(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::ST_Intersects(geom1, geom2);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

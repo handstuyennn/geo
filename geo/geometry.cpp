@@ -245,6 +245,11 @@ bool Geometry::GeometryWithin(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.within(geom1, geom2);
 }
 
+bool Geometry::GeometryIntersects(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.ST_Intersects(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

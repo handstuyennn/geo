@@ -96,6 +96,8 @@ add_library(
   operation/relate/RelateNode.cpp
   operation/relate/EdgeEndBundle.cpp
   operation/predicate/RectangleContains.cpp
+  operation/predicate/RectangleIntersects.cpp
+  operation/predicate/SegmentIntersectionTester.cpp
   noding/MCIndexNoder.cpp
   noding/NodedSegmentString.cpp
   noding/SegmentNodeList.cpp
@@ -180,6 +182,7 @@ add_library(
   geom/util/GeometryCombiner.cpp
   geom/util/NoOpGeometryOperation.cpp
   geom/util/GeometryTransformer.cpp
+  geom/util/ShortCircuitedGeometryVisitor.cpp
   geom/IntersectionMatrix.cpp
   geom/Dimension.cpp
   geom/GeometryCollection.cpp)

@@ -257,6 +257,22 @@ public:
 	 */
 	bool isTouches(int dimensionOfGeometryA, int dimensionOfGeometryB) const;
 
+	/** \brief
+	 * Returns true if this IntersectionMatrix is FF*FF****.
+	 *
+	 * @return true if the two Geometrys related by this
+	 *         IntersectionMatrix are disjoint.
+	 */
+	bool isDisjoint() const;
+
+	/** \brief
+	 * Returns true if isDisjoint returns false.
+	 *
+	 * @return true if the two Geometrys related by this
+	 *         IntersectionMatrix intersect.
+	 */
+	bool isIntersects() const;
+
 private:
 	static const int firstDim; // = 3;
 
