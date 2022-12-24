@@ -158,6 +158,18 @@ bool Postgis::ST_Intersects(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::ST_Intersects(geom1, geom2);
 }
 
+bool Postgis::covers(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::covers(geom1, geom2);
+}
+
+bool Postgis::coveredby(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::coveredby(geom1, geom2);
+}
+
+bool Postgis::disjoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::disjoint(geom1, geom2);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

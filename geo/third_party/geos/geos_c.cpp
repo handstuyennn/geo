@@ -276,12 +276,29 @@ char GEOSEquals(const Geometry *g1, const Geometry *g2) {
 	return GEOSEquals_r(handle, g1, g2);
 }
 
+/****************************************************************
+ ** relate()-related functions
+ ** return 0 = false, 1 = true, 2 = error occured
+ **
+ */
+char GEOSDisjoint(const Geometry *g1, const Geometry *g2) {
+	return GEOSDisjoint_r(handle, g1, g2);
+}
+
 char GEOSTouches(const Geometry *g1, const Geometry *g2) {
 	return GEOSTouches_r(handle, g1, g2);
 }
 
 char GEOSIntersects(const Geometry *g1, const Geometry *g2) {
 	return GEOSIntersects_r(handle, g1, g2);
+}
+
+//-------------------------------------------------------------------
+// low-level relate functions
+//------------------------------------------------------------------
+
+char GEOSRelatePattern(const Geometry *g1, const Geometry *g2, const char *pat) {
+	return GEOSRelatePattern_r(handle, g1, g2, pat);
 }
 
 } /* extern "C" */

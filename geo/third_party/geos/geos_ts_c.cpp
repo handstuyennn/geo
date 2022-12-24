@@ -804,12 +804,27 @@ char GEOSEquals_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geome
 	return execute(extHandle, 2, [&]() { return g1->equals(g2); });
 }
 
+char GEOSDisjoint_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2) {
+	return execute(extHandle, 2, [&]() { return g1->disjoint(g2); });
+}
+
 char GEOSTouches_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2) {
 	return execute(extHandle, 2, [&]() { return g1->touches(g2); });
 }
 
 char GEOSIntersects_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2) {
 	return execute(extHandle, 2, [&]() { return g1->intersects(g2); });
+}
+
+//-------------------------------------------------------------------
+// low-level relate functions
+//------------------------------------------------------------------
+
+char GEOSRelatePattern_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geometry *g2, const char *pat) {
+	return execute(extHandle, 2, [&]() {
+		std::string s(pat);
+		return g1->relate(g2, s);
+	});
 }
 
 } /* extern "C" */

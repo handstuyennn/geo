@@ -405,6 +405,30 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo intersects_func_info(intersects);
 	catalog.AddFunction(*con.context, &intersects_func_info);
 
+	// ST_COVERS
+	ScalarFunctionSet covers("st_covers");
+	covers.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryCoversFunction));
+
+	CreateScalarFunctionInfo covers_func_info(covers);
+	catalog.AddFunction(*con.context, &covers_func_info);
+
+	// ST_COVEREDBY
+	ScalarFunctionSet coveredby("st_coveredby");
+	coveredby.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryCoveredByFunction));
+
+	CreateScalarFunctionInfo coveredby_func_info(coveredby);
+	catalog.AddFunction(*con.context, &coveredby_func_info);
+
+	// ST_DISJOINT
+	ScalarFunctionSet disjoint("st_disjoint");
+	disjoint.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryDisjointFunction));
+
+	CreateScalarFunctionInfo disjoint_func_info(disjoint);
+	catalog.AddFunction(*con.context, &disjoint_func_info);
+
 	con.Commit();
 }
 

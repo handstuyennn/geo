@@ -802,4 +802,219 @@ bool ST_Intersects(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return result;
 }
 
+/*
+ * Described at
+ * http://lin-ear-th-inking.blogspot.com/2007/06/subtleties-of-ogc-covers-spatial.html
+ */
+bool covers(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	int result;
+	GBOX box1, box2;
+
+	/* A.Covers(Empty) == FALSE */
+	if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2))
+		return false;
+
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	/*
+	 * short-circuit 1: if geom2 bounding box is not completely inside
+	 * geom1 bounding box we can return FALSE.
+	 */
+	if (gserialized_get_gbox_p(geom1, &box1) && gserialized_get_gbox_p(geom2, &box2)) {
+		if (!gbox_contains_2d(&box1, &box2)) {
+			return false;
+		}
+	}
+	/*
+	 * short-circuit 2: if geom2 is a point and geom1 is a polygon
+	 * call the point-in-polygon function.
+	 */
+	if (is_poly(geom1) && is_point(geom2)) {
+		const GSERIALIZED *gpoly = is_poly(geom1) ? geom1 : geom2;
+		const GSERIALIZED *gpoint = is_point(geom1) ? geom1 : geom2;
+		int retval;
+
+		if (gserialized_get_type(gpoint) == POINTTYPE) {
+			LWGEOM *point = lwgeom_from_gserialized(gpoint);
+			int pip_result = pip_short_circuit(lwgeom_as_lwpoint(point), gpoly);
+			lwgeom_free(point);
+
+			retval = (pip_result != -1); /* not outside */
+		} else if (gserialized_get_type(gpoint) == MULTIPOINTTYPE) {
+			LWMPOINT *mpoint = lwgeom_as_lwmpoint(lwgeom_from_gserialized(gpoint));
+			uint32_t i;
+
+			retval = LW_TRUE;
+			for (i = 0; i < mpoint->ngeoms; i++) {
+				int pip_result = pip_short_circuit(mpoint->geoms[i], gpoly);
+				if (pip_result == -1) {
+					retval = LW_FALSE;
+					break;
+				}
+			}
+
+			lwmpoint_free(mpoint);
+		} else {
+			/* Never get here */
+			throw "Type isn't point or multipoint!";
+			return false;
+		}
+
+		return retval;
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	GEOSGeometry *g1;
+	GEOSGeometry *g2;
+
+	g1 = POSTGIS2GEOS(geom1);
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+	g2 = POSTGIS2GEOS(geom2);
+	if (!g2) {
+		GEOSGeom_destroy(g1);
+		throw "Second argument geometry could not be converted to GEOS";
+	}
+	result = GEOSRelatePattern(g1, g2, "******FF*");
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+
+	if (result == 2)
+		throw "GEOSCovers";
+
+	return result;
+}
+
+/*
+ * Described at:
+ * http://lin-ear-th-inking.blogspot.com/2007/06/subtleties-of-ogc-covers-spatial.html
+ */
+bool coveredby(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GEOSGeometry *g1, *g2;
+	int result;
+	GBOX box1, box2;
+	std::string patt = "**F**F***";
+
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	/* A.CoveredBy(Empty) == FALSE */
+	if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2))
+		return false;
+	/*
+	 * short-circuit 1: if geom1 bounding box is not completely inside
+	 * geom2 bounding box we can return FALSE.
+	 */
+	if (gserialized_get_gbox_p(geom1, &box1) && gserialized_get_gbox_p(geom2, &box2)) {
+		if (!gbox_contains_2d(&box2, &box1)) {
+			return false;
+		}
+	}
+	/*
+	 * short-circuit 2: if geom1 is a point and geom2 is a polygon
+	 * call the point-in-polygon function.
+	 */
+	if (is_point(geom1) && is_poly(geom2)) {
+		const GSERIALIZED *gpoly = is_poly(geom1) ? geom1 : geom2;
+		const GSERIALIZED *gpoint = is_point(geom1) ? geom1 : geom2;
+		int retval;
+
+		if (gserialized_get_type(gpoint) == POINTTYPE) {
+			LWGEOM *point = lwgeom_from_gserialized(gpoint);
+			int pip_result = pip_short_circuit(lwgeom_as_lwpoint(point), gpoly);
+			lwgeom_free(point);
+
+			retval = (pip_result != -1); /* not outside */
+		} else if (gserialized_get_type(gpoint) == MULTIPOINTTYPE) {
+			LWMPOINT *mpoint = lwgeom_as_lwmpoint(lwgeom_from_gserialized(gpoint));
+			uint32_t i;
+
+			retval = LW_TRUE;
+			for (i = 0; i < mpoint->ngeoms; i++) {
+				int pip_result = pip_short_circuit(mpoint->geoms[i], gpoly);
+				if (pip_result == -1) {
+					retval = LW_FALSE;
+					break;
+				}
+			}
+
+			lwmpoint_free(mpoint);
+		} else {
+			/* Never get here */
+			throw "Type isn't point or multipoint!";
+			return false;
+		}
+
+		return retval;
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g1 = POSTGIS2GEOS(geom1);
+
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+
+	g2 = POSTGIS2GEOS(geom2);
+
+	if (!g2) {
+		GEOSGeom_destroy(g1);
+		throw "Second argument geometry could not be converted to GEOS";
+	}
+
+	result = GEOSRelatePattern(g1, g2, patt.c_str());
+
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+
+	if (result == 2)
+		throw "GEOSCoveredBy";
+
+	return result;
+}
+
+bool disjoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GEOSGeometry *g1, *g2;
+	char result;
+	GBOX box1, box2;
+
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	/* A.Disjoint(Empty) == TRUE */
+	if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2))
+		return true;
+
+	/*
+	 * short-circuit 1: if geom2 bounding box does not overlap
+	 * geom1 bounding box we can return TRUE.
+	 */
+	if (gserialized_get_gbox_p(geom1, &box1) && gserialized_get_gbox_p(geom2, &box2)) {
+		if (gbox_overlaps_2d(&box1, &box2) == LW_FALSE) {
+			return true;
+		}
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g1 = POSTGIS2GEOS(geom1);
+	if (!g1)
+		throw "First argument geometry could not be converted to GEOS";
+
+	g2 = POSTGIS2GEOS(geom2);
+	if (!g2) {
+		GEOSGeom_destroy(g1);
+		throw "Second argument geometry could not be converted to GEOS";
+	}
+
+	result = GEOSDisjoint(g1, g2);
+
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+
+	if (result == 2)
+		throw "GEOSDisjoint";
+
+	return result;
+}
+
 } // namespace duckdb

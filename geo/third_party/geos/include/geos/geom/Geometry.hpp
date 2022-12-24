@@ -528,6 +528,24 @@ public:
 	/// Returns true if other.within(this) returns true.
 	virtual bool contains(const Geometry *g) const;
 
+	/**
+	 * Tests whether this geometry is disjoint from the specified geometry.
+	 *
+	 * The <code>disjoint</code> predicate has the following equivalent
+	 * definitions:
+	 *  - The two geometries have no point in common
+	 *  - The DE-9IM Intersection Matrix for the two geometries matches
+	 *    <code>[FF*FF****]</code>
+	 *  - <code>! g.intersects(this)</code>
+	 *    (<code>disjoint</code> is the inverse of <code>intersects</code>)
+	 *
+	 * @param  other  the Geometry with which to compare this Geometry
+	 * @return true if the two <code>Geometry</code>s are disjoint
+	 *
+	 * @see Geometry::intersects
+	 */
+	virtual bool disjoint(const Geometry *other) const;
+
 	/** \brief
 	 * Returns true if the DE-9IM intersection matrix for the two
 	 * Geometrys is FT*******, F**T***** or F***T****.

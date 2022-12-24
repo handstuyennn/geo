@@ -250,6 +250,21 @@ bool Geometry::GeometryIntersects(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.ST_Intersects(geom1, geom2);
 }
 
+bool Geometry::GeometryCovers(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.covers(geom1, geom2);
+}
+
+bool Geometry::GeometryCoveredby(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.coveredby(geom1, geom2);
+}
+
+bool Geometry::GeometryDisjoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	return postgis.disjoint(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

@@ -244,11 +244,20 @@ extern char GEOS_DLL GEOSContains_r(GEOSContextHandle_t handle, const GEOSGeomet
 /** \see GEOSEquals */
 extern char GEOS_DLL GEOSEquals_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
 
+/** \see GEOSDisjoint */
+extern char GEOS_DLL GEOSDisjoint_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
+
 /** \see GEOSTouches */
 extern char GEOS_DLL GEOSTouches_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
 
 /** \see GEOSIntersects */
 extern char GEOS_DLL GEOSIntersects_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2);
+
+/* ========== Dimensionally Extended 9 Intersection Model ========== */
+
+/** \see GEOSRelatePattern */
+extern char GEOS_DLL GEOSRelatePattern_r(GEOSContextHandle_t handle, const GEOSGeometry *g1, const GEOSGeometry *g2,
+                                         const char *pat);
 
 /* ========== Coordinate Sequence functions ========== */
 
@@ -935,6 +944,15 @@ extern char GEOS_DLL GEOSContains(const GEOSGeometry *g1, const GEOSGeometry *g2
 extern char GEOS_DLL GEOSEquals(const GEOSGeometry *g1, const GEOSGeometry *g2);
 
 /**
+ * True if no point of either geometry touchess or is within the other.
+ * \param g1 Input geometry
+ * \param g2 Input geometry
+ * \returns 1 on true, 0 on false, 2 on exception
+ * \see geos::geom::Geometry::disjoint
+ */
+extern char GEOS_DLL GEOSDisjoint(const GEOSGeometry *g1, const GEOSGeometry *g2);
+
+/**
  * True if geometries share boundaries at one or more points, but do
  * not have interior overlaps.
  * \param g1 Input geometry
@@ -952,6 +970,20 @@ extern char GEOS_DLL GEOSTouches(const GEOSGeometry *g1, const GEOSGeometry *g2)
  * \see geos::geom::Geometry::intersects
  */
 extern char GEOS_DLL GEOSIntersects(const GEOSGeometry *g1, const GEOSGeometry *g2);
+
+/**
+ * Calculate the DE9IM pattern for this geometry pair
+ * and compare against the provided pattern to check for
+ * consistency. If the result and pattern are consistent
+ * return true. The pattern may include glob "*" characters
+ * for portions that are allowed to match any value.
+ * \see geos::geom::Geometry::relate
+ * \param g1 First geometry in pair
+ * \param g2 Second geometry in pair
+ * \param pat DE9IM pattern to check
+ * \return 1 on true, 0 on false, 2 on exception
+ */
+extern char GEOS_DLL GEOSRelatePattern(const GEOSGeometry *g1, const GEOSGeometry *g2, const char *pat);
 
 #endif /* #ifndef GEOS_USE_ONLY_R_API */
 

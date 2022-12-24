@@ -329,6 +329,18 @@ bool Geometry::contains(const Geometry *g) const {
 	return res;
 }
 
+bool Geometry::disjoint(const Geometry *g) const {
+#ifdef SHORTCIRCUIT_PREDICATES
+	// short-circuit test
+	if (!getEnvelopeInternal()->intersects(g->getEnvelopeInternal())) {
+		return true;
+	}
+#endif
+	std::unique_ptr<IntersectionMatrix> im(relate(g));
+	bool res = im->isDisjoint();
+	return res;
+}
+
 bool Geometry::touches(const Geometry *g) const {
 #ifdef SHORTCIRCUIT_PREDICATES
 	// short-circuit test

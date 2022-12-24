@@ -1910,4 +1910,121 @@ void GeoFunctions::GeometryIntersectsFunction(DataChunk &args, ExpressionState &
 	GeometryIntersectsBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
 }
 
+struct CoversBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+			return true;
+		}
+		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+			return false;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get covers: could not getting covers from geom");
+			return false;
+		}
+		auto coversRv = Geometry::GeometryCovers(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return coversRv;
+	}
+};
+
+template <typename TA, typename TB, typename TR>
+static void GeometryCoversBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, CoversBinaryOperator>(geom1, geom2, result, count);
+}
+
+void GeoFunctions::GeometryCoversFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryCoversBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
+}
+
+struct CoveredByBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+			return true;
+		}
+		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+			return false;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get covered by: could not getting covered by from geom");
+			return false;
+		}
+		auto coveredbyRv = Geometry::GeometryCoveredby(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return coveredbyRv;
+	}
+};
+
+template <typename TA, typename TB, typename TR>
+static void GeometryCoveredByBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, CoveredByBinaryOperator>(geom1, geom2, result, count);
+}
+
+void GeoFunctions::GeometryCoveredByFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryCoveredByBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
+}
+
+struct DisjointBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+			return true;
+		}
+		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+			return false;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get disjoint: could not getting disjoint from geom");
+			return false;
+		}
+		auto disjointRv = Geometry::GeometryDisjoint(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return disjointRv;
+	}
+};
+
+template <typename TA, typename TB, typename TR>
+static void GeometryDisjointBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, DisjointBinaryOperator>(geom1, geom2, result, count);
+}
+
+void GeoFunctions::GeometryDisjointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryDisjointBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
+}
+
 } // namespace duckdb
