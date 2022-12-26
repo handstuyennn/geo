@@ -2027,4 +2027,47 @@ void GeoFunctions::GeometryDisjointFunction(DataChunk &args, ExpressionState &st
 	GeometryDisjointBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
 }
 
+struct DWithinernaryOperator {
+	template <class TA, class TB, class TC, class TR>
+	static inline TR Operation(TA geom1, TB geom2, TC distance) {
+		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+			return true;
+		}
+		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+			return false;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get dwithin: could not getting dwithin from geom");
+			return false;
+		}
+		auto dWithinRv = Geometry::GeometryDWithin(gser1, gser2, distance);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return dWithinRv;
+	}
+};
+
+template <typename TA, typename TB, typename TC, typename TR>
+static void GeometryDWithinTernaryExecutor(Vector &geom1, Vector &geom2, Vector &distance, Vector &result,
+                                           idx_t count) {
+	TernaryExecutor::Execute<TA, TB, TC, TR>(geom1, geom2, distance, result, count,
+	                                         DWithinernaryOperator::Operation<TA, TB, TC, TR>);
+}
+
+void GeoFunctions::GeometryDWithinFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	auto &distance_arg = args.data[2];
+	GeometryDWithinTernaryExecutor<string_t, string_t, double, bool>(geom1_arg, geom2_arg, distance_arg, result,
+	                                                                 args.size());
+}
+
 } // namespace duckdb

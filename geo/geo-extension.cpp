@@ -429,6 +429,14 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo disjoint_func_info(disjoint);
 	catalog.AddFunction(*con.context, &disjoint_func_info);
 
+	// ST_DWITHIN
+	ScalarFunctionSet dwithin("st_dwithin");
+	dwithin.AddFunction(ScalarFunction({geo_type, geo_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN,
+	                                   GeoFunctions::GeometryDWithinFunction));
+
+	CreateScalarFunctionInfo dwithin_func_info(dwithin);
+	catalog.AddFunction(*con.context, &dwithin_func_info);
+
 	con.Commit();
 }
 

@@ -55,6 +55,7 @@ public:
 	bool covers(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	bool coveredby(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	bool disjoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	bool LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance);
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

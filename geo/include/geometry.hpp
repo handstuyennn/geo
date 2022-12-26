@@ -82,6 +82,7 @@ public:
 	static bool GeometryCovers(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static bool GeometryCoveredby(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static bool GeometryDisjoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	static bool GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

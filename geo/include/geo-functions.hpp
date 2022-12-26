@@ -71,6 +71,7 @@ struct GeoFunctions {
 	static void GeometryCoversFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryCoveredByFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryDisjointFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryDWithinFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

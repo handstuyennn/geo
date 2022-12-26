@@ -170,6 +170,10 @@ bool Postgis::disjoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::disjoint(geom1, geom2);
 }
 
+bool Postgis::LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance) {
+	return duckdb::LWGEOM_dwithin(geom1, geom2, distance);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

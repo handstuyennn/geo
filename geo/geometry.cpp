@@ -265,6 +265,11 @@ bool Geometry::GeometryDisjoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.disjoint(geom1, geom2);
 }
 
+bool Geometry::GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance) {
+	Postgis postgis;
+	return postgis.LWGEOM_dwithin(geom1, geom2, distance);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);
