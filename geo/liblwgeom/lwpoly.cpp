@@ -238,4 +238,32 @@ int lwpoly_is_closed(const LWPOLY *poly) {
 	return LW_TRUE;
 }
 
+/**
+ * Find the area of the outer ring - sum (area of inner rings).
+ */
+double lwpoly_area(const LWPOLY *poly) {
+	double poly_area = 0.0;
+	uint32_t i;
+
+	if (!poly)
+		lwerror("lwpoly_area called with null polygon pointer!");
+
+	for (i = 0; i < poly->nrings; i++) {
+		POINTARRAY *ring = poly->rings[i];
+		double ringarea = 0.0;
+
+		/* Empty or messed-up ring. */
+		if (ring->npoints < 3)
+			continue;
+
+		ringarea = fabs(ptarray_signed_area(ring));
+		if (i == 0) /* Outer ring, positive area! */
+			poly_area += ringarea;
+		else /* Inner ring, negative area! */
+			poly_area -= ringarea;
+	}
+
+	return poly_area;
+}
+
 } // namespace duckdb

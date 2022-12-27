@@ -63,7 +63,7 @@ This extension will provide a `GEO` type for DuckDB and enable basic GIS data an
 
 **Measures (9)**:
 - [ ] [`ST_ANGLE`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_angle)  
-- [ ] [`ST_AREA`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_area)  
+- [x] [`ST_AREA`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_area)  
 - [ ] [`ST_AZIMUTH`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_azimuth)  
 - [ ] [`ST_BOUNDINGBOX`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_boundingbox)  (alias: `ST_ENVELOPE`)
 - [ ] [`ST_DISTANCE`](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_distance)  

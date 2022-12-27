@@ -2070,4 +2070,57 @@ void GeoFunctions::GeometryDWithinFunction(DataChunk &args, ExpressionState &sta
 	                                                                 args.size());
 }
 
+struct AreaOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA geom) {
+		if (geom.GetSize() == 0) {
+			return 0;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			return 0;
+		}
+		auto area = Geometry::GeometryArea(gser);
+		Geometry::DestroyGeometry(gser);
+		return area;
+	}
+};
+
+struct AreaBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom, TB use_spheroid) {
+		if (geom.GetSize() == 0) {
+			return 0;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry get area: could not getting area from geom");
+			return false;
+		}
+		auto area = Geometry::GeometryArea(gser, use_spheroid);
+		Geometry::DestroyGeometry(gser);
+		return area;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryAreaUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, AreaOperator>(geom, result, count);
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryAreaBinaryExecutor(Vector &geom, Vector &use_spheroid, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, AreaBinaryOperator>(geom, use_spheroid, result, count);
+}
+
+void GeoFunctions::GeometryAreaFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	if (args.data.size() == 1) {
+		GeometryAreaUnaryExecutor<string_t, double>(geom_arg, result, args.size());
+	} else if (args.data.size() == 2) {
+		auto &use_spheroid_arg = args.data[1];
+		GeometryAreaBinaryExecutor<string_t, bool, double>(geom_arg, use_spheroid_arg, result, args.size());
+	}
+}
+
 } // namespace duckdb

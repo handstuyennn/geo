@@ -42,6 +42,39 @@ int ptarray_has_m(const POINTARRAY *pa) {
 	return FLAGS_GET_M(pa->flags);
 }
 
+/**
+ * Returns the area in cartesian units. Area is negative if ring is oriented CCW,
+ * positive if it is oriented CW and zero if the ring is degenerate or flat.
+ * http://en.wikipedia.org/wiki/Shoelace_formula
+ */
+double ptarray_signed_area(const POINTARRAY *pa) {
+	const POINT2D *P1;
+	const POINT2D *P2;
+	const POINT2D *P3;
+	double sum = 0.0;
+	double x0, x, y1, y2;
+	uint32_t i;
+
+	if (!pa || pa->npoints < 3)
+		return 0.0;
+
+	P1 = getPoint2d_cp(pa, 0);
+	P2 = getPoint2d_cp(pa, 1);
+	x0 = P1->x;
+	for (i = 2; i < pa->npoints; i++) {
+		P3 = getPoint2d_cp(pa, i);
+		x = P2->x - x0;
+		y1 = P3->y;
+		y2 = P1->y;
+		sum += x * (y2 - y1);
+
+		/* Move forwards! */
+		P1 = P2;
+		P2 = P3;
+	}
+	return sum / 2.0;
+}
+
 void ptarray_free(POINTARRAY *pa) {
 	if (pa) {
 		if (pa->serialized_pointlist && (!FLAGS_GET_READONLY(pa->flags)))

@@ -57,6 +57,9 @@ public:
 	bool disjoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	bool LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance);
 
+	double ST_Area(GSERIALIZED *geom);
+	double geography_area(GSERIALIZED *geom, bool use_spheroid);
+
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
 	GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);

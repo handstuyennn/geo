@@ -1,4 +1,5 @@
 #include "liblwgeom/liblwgeom_internal.hpp"
+#include "liblwgeom/lwinline.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +82,20 @@ LWCURVEPOLY *lwcurvepoly_construct_from_lwpoly(LWPOLY *lwpoly) {
 		ret->rings[i] = lwline_as_lwgeom(lwline_construct(ret->srid, NULL, ptarray_clone_deep(lwpoly->rings[i])));
 	}
 	return ret;
+}
+
+/**
+ * This should be rewritten to make use of the curve itself.
+ */
+double lwcurvepoly_area(const LWCURVEPOLY *curvepoly) {
+	double area = 0.0;
+	LWPOLY *poly;
+	if (lwgeom_is_empty((LWGEOM *)curvepoly))
+		return 0.0;
+	poly = lwcurvepoly_stroke(curvepoly, 32);
+	area = lwpoly_area(poly);
+	lwpoly_free(poly);
+	return area;
 }
 
 } // namespace duckdb

@@ -84,6 +84,9 @@ public:
 	static bool GeometryDisjoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static bool GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance);
 
+	static double GeometryArea(GSERIALIZED *geom);
+	static double GeometryArea(GSERIALIZED *geom, bool use_spheroid);
+
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
 	static GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);

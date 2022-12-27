@@ -437,6 +437,15 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo dwithin_func_info(dwithin);
 	catalog.AddFunction(*con.context, &dwithin_func_info);
 
+	// ST_AREA
+	ScalarFunctionSet area("st_area");
+	area.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAreaFunction));
+	area.AddFunction(
+	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryAreaFunction));
+
+	CreateScalarFunctionInfo area_func_info(area);
+	catalog.AddFunction(*con.context, &area_func_info);
+
 	con.Commit();
 }
 

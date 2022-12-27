@@ -270,6 +270,16 @@ bool Geometry::GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double di
 	return postgis.LWGEOM_dwithin(geom1, geom2, distance);
 }
 
+double Geometry::GeometryArea(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.ST_Area(geom);
+}
+
+double Geometry::GeometryArea(GSERIALIZED *geom, bool use_spheroid) {
+	Postgis postgis;
+	return postgis.geography_area(geom, use_spheroid);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

@@ -174,6 +174,14 @@ bool Postgis::LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double dist
 	return duckdb::LWGEOM_dwithin(geom1, geom2, distance);
 }
 
+double Postgis::ST_Area(GSERIALIZED *geom) {
+	return duckdb::ST_Area(geom);
+}
+
+double Postgis::geography_area(GSERIALIZED *geom, bool use_spheroid) {
+	return duckdb::geography_area(geom, use_spheroid);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

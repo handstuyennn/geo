@@ -181,10 +181,23 @@ lwvarlena_t *geohash_point(double longitude, double latitude, int precision);
 void decode_geohash_bbox(char *geohash, double *lat, double *lon, int precision);
 
 /*
+ * Area calculations
+ */
+double lwpoly_area(const LWPOLY *poly);
+double lwcurvepoly_area(const LWCURVEPOLY *curvepoly);
+double lwtriangle_area(const LWTRIANGLE *triangle);
+
+/*
+ * Segmentization
+ */
+LWPOLY *lwcurvepoly_stroke(const LWCURVEPOLY *curvepoly, uint32_t perQuad);
+
+/*
  * PointArray
  */
 int ptarray_has_z(const POINTARRAY *pa);
 int ptarray_has_m(const POINTARRAY *pa);
+double ptarray_signed_area(const POINTARRAY *pa);
 
 /*
  * Clone support

@@ -659,4 +659,9 @@ LWGEOM *lwgeom_stroke(const LWGEOM *geom, uint32_t perQuad) {
 	return lwcurve_linearize(geom, perQuad, LW_LINEARIZE_TOLERANCE_TYPE_SEGS_PER_QUAD, 0);
 }
 
+/* Kept for backward compatibility - TODO: drop */
+LWPOLY *lwcurvepoly_stroke(const LWCURVEPOLY *curvepoly, uint32_t perQuad) {
+	return lwcurvepoly_linearize(curvepoly, perQuad, LW_LINEARIZE_TOLERANCE_TYPE_SEGS_PER_QUAD, 0);
+}
+
 } // namespace duckdb

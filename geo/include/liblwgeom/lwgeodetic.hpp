@@ -83,18 +83,25 @@ void geographic_point_init(double lon, double lat, GEOGRAPHIC_POINT *g);
 double longitude_radians_normalize(double lon);
 double latitude_radians_normalize(double lat);
 double sphere_distance(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e);
+double sphere_distance_cartesian(const POINT3D *s, const POINT3D *e);
 int sphere_project(const GEOGRAPHIC_POINT *r, double distance, double azimuth, GEOGRAPHIC_POINT *n);
 double edge_distance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *gp, GEOGRAPHIC_POINT *closest);
 double edge_distance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *closest1,
                              GEOGRAPHIC_POINT *closest2);
+int crosses_dateline(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e);
+void point_shift(GEOGRAPHIC_POINT *p, double shift);
 int geographic_point_equals(const GEOGRAPHIC_POINT *g1, const GEOGRAPHIC_POINT *g2);
 uint32_t edge_intersects(const POINT3D *A1, const POINT3D *A2, const POINT3D *B1, const POINT3D *B2);
 int edge_intersection(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *g);
 int lwpoly_pt_outside(const LWPOLY *poly, POINT2D *pt_outside);
+double ptarray_area_sphere(const POINTARRAY *pa);
 
 /*
 ** Prototypes for spheroid functions.
 */
 double spheroid_distance(const GEOGRAPHIC_POINT *a, const GEOGRAPHIC_POINT *b, const SPHEROID *spheroid);
+double spheroid_direction(const GEOGRAPHIC_POINT *r, const GEOGRAPHIC_POINT *s, const SPHEROID *spheroid);
+int spheroid_project(const GEOGRAPHIC_POINT *r, const SPHEROID *spheroid, double distance, double azimuth,
+                     GEOGRAPHIC_POINT *g);
 
 } // namespace duckdb

@@ -72,6 +72,9 @@ struct GeoFunctions {
 	static void GeometryCoveredByFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryDisjointFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryDWithinFunction(DataChunk &args, ExpressionState &state, Vector &result);
+
+	// **Measures (9)**
+	static void GeometryAreaFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

@@ -273,4 +273,21 @@ bool LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double tolerance) {
 	return tolerance >= mindist;
 }
 
+/**
+ * @brief Calculate the area of all the subobj in a polygon
+ * 		area(point) = 0
+ * 		area (line) = 0
+ * 		area(polygon) = find its 2d area
+ */
+double ST_Area(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	double area = 0.0;
+
+	area = lwgeom_area(lwgeom);
+
+	lwgeom_free(lwgeom);
+
+	return area;
+}
+
 } // namespace duckdb

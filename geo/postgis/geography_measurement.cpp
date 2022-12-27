@@ -28,6 +28,7 @@
 #include "liblwgeom/liblwgeom.hpp"
 #include "liblwgeom/liblwgeom_internal.hpp"
 #include "liblwgeom/lwgeodetic_tree.hpp"
+#include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
 #include "libpgcommon/lwgeom_transform.hpp"
 #include "postgis/geography_measurement_trees.hpp"
@@ -88,6 +89,54 @@ double geography_distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid) {
 	}
 
 	return distance;
+}
+
+/*
+** geography_area(GSERIALIZED *g)
+** returns double area in meters square
+*/
+double geography_area(GSERIALIZED *g, bool use_spheroid) {
+	LWGEOM *lwgeom = NULL;
+	GBOX gbox;
+	double area;
+	SPHEROID s;
+
+	/* Initialize spheroid */
+	spheroid_init_from_srid(gserialized_get_srid(g), &s);
+
+	lwgeom = lwgeom_from_gserialized(g);
+
+	/* EMPTY things have no area */
+	if (lwgeom_is_empty(lwgeom)) {
+		lwgeom_free(lwgeom);
+		return 0.0;
+	}
+
+	if (lwgeom->bbox)
+		gbox = *(lwgeom->bbox);
+	else
+		lwgeom_calculate_gbox_geodetic(lwgeom, &gbox);
+
+	/* User requests spherical calculation, turn our spheroid into a sphere */
+	if (!use_spheroid)
+		s.a = s.b = s.radius;
+
+	/* Calculate the area */
+	if (use_spheroid)
+		area = lwgeom_area_spheroid(lwgeom, &s);
+	else
+		area = lwgeom_area_sphere(lwgeom, &s);
+
+	/* Clean up */
+	lwgeom_free(lwgeom);
+
+	/* Something went wrong... */
+	if (area < 0.0) {
+		throw "lwgeom_area_spher(oid) returned area < 0.0";
+		return 0;
+	}
+
+	return area;
 }
 
 } // namespace duckdb

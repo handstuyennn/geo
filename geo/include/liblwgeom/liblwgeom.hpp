@@ -710,6 +710,8 @@ extern double lwgeom_mindistance2d(const LWGEOM *lw1, const LWGEOM *lw2);
 extern double lwgeom_mindistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tolerance);
 extern LWGEOM *lwgeom_closest_point(const LWGEOM *lw1, const LWGEOM *lw2);
 
+extern double lwgeom_area(const LWGEOM *geom);
+
 extern int lwgeom_dimension(const LWGEOM *geom);
 
 extern LWPOINT *lwline_get_lwpoint(const LWLINE *line, uint32_t where);
@@ -849,6 +851,18 @@ extern LWGEOM *lwgeom_from_geojson(const char *geojson, char **srs);
  * Initialize a spheroid object for use in geodetic functions.
  */
 extern void spheroid_init(SPHEROID *s, double a, double b);
+
+/**
+ * Calculate the geodetic area of a lwgeom on the sphere. The result
+ * will be multiplied by the average radius of the supplied spheroid.
+ */
+extern double lwgeom_area_sphere(const LWGEOM *lwgeom, const SPHEROID *spheroid);
+
+/**
+ * Calculate the geodetic area of a lwgeom on the spheroid. The result
+ * will have the squared units of the spheroid axes.
+ */
+extern double lwgeom_area_spheroid(const LWGEOM *lwgeom, const SPHEROID *spheroid);
 
 /**
  * Global functions for memory/logging handlers.
