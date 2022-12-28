@@ -1718,10 +1718,10 @@ void GeoFunctions::GeometryBufferTextFunction(DataChunk &args, ExpressionState &
 struct EqualsBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -1757,10 +1757,10 @@ void GeoFunctions::GeometryEqualsFunction(DataChunk &args, ExpressionState &stat
 struct ContainsBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -1796,10 +1796,10 @@ void GeoFunctions::GeometryContainsFunction(DataChunk &args, ExpressionState &st
 struct TouchesBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -1835,10 +1835,10 @@ void GeoFunctions::GeometryTouchesFunction(DataChunk &args, ExpressionState &sta
 struct WithInBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -1874,10 +1874,10 @@ void GeoFunctions::GeometryWithinFunction(DataChunk &args, ExpressionState &stat
 struct IntersectsBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -1913,10 +1913,10 @@ void GeoFunctions::GeometryIntersectsFunction(DataChunk &args, ExpressionState &
 struct CoversBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -1952,10 +1952,10 @@ void GeoFunctions::GeometryCoversFunction(DataChunk &args, ExpressionState &stat
 struct CoveredByBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -1991,10 +1991,10 @@ void GeoFunctions::GeometryCoveredByFunction(DataChunk &args, ExpressionState &s
 struct DisjointBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -2027,13 +2027,13 @@ void GeoFunctions::GeometryDisjointFunction(DataChunk &args, ExpressionState &st
 	GeometryDisjointBinaryExecutor<string_t, string_t, bool>(geom1_arg, geom2_arg, result, args.size());
 }
 
-struct DWithinernaryOperator {
+struct DWithinTernaryOperator {
 	template <class TA, class TB, class TC, class TR>
 	static inline TR Operation(TA geom1, TB geom2, TC distance) {
-		if (geom1.GetSize() == 0 && geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
 			return true;
 		}
-		if (geom1.GetSize() == 0 || geom1.GetSize() == 0) {
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
 			return false;
 		}
 		auto gser1 = Geometry::GetGserialized(geom1);
@@ -2059,7 +2059,7 @@ template <typename TA, typename TB, typename TC, typename TR>
 static void GeometryDWithinTernaryExecutor(Vector &geom1, Vector &geom2, Vector &distance, Vector &result,
                                            idx_t count) {
 	TernaryExecutor::Execute<TA, TB, TC, TR>(geom1, geom2, distance, result, count,
-	                                         DWithinernaryOperator::Operation<TA, TB, TC, TR>);
+	                                         DWithinTernaryOperator::Operation<TA, TB, TC, TR>);
 }
 
 void GeoFunctions::GeometryDWithinFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -2120,6 +2120,106 @@ void GeoFunctions::GeometryAreaFunction(DataChunk &args, ExpressionState &state,
 	} else if (args.data.size() == 2) {
 		auto &use_spheroid_arg = args.data[1];
 		GeometryAreaBinaryExecutor<string_t, bool, double>(geom_arg, use_spheroid_arg, result, args.size());
+	}
+}
+
+struct AngleTernaryOperator {
+	template <class TA, class TB, class TC, class TR>
+	static inline TR Operation(TA geom1, TB geom2, TC geom3) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0 && geom3.GetSize() == 0) {
+			return 0.0;
+		}
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0 || geom3.GetSize() == 0) {
+			return 0.0;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		auto gser3 = Geometry::GetGserialized(geom3);
+		if (!gser1 || !gser2 || !gser3) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			if (gser3) {
+				Geometry::DestroyGeometry(gser3);
+			}
+			throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
+			return false;
+		}
+		auto angle = Geometry::GeometryAngle(gser1, gser2, gser3);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		Geometry::DestroyGeometry(gser3);
+		return angle;
+	}
+};
+
+template <typename TA, typename TB, typename TC, typename TR>
+static void GeometryAngleTernaryExecutor(Vector &geom1, Vector &geom2, Vector &geom3, Vector &result, idx_t count) {
+	TernaryExecutor::Execute<TA, TB, TC, TR>(geom1, geom2, geom3, result, count,
+	                                         AngleTernaryOperator::Operation<TA, TB, TC, TR>);
+}
+
+void GeoFunctions::GeometryAngleFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	auto &geom3_arg = args.data[2];
+	GeometryAngleTernaryExecutor<string_t, string_t, string_t, double>(geom1_arg, geom2_arg, geom3_arg, result,
+	                                                                   args.size());
+}
+
+struct PerimeterUnaryOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA geom) {
+		if (geom.GetSize() == 0) {
+			return 0.0;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			return 0.0;
+		}
+		auto perimeter = Geometry::GeometryPerimeter(gser);
+		Geometry::DestroyGeometry(gser);
+		return perimeter;
+	}
+};
+
+struct PerimeterBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom, TB use_spheroid) {
+		if (geom.GetSize() == 0) {
+			return 0;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry get perimeter: could not getting perimeter from geom");
+			return false;
+		}
+		auto perimeter = Geometry::GeometryPerimeter(gser, use_spheroid);
+		Geometry::DestroyGeometry(gser);
+		return perimeter;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryPerimeterUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, PerimeterUnaryOperator>(geom, result, count);
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryPerimeterBinaryExecutor(Vector &geom, Vector &use_spheroid, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, PerimeterBinaryOperator>(geom, use_spheroid, result, count);
+}
+
+void GeoFunctions::GeometryPerimeterFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	if (args.data.size() == 1) {
+		GeometryPerimeterUnaryExecutor<string_t, double>(geom_arg, result, args.size());
+	} else if (args.data.size() == 2) {
+		auto &use_spheroid_arg = args.data[1];
+		GeometryPerimeterBinaryExecutor<string_t, bool, double>(geom_arg, use_spheroid_arg, result, args.size());
 	}
 }
 

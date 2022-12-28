@@ -139,4 +139,50 @@ double geography_area(GSERIALIZED *g, bool use_spheroid) {
 	return area;
 }
 
+/*
+** geography_perimeter(GSERIALIZED *g)
+** returns double perimeter in meters for area features
+*/
+double geography_perimeter(GSERIALIZED *g, bool use_spheroid) {
+	LWGEOM *lwgeom = NULL;
+	double length;
+	SPHEROID s;
+	int type;
+
+	/* Only return for area features. */
+	type = gserialized_get_type(g);
+	if (!(type == POLYGONTYPE || type == MULTIPOLYGONTYPE || type == COLLECTIONTYPE)) {
+		return 0.0;
+	}
+
+	lwgeom = lwgeom_from_gserialized(g);
+
+	/* EMPTY things have no perimeter */
+	if (lwgeom_is_empty(lwgeom)) {
+		lwgeom_free(lwgeom);
+		return 0.0;
+	}
+
+	/* Initialize spheroid */
+	spheroid_init_from_srid(gserialized_get_srid(g), &s);
+
+	/* User requests spherical calculation, turn our spheroid into a sphere */
+	if (!use_spheroid)
+		s.a = s.b = s.radius;
+
+	/* Calculate the length */
+	length = lwgeom_length_spheroid(lwgeom, &s);
+
+	/* Something went wrong... */
+	if (length < 0.0) {
+		throw "lwgeom_length_spheroid returned length < 0.0";
+		return 0.0;
+	}
+
+	/* Clean up, but not all the way to the point arrays */
+	lwgeom_free(lwgeom);
+
+	return length;
+}
+
 } // namespace duckdb

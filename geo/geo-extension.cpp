@@ -41,7 +41,7 @@ void GeoExtension::Load(DuckDB &db) {
 	Connection con(db);
 	con.BeginTransaction();
 
-	auto &catalog = Catalog::GetCatalog(*con.context);
+	auto &catalog = Catalog::GetSystemCatalog(*con.context);
 
 	auto geo_type = LogicalType(LogicalTypeId::BLOB);
 	geo_type.SetAlias("GEOMETRY");
@@ -445,6 +445,22 @@ void GeoExtension::Load(DuckDB &db) {
 
 	CreateScalarFunctionInfo area_func_info(area);
 	catalog.AddFunction(*con.context, &area_func_info);
+
+	// ST_ANGLE
+	ScalarFunctionSet angle("st_angle");
+	angle.AddFunction(
+	    ScalarFunction({geo_type, geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAngleFunction));
+
+	CreateScalarFunctionInfo angle_func_info(angle);
+	catalog.AddFunction(*con.context, &angle_func_info);
+
+	// ST_PERIMETER
+	ScalarFunctionSet perimeter("st_perimeter");
+	perimeter.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryPerimeterFunction));
+	perimeter.AddFunction(ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryPerimeterFunction));
+
+	CreateScalarFunctionInfo perimeter_func_info(perimeter);
+	catalog.AddFunction(*con.context, &perimeter_func_info);
 
 	con.Commit();
 }

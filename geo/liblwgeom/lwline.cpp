@@ -212,4 +212,10 @@ LWPOINT *lwline_get_lwpoint(const LWLINE *line, uint32_t where) {
 	return lwpoint;
 }
 
+double lwline_length_2d(const LWLINE *line) {
+	if (lwline_is_empty(line))
+		return 0.0;
+	return ptarray_length_2d(line->points);
+}
+
 } // namespace duckdb

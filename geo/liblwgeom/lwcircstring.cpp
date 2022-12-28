@@ -91,4 +91,11 @@ int lwcircstring_is_closed(const LWCIRCSTRING *curve) {
 	return ptarray_is_closed_2d(curve->points);
 }
 
+double lwcircstring_length_2d(const LWCIRCSTRING *circ) {
+	if (lwcircstring_is_empty(circ))
+		return 0.0;
+
+	return ptarray_arc_length_2d(circ->points);
+}
+
 } // namespace duckdb

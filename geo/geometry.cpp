@@ -280,6 +280,21 @@ double Geometry::GeometryArea(GSERIALIZED *geom, bool use_spheroid) {
 	return postgis.geography_area(geom, use_spheroid);
 }
 
+double Geometry::GeometryAngle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3) {
+	Postgis postgis;
+	return postgis.LWGEOM_angle(geom1, geom2, geom3);
+}
+
+double Geometry::GeometryPerimeter(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_perimeter2d_poly(geom);
+}
+
+double Geometry::GeometryPerimeter(GSERIALIZED *geom, bool use_spheroid) {
+	Postgis postgis;
+	return postgis.geography_perimeter(geom, use_spheroid);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

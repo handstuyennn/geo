@@ -95,6 +95,7 @@ uint32_t edge_intersects(const POINT3D *A1, const POINT3D *A2, const POINT3D *B1
 int edge_intersection(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *g);
 int lwpoly_pt_outside(const LWPOLY *poly, POINT2D *pt_outside);
 double ptarray_area_sphere(const POINTARRAY *pa);
+double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s);
 
 /*
 ** Prototypes for spheroid functions.

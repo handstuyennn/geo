@@ -952,4 +952,56 @@ void ptarray_grid_in_place(POINTARRAY *pa, const gridspec *grid) {
 	return;
 }
 
+/**
+ * Find the 2d length of the given #POINTARRAY (even if it's 3d)
+ */
+double ptarray_length_2d(const POINTARRAY *pts) {
+	double dist = 0.0;
+	uint32_t i;
+	const POINT2D *frm;
+	const POINT2D *to;
+
+	if (pts->npoints < 2)
+		return 0.0;
+
+	frm = getPoint2d_cp(pts, 0);
+
+	for (i = 1; i < pts->npoints; i++) {
+		to = getPoint2d_cp(pts, i);
+
+		dist += sqrt(((frm->x - to->x) * (frm->x - to->x)) + ((frm->y - to->y) * (frm->y - to->y)));
+
+		frm = to;
+	}
+	return dist;
+}
+
+/************************************************************************/
+
+/**
+ * Find the 2d length of the given #POINTARRAY, using circular
+ * arc interpolation between each coordinate triple.
+ * Length(A1, A2, A3, A4, A5) = Length(A1, A2, A3)+Length(A3, A4, A5)
+ */
+double ptarray_arc_length_2d(const POINTARRAY *pts) {
+	double dist = 0.0;
+	uint32_t i;
+	const POINT2D *a1;
+	const POINT2D *a2;
+	const POINT2D *a3;
+
+	if (pts->npoints % 2 != 1)
+		lwerror("arc point array with even number of points");
+
+	a1 = getPoint2d_cp(pts, 0);
+
+	for (i = 2; i < pts->npoints; i += 2) {
+		a2 = getPoint2d_cp(pts, i - 1);
+		a3 = getPoint2d_cp(pts, i);
+		dist += lw_arc_length(a1, a2, a3);
+		a1 = a3;
+	}
+	return dist;
+}
+
 } // namespace duckdb

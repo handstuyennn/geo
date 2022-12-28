@@ -830,4 +830,42 @@ double lwgeom_area(const LWGEOM *geom) {
 		return 0.0;
 }
 
+double lwgeom_perimeter_2d(const LWGEOM *geom) {
+	int type = geom->type;
+	if (type == POLYGONTYPE)
+		return lwpoly_perimeter_2d((LWPOLY *)geom);
+	else if (type == CURVEPOLYTYPE)
+		return lwcurvepoly_perimeter_2d((LWCURVEPOLY *)geom);
+	else if (type == TRIANGLETYPE)
+		return lwtriangle_perimeter_2d((LWTRIANGLE *)geom);
+	else if (lwgeom_is_collection(geom)) {
+		double perimeter = 0.0;
+		uint32_t i;
+		LWCOLLECTION *col = (LWCOLLECTION *)geom;
+		for (i = 0; i < col->ngeoms; i++)
+			perimeter += lwgeom_perimeter_2d(col->geoms[i]);
+		return perimeter;
+	} else
+		return 0.0;
+}
+
+double lwgeom_length_2d(const LWGEOM *geom) {
+	int type = geom->type;
+	if (type == LINETYPE)
+		return lwline_length_2d((LWLINE *)geom);
+	else if (type == CIRCSTRINGTYPE)
+		return lwcircstring_length_2d((LWCIRCSTRING *)geom);
+	else if (type == COMPOUNDTYPE)
+		return lwcompound_length_2d((LWCOMPOUND *)geom);
+	else if (lwgeom_is_collection(geom)) {
+		double length = 0.0;
+		uint32_t i;
+		LWCOLLECTION *col = (LWCOLLECTION *)geom;
+		for (i = 0; i < col->ngeoms; i++)
+			length += lwgeom_length_2d(col->geoms[i]);
+		return length;
+	} else
+		return 0.0;
+}
+
 } // namespace duckdb

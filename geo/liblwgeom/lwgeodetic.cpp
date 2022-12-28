@@ -1425,4 +1425,98 @@ double lwgeom_area_sphere(const LWGEOM *lwgeom, const SPHEROID *spheroid) {
 	return 0.0;
 }
 
+double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s) {
+	GEOGRAPHIC_POINT a, b;
+	double za = 0.0, zb = 0.0;
+	POINT4D p;
+	uint32_t i;
+	int hasz = LW_FALSE;
+	double length = 0.0;
+	double seglength = 0.0;
+
+	/* Return zero on non-sensical inputs */
+	if (!pa || pa->npoints < 2)
+		return 0.0;
+
+	/* See if we have a third dimension */
+	hasz = FLAGS_GET_Z(pa->flags);
+
+	/* Initialize first point */
+	getPoint4d_p(pa, 0, &p);
+	geographic_point_init(p.x, p.y, &a);
+	if (hasz)
+		za = p.z;
+
+	/* Loop and sum the length for each segment */
+	for (i = 1; i < pa->npoints; i++) {
+		seglength = 0.0;
+		getPoint4d_p(pa, i, &p);
+		geographic_point_init(p.x, p.y, &b);
+		if (hasz)
+			zb = p.z;
+
+		/* Special sphere case */
+		if (s->a == s->b)
+			seglength = s->radius * sphere_distance(&a, &b);
+		/* Spheroid case */
+		else
+			seglength = spheroid_distance(&a, &b, s);
+
+		/* Add in the vertical displacement if we're in 3D */
+		if (hasz)
+			seglength = sqrt((zb - za) * (zb - za) + seglength * seglength);
+
+		/* Add this segment length to the total */
+		length += seglength;
+
+		/* B gets incremented in the next loop, so we save the value here */
+		a = b;
+		za = zb;
+	}
+	return length;
+}
+
+double lwgeom_length_spheroid(const LWGEOM *geom, const SPHEROID *s) {
+	int type;
+	uint32_t i = 0;
+	double length = 0.0;
+
+	assert(geom);
+
+	/* No area in nothing */
+	if (lwgeom_is_empty(geom))
+		return 0.0;
+
+	type = geom->type;
+
+	if (type == POINTTYPE || type == MULTIPOINTTYPE)
+		return 0.0;
+
+	if (type == LINETYPE)
+		return ptarray_length_spheroid(((LWLINE *)geom)->points, s);
+
+	if (type == POLYGONTYPE) {
+		LWPOLY *poly = (LWPOLY *)geom;
+		for (i = 0; i < poly->nrings; i++) {
+			length += ptarray_length_spheroid(poly->rings[i], s);
+		}
+		return length;
+	}
+
+	if (type == TRIANGLETYPE)
+		return ptarray_length_spheroid(((LWTRIANGLE *)geom)->points, s);
+
+	if (lwtype_is_collection(type)) {
+		LWCOLLECTION *col = (LWCOLLECTION *)geom;
+
+		for (i = 0; i < col->ngeoms; i++) {
+			length += lwgeom_length_spheroid(col->geoms[i], s);
+		}
+		return length;
+	}
+
+	lwerror("unsupported type passed to lwgeom_length_sphere");
+	return 0.0;
+}
+
 } // namespace duckdb

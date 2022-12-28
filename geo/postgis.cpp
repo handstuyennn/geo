@@ -182,6 +182,18 @@ double Postgis::geography_area(GSERIALIZED *geom, bool use_spheroid) {
 	return duckdb::geography_area(geom, use_spheroid);
 }
 
+double Postgis::LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3) {
+	return duckdb::LWGEOM_angle(geom1, geom2, geom3);
+}
+
+double Postgis::LWGEOM_perimeter2d_poly(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_perimeter2d_poly(geom);
+}
+
+double Postgis::geography_perimeter(GSERIALIZED *geom, bool use_spheroid) {
+	return duckdb::geography_perimeter(geom, use_spheroid);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

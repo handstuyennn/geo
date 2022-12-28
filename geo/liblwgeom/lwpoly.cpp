@@ -266,4 +266,18 @@ double lwpoly_area(const LWPOLY *poly) {
 	return poly_area;
 }
 
+/**
+ * Compute the sum of polygon rings length (forcing 2d computation).
+ * Could use a more numerically stable calculator...
+ */
+double lwpoly_perimeter_2d(const LWPOLY *poly) {
+	double result = 0.0;
+	uint32_t i;
+
+	for (i = 0; i < poly->nrings; i++)
+		result += ptarray_length_2d(poly->rings[i]);
+
+	return result;
+}
+
 } // namespace duckdb

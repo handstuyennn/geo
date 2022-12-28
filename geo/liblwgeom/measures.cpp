@@ -1984,4 +1984,15 @@ int lw_dist2d_pt_arc(const POINT2D *P, const POINT2D *A1, const POINT2D *A2, con
 	return LW_TRUE;
 }
 
+/**
+ * Compute the azimuth of segment AB in radians.
+ * Return 0 on exception (same point), 1 otherwise.
+ */
+int azimuth_pt_pt(const POINT2D *A, const POINT2D *B, double *d) {
+	if (A->x == B->x && A->y == B->y)
+		return LW_FALSE;
+	*d = fmod(2 * M_PI + M_PI / 2 - atan2(B->y - A->y, B->x - A->x), 2 * M_PI);
+	return LW_TRUE;
+}
+
 } // namespace duckdb

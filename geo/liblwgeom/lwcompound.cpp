@@ -163,4 +163,16 @@ int lwcompound_contains_point(const LWCOMPOUND *comp, const POINT2D *pt) {
 	return LW_INSIDE;
 }
 
+double lwcompound_length_2d(const LWCOMPOUND *comp) {
+	uint32_t i;
+	double length = 0.0;
+	if (lwgeom_is_empty((LWGEOM *)comp))
+		return 0.0;
+
+	for (i = 0; i < comp->ngeoms; i++) {
+		length += lwgeom_length_2d(comp->geoms[i]);
+	}
+	return length;
+}
+
 } // namespace duckdb

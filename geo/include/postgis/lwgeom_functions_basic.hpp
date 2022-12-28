@@ -42,5 +42,7 @@ int LWGEOM_npoints(GSERIALIZED *geom);
 GSERIALIZED *LWGEOM_closestpoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
 bool LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double tolerance);
 double ST_Area(GSERIALIZED *geom);
+double LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3);
+double LWGEOM_perimeter2d_poly(GSERIALIZED *geom);
 
 } // namespace duckdb

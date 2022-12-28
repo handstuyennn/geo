@@ -711,7 +711,7 @@ extern double lwgeom_mindistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw
 extern LWGEOM *lwgeom_closest_point(const LWGEOM *lw1, const LWGEOM *lw2);
 
 extern double lwgeom_area(const LWGEOM *geom);
-
+extern double lwgeom_perimeter_2d(const LWGEOM *geom);
 extern int lwgeom_dimension(const LWGEOM *geom);
 
 extern LWPOINT *lwline_get_lwpoint(const LWLINE *line, uint32_t where);
@@ -719,6 +719,10 @@ extern LWPOINT *lwline_get_lwpoint(const LWLINE *line, uint32_t where);
 extern LWPOINT *lwcompound_get_startpoint(const LWCOMPOUND *lwcmp);
 extern LWPOINT *lwcompound_get_endpoint(const LWCOMPOUND *lwcmp);
 extern LWPOINT *lwcompound_get_lwpoint(const LWCOMPOUND *lwcmp, uint32_t where);
+
+extern double ptarray_length_2d(const POINTARRAY *pts);
+extern double lwgeom_length_2d(const LWGEOM *geom);
+extern int azimuth_pt_pt(const POINT2D *p1, const POINT2D *p2, double *ret);
 
 /**
  * @brief Check whether or not a lwgeom is big enough to warrant a bounding box.
@@ -863,6 +867,12 @@ extern double lwgeom_area_sphere(const LWGEOM *lwgeom, const SPHEROID *spheroid)
  * will have the squared units of the spheroid axes.
  */
 extern double lwgeom_area_spheroid(const LWGEOM *lwgeom, const SPHEROID *spheroid);
+
+/**
+ * Calculate the geodetic length of a lwgeom on the unit sphere. The result
+ * will have to by multiplied by the real radius to get the real length.
+ */
+extern double lwgeom_length_spheroid(const LWGEOM *geom, const SPHEROID *s);
 
 /**
  * Global functions for memory/logging handlers.

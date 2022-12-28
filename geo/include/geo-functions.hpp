@@ -75,6 +75,8 @@ struct GeoFunctions {
 
 	// **Measures (9)**
 	static void GeometryAreaFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryAngleFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryPerimeterFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

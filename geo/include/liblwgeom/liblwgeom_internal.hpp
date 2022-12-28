@@ -162,6 +162,7 @@ int ptarrayarc_contains_point_partial(const POINTARRAY *pa, const POINT2D *pt, i
 int lwgeom_contains_point(const LWGEOM *geom, const POINT2D *pt);
 int lw_arc_is_pt(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3);
 int lwcompound_contains_point(const LWCOMPOUND *comp, const POINT2D *pt);
+double lw_arc_length(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3);
 
 /*
  * Force dims
@@ -188,6 +189,16 @@ double lwcurvepoly_area(const LWCURVEPOLY *curvepoly);
 double lwtriangle_area(const LWTRIANGLE *triangle);
 
 /*
+ * Length calculations
+ */
+double lwcompound_length_2d(const LWCOMPOUND *comp);
+double lwline_length_2d(const LWLINE *line);
+double lwcircstring_length_2d(const LWCIRCSTRING *circ);
+double lwpoly_perimeter_2d(const LWPOLY *poly);
+double lwcurvepoly_perimeter_2d(const LWCURVEPOLY *poly);
+double lwtriangle_perimeter_2d(const LWTRIANGLE *triangle);
+
+/*
  * Segmentization
  */
 LWPOLY *lwcurvepoly_stroke(const LWCURVEPOLY *curvepoly, uint32_t perQuad);
@@ -198,6 +209,11 @@ LWPOLY *lwcurvepoly_stroke(const LWCURVEPOLY *curvepoly, uint32_t perQuad);
 int ptarray_has_z(const POINTARRAY *pa);
 int ptarray_has_m(const POINTARRAY *pa);
 double ptarray_signed_area(const POINTARRAY *pa);
+
+/*
+ * Length
+ */
+double ptarray_arc_length_2d(const POINTARRAY *pts);
 
 /*
  * Clone support

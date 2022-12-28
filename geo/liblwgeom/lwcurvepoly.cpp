@@ -98,4 +98,14 @@ double lwcurvepoly_area(const LWCURVEPOLY *curvepoly) {
 	return area;
 }
 
+double lwcurvepoly_perimeter_2d(const LWCURVEPOLY *poly) {
+	double result = 0.0;
+	uint32_t i;
+
+	for (i = 0; i < poly->nrings; i++)
+		result += lwgeom_length_2d(poly->rings[i]);
+
+	return result;
+}
+
 } // namespace duckdb
