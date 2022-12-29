@@ -62,6 +62,8 @@ public:
 	double LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3);
 	double LWGEOM_perimeter2d_poly(GSERIALIZED *geom);
 	double geography_perimeter(GSERIALIZED *geom, bool use_spheroid);
+	double LWGEOM_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	double geography_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 	int LWGEOM_dimension(GSERIALIZED *geom);
 	std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

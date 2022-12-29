@@ -413,4 +413,61 @@ double LWGEOM_perimeter2d_poly(GSERIALIZED *geom) {
 	return perimeter;
 }
 
+/**
+ * Compute the azimuth of segment defined by the two
+ * given Point geometries.
+ * @return NULL on exception (same point).
+ * 		Return radians otherwise.
+ */
+double LWGEOM_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	GSERIALIZED *geom;
+	LWPOINT *lwpoint;
+	POINT2D p1, p2;
+	double result;
+	int32_t srid;
+
+	/* Extract first point */
+	geom = geom1;
+	lwpoint = lwgeom_as_lwpoint(lwgeom_from_gserialized(geom));
+	if (!lwpoint) {
+		throw "Argument must be POINT geometries";
+		return 0.0;
+	}
+	srid = lwpoint->srid;
+	if (!getPoint2d_p(lwpoint->point, 0, &p1)) {
+		throw "Error extracting point";
+		throw 0.0;
+	}
+	lwpoint_free(lwpoint);
+
+	/* Extract second point */
+	geom = geom2;
+	lwpoint = lwgeom_as_lwpoint(lwgeom_from_gserialized(geom));
+	if (!lwpoint) {
+		throw "Argument must be POINT geometries";
+		return 0.0;
+	}
+	if (lwpoint->srid != srid) {
+		throw "Operation on mixed SRID geometries";
+		return 0.0;
+	}
+	if (!getPoint2d_p(lwpoint->point, 0, &p2)) {
+		throw "Error extracting point";
+		return 0.0;
+	}
+	lwpoint_free(lwpoint);
+
+	/* Standard return value for equality case */
+	if ((p1.x == p2.x) && (p1.y == p2.y)) {
+		return 0.0;
+	}
+
+	/* Compute azimuth */
+	if (!azimuth_pt_pt(&p1, &p2, &result)) {
+		return 0.0;
+	}
+
+	return result;
+}
+
 } // namespace duckdb

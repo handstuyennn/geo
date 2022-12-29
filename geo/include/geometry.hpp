@@ -89,6 +89,7 @@ public:
 	static double GeometryAngle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3);
 	static double GeometryPerimeter(GSERIALIZED *geom);
 	static double GeometryPerimeter(GSERIALIZED *geom, bool use_spheroid);
+	static double GeometryAzimuth(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

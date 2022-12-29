@@ -50,5 +50,7 @@ void circ_tree_free(CIRC_NODE *node);
 CIRC_NODE *circ_tree_new(const POINTARRAY *pa);
 CIRC_NODE *lwgeom_calculate_circ_tree(const LWGEOM *lwgeom);
 double circ_tree_distance_tree(const CIRC_NODE *n1, const CIRC_NODE *n2, const SPHEROID *spheroid, double threshold);
+int circ_tree_contains_point(const CIRC_NODE *node, const POINT2D *pt, const POINT2D *pt_outside, int level,
+                             int *on_boundary);
 
 } // namespace duckdb

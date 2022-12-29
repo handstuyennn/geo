@@ -457,10 +457,19 @@ void GeoExtension::Load(DuckDB &db) {
 	// ST_PERIMETER
 	ScalarFunctionSet perimeter("st_perimeter");
 	perimeter.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryPerimeterFunction));
-	perimeter.AddFunction(ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryPerimeterFunction));
+	perimeter.AddFunction(
+	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryPerimeterFunction));
 
 	CreateScalarFunctionInfo perimeter_func_info(perimeter);
 	catalog.AddFunction(*con.context, &perimeter_func_info);
+
+	// ST_AZIMUTH
+	ScalarFunctionSet azimuth("st_azimuth");
+	azimuth.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAzimuthFunction));
+
+	CreateScalarFunctionInfo azimuth_func_info(azimuth);
+	catalog.AddFunction(*con.context, &azimuth_func_info);
 
 	con.Commit();
 }

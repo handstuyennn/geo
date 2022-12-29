@@ -1519,4 +1519,37 @@ double lwgeom_length_spheroid(const LWGEOM *geom, const SPHEROID *s) {
 	return 0.0;
 }
 
+/**
+ * Calculate a bearing (azimuth) given a source and destination point.
+ * @param r - location of first point.
+ * @param s - location of second point.
+ * @param spheroid - spheroid definition.
+ * @return azimuth - azimuth in radians.
+ *
+ */
+double lwgeom_azumith_spheroid(const LWPOINT *r, const LWPOINT *s, const SPHEROID *spheroid) {
+	GEOGRAPHIC_POINT g1, g2;
+	double x1, y1, x2, y2, az;
+
+	/* Convert r to a geodetic point */
+	x1 = lwpoint_get_x(r);
+	y1 = lwpoint_get_y(r);
+	geographic_point_init(x1, y1, &g1);
+
+	/* Convert s to a geodetic point */
+	x2 = lwpoint_get_x(s);
+	y2 = lwpoint_get_y(s);
+	geographic_point_init(x2, y2, &g2);
+
+	/* Same point, return NaN */
+	if (FP_EQUALS(x1, x2) && FP_EQUALS(y1, y2)) {
+		return NAN;
+	}
+
+	/* Do the direction calculation */
+	az = spheroid_direction(&g1, &g2, spheroid);
+	/* Ensure result is positive */
+	return az > 0 ? az : M_PI - az;
+}
+
 } // namespace duckdb

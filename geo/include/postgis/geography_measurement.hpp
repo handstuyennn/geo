@@ -35,6 +35,7 @@ namespace duckdb {
 double geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spheroid);
 double geography_area(GSERIALIZED *g, bool use_spheroid);
 double geography_perimeter(GSERIALIZED *g, bool use_spheroid);
+double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2);
 
 #endif /* !defined _LIBGEOGRAPHY_MEASUREMENT_H  */
 

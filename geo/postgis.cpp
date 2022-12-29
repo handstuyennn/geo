@@ -194,6 +194,14 @@ double Postgis::geography_perimeter(GSERIALIZED *geom, bool use_spheroid) {
 	return duckdb::geography_perimeter(geom, use_spheroid);
 }
 
+double Postgis::LWGEOM_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::LWGEOM_azimuth(geom1, geom2);
+}
+
+double Postgis::geography_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::geography_azimuth(geom1, geom2);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

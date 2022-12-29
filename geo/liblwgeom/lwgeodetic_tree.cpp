@@ -539,7 +539,18 @@ static void circ_internal_nodes_sort(CIRC_NODE **nodes, uint32_t num_nodes, cons
 	return;
 }
 
-/***********************************************************************/
+/**
+ * Returns a #POINT2D that is a vertex of the input shape
+ */
+int circ_tree_get_point(const CIRC_NODE *node, POINT2D *pt) {
+	if (circ_node_is_leaf(node)) {
+		pt->x = node->p1->x;
+		pt->y = node->p1->y;
+		return LW_SUCCESS;
+	} else {
+		return circ_tree_get_point(node->nodes[0], pt);
+	}
+}
 
 static double circ_tree_distance_tree_internal(const CIRC_NODE *n1, const CIRC_NODE *n2, double threshold,
                                                double *min_dist, double *max_dist, GEOGRAPHIC_POINT *closest1,
@@ -569,36 +580,28 @@ static double circ_tree_distance_tree_internal(const CIRC_NODE *n1, const CIRC_N
 
 	/* Polygon on one side, primitive type on the other. Check for point-in-polygon */
 	/* short circuit. */
-	// Need to do with postgis
-
-	// if ( n1->geom_type == POLYGONTYPE && n2->geom_type && ! lwtype_is_collection(n2->geom_type) )
-	// {
-	// 	POINT2D pt;
-	// 	circ_tree_get_point(n2, &pt);
-	// 	if ( circ_tree_contains_point(n1, &pt, &(n1->pt_outside), 0, NULL) )
-	// 	{
-	// 		*min_dist = 0.0;
-	// 		geographic_point_init(pt.x, pt.y, closest1);
-	// 		geographic_point_init(pt.x, pt.y, closest2);
-	// 		return *min_dist;
-	// 	}
-	// }
+	if (n1->geom_type == POLYGONTYPE && n2->geom_type && !lwtype_is_collection(n2->geom_type)) {
+		POINT2D pt;
+		circ_tree_get_point(n2, &pt);
+		if (circ_tree_contains_point(n1, &pt, &(n1->pt_outside), 0, NULL)) {
+			*min_dist = 0.0;
+			geographic_point_init(pt.x, pt.y, closest1);
+			geographic_point_init(pt.x, pt.y, closest2);
+			return *min_dist;
+		}
+	}
 	/* Polygon on one side, primitive type on the other. Check for point-in-polygon */
 	/* short circuit. */
-	// Need to do with postgis
-
-	// if ( n2->geom_type == POLYGONTYPE && n1->geom_type && ! lwtype_is_collection(n1->geom_type) )
-	// {
-	// 	POINT2D pt;
-	// 	circ_tree_get_point(n1, &pt);
-	// 	if ( circ_tree_contains_point(n2, &pt, &(n2->pt_outside), 0, NULL) )
-	// 	{
-	// 		geographic_point_init(pt.x, pt.y, closest1);
-	// 		geographic_point_init(pt.x, pt.y, closest2);
-	// 		*min_dist = 0.0;
-	// 		return *min_dist;
-	// 	}
-	// }
+	if (n2->geom_type == POLYGONTYPE && n1->geom_type && !lwtype_is_collection(n1->geom_type)) {
+		POINT2D pt;
+		circ_tree_get_point(n1, &pt);
+		if (circ_tree_contains_point(n2, &pt, &(n2->pt_outside), 0, NULL)) {
+			geographic_point_init(pt.x, pt.y, closest1);
+			geographic_point_init(pt.x, pt.y, closest2);
+			*min_dist = 0.0;
+			return *min_dist;
+		}
+	}
 
 	/* Both leaf nodes, do a real distance calculation */
 	if (circ_node_is_leaf(n1) && circ_node_is_leaf(n2)) {
@@ -666,28 +669,21 @@ static double circ_tree_distance_tree_internal(const CIRC_NODE *n1, const CIRC_N
 		/* Drive the recursion into the COLLECTION types first so we end up with */
 		/* pairings of primitive geometries that can be forced into the point-in-polygon */
 		/* tests above. */
-		// if ( n1->geom_type && lwtype_is_collection(n1->geom_type) )
-		// {
-		// 	circ_internal_nodes_sort(n1->nodes, n1->num_nodes, n2);
-		// 	for ( i = 0; i < n1->num_nodes; i++ )
-		// 	{
-		// 		d = circ_tree_distance_tree_internal(n1->nodes[i], n2, threshold, min_dist, max_dist, closest1,
-		// closest2); 		d_min = FP_MIN(d_min, d);
-		// 	}
-		// }
-		// else if ( n2->geom_type && lwtype_is_collection(n2->geom_type) )
-		// {
-		// 	circ_internal_nodes_sort(n2->nodes, n2->num_nodes, n1);
-		// 	for ( i = 0; i < n2->num_nodes; i++ )
-		// 	{
-		// 		d = circ_tree_distance_tree_internal(n1, n2->nodes[i], threshold, min_dist, max_dist, closest1,
-		// closest2); 		d_min = FP_MIN(d_min, d);
-		// 	}
-		// }
-		// else if ( ! circ_node_is_leaf(n1) )
-		// Need to do with postgis
-
-		if (!circ_node_is_leaf(n1)) {
+		if (n1->geom_type && lwtype_is_collection(n1->geom_type)) {
+			circ_internal_nodes_sort(n1->nodes, n1->num_nodes, n2);
+			for (i = 0; i < n1->num_nodes; i++) {
+				d = circ_tree_distance_tree_internal(n1->nodes[i], n2, threshold, min_dist, max_dist, closest1,
+				                                     closest2);
+				d_min = FP_MIN(d_min, d);
+			}
+		} else if (n2->geom_type && lwtype_is_collection(n2->geom_type)) {
+			circ_internal_nodes_sort(n2->nodes, n2->num_nodes, n1);
+			for (i = 0; i < n2->num_nodes; i++) {
+				d = circ_tree_distance_tree_internal(n1, n2->nodes[i], threshold, min_dist, max_dist, closest1,
+				                                     closest2);
+				d_min = FP_MIN(d_min, d);
+			}
+		} else if (!circ_node_is_leaf(n1)) {
 			circ_internal_nodes_sort(n1->nodes, n1->num_nodes, n2);
 			for (i = 0; i < n1->num_nodes; i++) {
 				d = circ_tree_distance_tree_internal(n1->nodes[i], n2, threshold, min_dist, max_dist, closest1,
@@ -726,6 +722,69 @@ double circ_tree_distance_tree(const CIRC_NODE *n1, const CIRC_NODE *n2, const S
 	} else {
 		return spheroid_distance(&closest1, &closest2, spheroid);
 	}
+}
+
+/**
+ * Walk the tree and count intersections between the stab line and the edges.
+ * odd => containment, even => no containment.
+ * KNOWN PROBLEM: Grazings (think of a sharp point, just touching the
+ *   stabline) will be counted for one, which will throw off the count.
+ */
+int circ_tree_contains_point(const CIRC_NODE *node, const POINT2D *pt, const POINT2D *pt_outside, int level,
+                             int *on_boundary) {
+	GEOGRAPHIC_POINT closest;
+	GEOGRAPHIC_EDGE stab_edge, edge;
+	POINT3D S1, S2, E1, E2;
+	double d;
+	uint32_t i, c;
+
+	/* Construct a stabline edge from our "inside" to our known outside point */
+	geographic_point_init(pt->x, pt->y, &(stab_edge.start));
+	geographic_point_init(pt_outside->x, pt_outside->y, &(stab_edge.end));
+	geog2cart(&(stab_edge.start), &S1);
+	geog2cart(&(stab_edge.end), &S2);
+
+	/*
+	 * If the stabline doesn't cross within the radius of a node, there's no
+	 * way it can cross.
+	 */
+
+	d = edge_distance_to_point(&stab_edge, &(node->center), &closest);
+	if (FP_LTEQ(d, node->radius)) {
+		/* Return the crossing number of this leaf */
+		if (circ_node_is_leaf(node)) {
+			int inter;
+			geographic_point_init(node->p1->x, node->p1->y, &(edge.start));
+			geographic_point_init(node->p2->x, node->p2->y, &(edge.end));
+			geog2cart(&(edge.start), &E1);
+			geog2cart(&(edge.end), &E2);
+
+			inter = edge_intersects(&S1, &S2, &E1, &E2);
+
+			if (inter & PIR_INTERSECTS) {
+				/* To avoid double counting crossings-at-a-vertex, */
+				/* always ignore crossings at "lower" ends of edges*/
+				GEOGRAPHIC_POINT e1, e2;
+				cart2geog(&E1, &e1);
+				cart2geog(&E2, &e2);
+
+				if (inter & PIR_B_TOUCH_RIGHT || inter & PIR_COLINEAR) {
+					return 0;
+				} else {
+					return 1;
+				}
+			}
+		}
+		/* Or, add up the crossing numbers of all children of this node. */
+		else {
+			c = 0;
+			for (i = 0; i < node->num_nodes; i++) {
+				c += circ_tree_contains_point(node->nodes[i], pt, pt_outside, level + 1, on_boundary);
+			}
+			return c % 2;
+		}
+	}
+	return 0;
 }
 
 } // namespace duckdb

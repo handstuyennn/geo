@@ -2223,4 +2223,43 @@ void GeoFunctions::GeometryPerimeterFunction(DataChunk &args, ExpressionState &s
 	}
 }
 
+struct AzimuthBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
+			return true;
+		}
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+			return false;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get azimuth: could not getting azimuth from geom");
+			return false;
+		}
+		auto azimuthRv = Geometry::GeometryAzimuth(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return azimuthRv;
+	}
+};
+
+template <typename TA, typename TB, typename TR>
+static void GeometryAzimuthBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, AzimuthBinaryOperator>(geom1, geom2, result, count);
+}
+
+void GeoFunctions::GeometryAzimuthFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryAzimuthBinaryExecutor<string_t, string_t, double>(geom1_arg, geom2_arg, result, args.size());
+}
+
 } // namespace duckdb

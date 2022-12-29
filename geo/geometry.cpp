@@ -295,6 +295,14 @@ double Geometry::GeometryPerimeter(GSERIALIZED *geom, bool use_spheroid) {
 	return postgis.geography_perimeter(geom, use_spheroid);
 }
 
+double Geometry::GeometryAzimuth(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	Postgis postgis;
+	// For geometry
+	// return postgis.LWGEOM_azimuth(geom1, geom2);
+	// For geography
+	return postgis.geography_azimuth(geom1, geom2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

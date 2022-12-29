@@ -838,6 +838,10 @@ extern LWLINE *lwline_from_lwgeom_array(int32_t srid, uint32_t ngeoms, LWGEOM **
 extern LWPOLY *lwpoly_from_lwlines(const LWLINE *shell, uint32_t nholes, const LWLINE **holes);
 extern LWPOLY *lwpoly_construct_rectangle(char hasz, char hasm, POINT4D *p1, POINT4D *p2, POINT4D *p3, POINT4D *p4);
 
+/* Some point accessors */
+extern double lwpoint_get_x(const LWPOINT *point);
+extern double lwpoint_get_y(const LWPOINT *point);
+
 unsigned int geohash_point_as_int(POINT2D *pt);
 
 /**
@@ -855,6 +859,11 @@ extern LWGEOM *lwgeom_from_geojson(const char *geojson, char **srs);
  * Initialize a spheroid object for use in geodetic functions.
  */
 extern void spheroid_init(SPHEROID *s, double a, double b);
+
+/**
+ * Calculate the bearing between two points on a spheroid.
+ */
+extern double lwgeom_azumith_spheroid(const LWPOINT *r, const LWPOINT *s, const SPHEROID *spheroid);
 
 /**
  * Calculate the geodetic area of a lwgeom on the sphere. The result

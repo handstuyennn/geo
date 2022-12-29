@@ -110,4 +110,24 @@ int lwpoint_getPoint4d_p(const LWPOINT *point, POINT4D *out) {
 	return lwpoint_is_empty(point) ? 0 : getPoint4d_p(point->point, 0, out);
 }
 
+double lwpoint_get_x(const LWPOINT *point) {
+	POINT4D pt;
+	if (lwpoint_is_empty(point)) {
+		lwerror("lwpoint_get_x called with empty geometry");
+		return 0;
+	}
+	getPoint4d_p(point->point, 0, &pt);
+	return pt.x;
+}
+
+double lwpoint_get_y(const LWPOINT *point) {
+	POINT4D pt;
+	if (lwpoint_is_empty(point)) {
+		lwerror("lwpoint_get_y called with empty geometry");
+		return 0;
+	}
+	getPoint4d_p(point->point, 0, &pt);
+	return pt.y;
+}
+
 } // namespace duckdb

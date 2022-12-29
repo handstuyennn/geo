@@ -185,4 +185,53 @@ double geography_perimeter(GSERIALIZED *g, bool use_spheroid) {
 	return length;
 }
 
+/*
+** geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2)
+** returns direction between points (north = 0)
+** azimuth (bearing) and distance
+*/
+double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2) {
+	LWGEOM *lwgeom1 = NULL;
+	LWGEOM *lwgeom2 = NULL;
+	double azimuth;
+	SPHEROID s;
+	uint32_t type1, type2;
+
+	/* Only return for points. */
+	type1 = gserialized_get_type(g1);
+	type2 = gserialized_get_type(g2);
+	if (type1 != POINTTYPE || type2 != POINTTYPE) {
+		throw "ST_Azimuth(geography, geography) is only valid for point inputs";
+		return 0.0;
+	}
+
+	lwgeom1 = lwgeom_from_gserialized(g1);
+	lwgeom2 = lwgeom_from_gserialized(g2);
+
+	/* EMPTY things cannot be used */
+	if (lwgeom_is_empty(lwgeom1) || lwgeom_is_empty(lwgeom2)) {
+		lwgeom_free(lwgeom1);
+		lwgeom_free(lwgeom2);
+		throw "ST_Azimuth(geography, geography) cannot work with empty points";
+		return 0.0;
+	}
+
+	/* Initialize spheroid */
+	spheroid_init_from_srid(gserialized_get_srid(g1), &s);
+
+	/* Calculate the direction */
+	azimuth = lwgeom_azumith_spheroid(lwgeom_as_lwpoint(lwgeom1), lwgeom_as_lwpoint(lwgeom2), &s);
+
+	/* Clean up */
+	lwgeom_free(lwgeom1);
+	lwgeom_free(lwgeom2);
+
+	/* Return NULL for unknown (same point) azimuth */
+	if (isnan(azimuth)) {
+		return 0.0;
+	}
+
+	return azimuth;
+}
+
 } // namespace duckdb
