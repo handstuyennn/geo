@@ -759,7 +759,7 @@ LWGEOM *wkt_parser_collection_finalize(int lwtype, LWGEOM *geom, char *dimension
 void wkt_parser_geometry_new(LWGEOM *geom, int32_t srid) {
 
 	if (geom == NULL) {
-		// lwerror("Parsed geometry is null!");
+		lwerror("Parsed geometry is null!");
 		return;
 	}
 

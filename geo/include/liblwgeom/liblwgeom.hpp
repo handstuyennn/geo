@@ -692,6 +692,7 @@ extern void lwpoly_free(LWPOLY *poly);
 extern void lwcircstring_free(LWCIRCSTRING *curve);
 extern void lwmpoint_free(LWMPOINT *mpt);
 extern void lwmline_free(LWMLINE *mline);
+extern void lwmpoly_free(LWMPOLY *mpoly);
 extern void lwtriangle_free(LWTRIANGLE *triangle);
 extern void lwcollection_free(LWCOLLECTION *col);
 extern void lwgeom_free(LWGEOM *geom);
@@ -708,6 +709,8 @@ extern float next_float_up(double d);
 extern double distance2d_pt_pt(const POINT2D *p1, const POINT2D *p2);
 extern double lwgeom_mindistance2d(const LWGEOM *lw1, const LWGEOM *lw2);
 extern double lwgeom_mindistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tolerance);
+extern double lwgeom_maxdistance2d(const LWGEOM *lw1, const LWGEOM *lw2);
+extern double lwgeom_maxdistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tolerance);
 extern LWGEOM *lwgeom_closest_point(const LWGEOM *lw1, const LWGEOM *lw2);
 
 extern double lwgeom_area(const LWGEOM *geom);

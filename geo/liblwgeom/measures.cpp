@@ -356,6 +356,31 @@ double lwgeom_mindistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, doub
 	return FLT_MAX;
 }
 
+/**
+Function initializing max distance calculation
+*/
+double lwgeom_maxdistance2d(const LWGEOM *lw1, const LWGEOM *lw2) {
+	return lwgeom_maxdistance2d_tolerance(lw1, lw2, 0.0);
+}
+
+/**
+Function handling max distance calculations and dfullywithin calculations.
+The difference is just the tolerance.
+*/
+double lwgeom_maxdistance2d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tolerance) {
+	/*double thedist;*/
+	DISTPTS thedl;
+	thedl.mode = DIST_MAX;
+	thedl.distance = -1;
+	thedl.tolerance = tolerance;
+	if (lw_dist2d_comp(lw1, lw2, &thedl))
+		return thedl.distance;
+
+	/*should never get here. all cases ought to be error handled earlier*/
+	lwerror("Some unspecified error.");
+	return -1;
+}
+
 /** Compares incoming points and stores the points closest to each other or most far away from each other depending on
  * dl->mode (max or min) */
 int lw_dist2d_pt_pt(const POINT2D *thep1, const POINT2D *thep2, DISTPTS *dl) {
@@ -1076,7 +1101,7 @@ LWGEOM *lw_dist2d_distancepoint(const LWGEOM *lw1, const LWGEOM *lw2, int32_t sr
 
 	if (!lw_dist2d_comp(lw1, lw2, &thedl)) {
 		/*should never get here. all cases ought to be error handled earlier*/
-		// lwerror("Some unspecified error.");
+		lwerror("Some unspecified error.");
 		result = (LWGEOM *)lwcollection_construct_empty(COLLECTIONTYPE, srid, 0, 0);
 	}
 	if (thedl.distance == initdistance) {

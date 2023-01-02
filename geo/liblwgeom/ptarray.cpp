@@ -160,7 +160,7 @@ POINTARRAY *ptarray_clone(const POINTARRAY *in) {
 int ptarray_append_point(POINTARRAY *pa, const POINT4D *pt, int repeated_points) {
 	/* Check for pathology */
 	if (!pa || !pt) {
-		// lwerror("ptarray_append_point: null input");
+		lwerror("ptarray_append_point: null input");
 		return LW_FAILURE;
 	}
 
@@ -188,7 +188,7 @@ int ptarray_append_ptarray(POINTARRAY *pa1, POINTARRAY *pa2, double gap_toleranc
 
 	/* Check for pathology */
 	if (!pa1 || !pa2) {
-		// lwerror("ptarray_append_ptarray: null input");
+		lwerror("ptarray_append_ptarray: null input");
 		return LW_FAILURE;
 	}
 
@@ -198,12 +198,12 @@ int ptarray_append_ptarray(POINTARRAY *pa1, POINTARRAY *pa2, double gap_toleranc
 		return LW_SUCCESS; /* nothing more to do */
 
 	if (FLAGS_GET_READONLY(pa1->flags)) {
-		// lwerror("ptarray_append_ptarray: target pointarray is read-only");
+		lwerror("ptarray_append_ptarray: target pointarray is read-only");
 		return LW_FAILURE;
 	}
 
 	if (FLAGS_GET_ZM(pa1->flags) != FLAGS_GET_ZM(pa2->flags)) {
-		// lwerror("ptarray_append_ptarray: appending mixed dimensionality is not allowed");
+		lwerror("ptarray_append_ptarray: appending mixed dimensionality is not allowed");
 		return LW_FAILURE;
 	}
 
@@ -220,7 +220,7 @@ int ptarray_append_ptarray(POINTARRAY *pa1, POINTARRAY *pa2, double gap_toleranc
 			poff = 1;
 			--npoints;
 		} else if (gap_tolerance == 0 || (gap_tolerance > 0 && distance2d_pt_pt(&tmp1, &tmp2) > gap_tolerance)) {
-			// lwerror("Second line start point too far from first line end point");
+			lwerror("Second line start point too far from first line end point");
 			return LW_FAILURE;
 		}
 	}
@@ -294,7 +294,7 @@ POINTARRAY *ptarray_clone_deep(const POINTARRAY *in) {
 
 int ptarray_is_closed_2d(const POINTARRAY *in) {
 	if (!in) {
-		// lwerror("ptarray_is_closed_2d: called with null point array");
+		lwerror("ptarray_is_closed_2d: called with null point array");
 		return 0;
 	}
 	if (in->npoints <= 1)
@@ -536,7 +536,7 @@ int ptarrayarc_contains_point_partial(const POINTARRAY *pa, const POINT2D *pt, i
 
 int ptarray_is_closed_3d(const POINTARRAY *in) {
 	if (!in) {
-		// lwerror("ptarray_is_closed_3d: called with null point array");
+		lwerror("ptarray_is_closed_3d: called with null point array");
 		return 0;
 	}
 	if (in->npoints <= 1)
@@ -562,13 +562,13 @@ int ptarray_insert_point(POINTARRAY *pa, const POINT4D *p, uint32_t where) {
 	size_t point_size = ptarray_point_size(pa);
 
 	if (FLAGS_GET_READONLY(pa->flags)) {
-		// lwerror("ptarray_insert_point: called on read-only point array");
+		lwerror("ptarray_insert_point: called on read-only point array");
 		return LW_FAILURE;
 	}
 
 	/* Error on invalid offset value */
 	if (where > pa->npoints) {
-		// lwerror("ptarray_insert_point: offset out of range (%d)", where);
+		lwerror("ptarray_insert_point: offset out of range (%d)", where);
 		return LW_FAILURE;
 	}
 
@@ -581,7 +581,7 @@ int ptarray_insert_point(POINTARRAY *pa, const POINT4D *p, uint32_t where) {
 
 	/* Error out if we have a bad situation */
 	if (pa->npoints > pa->maxpoints) {
-		// lwerror("npoints (%d) is greater than maxpoints (%d)", pa->npoints, pa->maxpoints);
+		lwerror("npoints (%d) is greater than maxpoints (%d)", pa->npoints, pa->maxpoints);
 		return LW_FAILURE;
 	}
 

@@ -84,9 +84,6 @@ template <typename To, typename From>
 inline To down_cast(From *f) {
 	static_assert((std::is_base_of<From, typename std::remove_pointer<To>::type>::value),
 	              "target type not derived from source type");
-#if GEOS_DEBUG
-	assert(f == nullptr || dynamic_cast<To>(f) != nullptr);
-#endif
 	return static_cast<To>(f);
 }
 

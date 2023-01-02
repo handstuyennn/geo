@@ -32,7 +32,7 @@ int lwcurvepoly_add_ring(LWCURVEPOLY *poly, LWGEOM *ring) {
 
 	/* Check that we're not working with garbage */
 	if (poly->rings == NULL && (poly->nrings || poly->maxrings)) {
-		// lwerror("Curvepolygon is in inconsistent state. Null memory but non-zero collection counts.");
+		lwerror("Curvepolygon is in inconsistent state. Null memory but non-zero collection counts.");
 		return LW_FAILURE;
 	}
 

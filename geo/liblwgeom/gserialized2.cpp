@@ -552,7 +552,7 @@ static LWCOLLECTION *lwcollection_from_gserialized2_buffer(uint8_t *data_ptr, lw
 		size_t subsize = 0;
 
 		if (!lwcollection_allows_subtype(type, subtype)) {
-			// lwerror("Invalid subtype (%s) for collection type (%s)", lwtype_name(subtype), lwtype_name(type));
+			lwerror("Invalid subtype (%s) for collection type (%s)", lwtype_name(subtype), lwtype_name(type));
 			lwfree(collection);
 			return NULL;
 		}
@@ -597,9 +597,10 @@ LWGEOM *lwgeom_from_gserialized2_buffer(uint8_t *data_ptr, lwflags_t lwflags, si
 		return (LWGEOM *)lwcollection_from_gserialized2_buffer(data_ptr, lwflags, g_size, srid);
 		// Need to do with postgis
 
-	default:
-		// lwerror("Unknown geometry type: %d - %s", type, lwtype_name(type));
+	default: {
+		lwerror("Unknown geometry type: %d - %s", type, lwtype_name(type));
 		return NULL;
+	}
 	}
 }
 
@@ -714,9 +715,10 @@ static size_t gserialized2_from_any_size(const LWGEOM *geom) {
 	case COLLECTIONTYPE:
 		return gserialized2_from_lwcollection_size((LWCOLLECTION *)geom);
 	// Need to do with postgis
-	default:
-		// lwerror("Unknown geometry type: %d - %s", geom->type, lwtype_name(geom->type));
+	default: {
+		lwerror("Unknown geometry type: %d - %s", geom->type, lwtype_name(geom->type));
 		return 0;
+	}
 	}
 }
 
@@ -746,9 +748,10 @@ static size_t gserialized2_from_lwpoint(const LWPOINT *point, uint8_t *buf) {
 	assert(point);
 	assert(buf);
 
-	if (FLAGS_GET_ZM(point->flags) != FLAGS_GET_ZM(point->point->flags))
-		// lwerror("Dimensions mismatch in lwpoint");
+	if (FLAGS_GET_ZM(point->flags) != FLAGS_GET_ZM(point->point->flags)) {
+		lwerror("Dimensions mismatch in lwpoint");
 		return 0;
+	}
 
 	loc = buf;
 
@@ -777,9 +780,10 @@ static size_t gserialized2_from_lwline(const LWLINE *line, uint8_t *buf) {
 	assert(line);
 	assert(buf);
 
-	if (FLAGS_GET_Z(line->flags) != FLAGS_GET_Z(line->points->flags))
-		// lwerror("Dimensions mismatch in lwline");
+	if (FLAGS_GET_Z(line->flags) != FLAGS_GET_Z(line->points->flags)) {
+		lwerror("Dimensions mismatch in lwline");
 		return 0;
+	}
 
 	ptsize = ptarray_point_size(line->points);
 
@@ -840,9 +844,10 @@ static size_t gserialized2_from_lwpoly(const LWPOLY *poly, uint8_t *buf) {
 		POINTARRAY *pa = poly->rings[i];
 		size_t pasize;
 
-		if (FLAGS_GET_ZM(poly->flags) != FLAGS_GET_ZM(pa->flags))
-			// lwerror("Dimensions mismatch in lwpoly");
+		if (FLAGS_GET_ZM(poly->flags) != FLAGS_GET_ZM(pa->flags)) {
+			lwerror("Dimensions mismatch in lwpoly");
 			return 0;
+		}
 
 		pasize = pa->npoints * ptsize;
 		if (pa->npoints > 0)
@@ -861,9 +866,10 @@ static size_t gserialized2_from_lwtriangle(const LWTRIANGLE *triangle, uint8_t *
 	assert(triangle);
 	assert(buf);
 
-	if (FLAGS_GET_ZM(triangle->flags) != FLAGS_GET_ZM(triangle->points->flags))
-		// lwerror("Dimensions mismatch in lwtriangle");
+	if (FLAGS_GET_ZM(triangle->flags) != FLAGS_GET_ZM(triangle->points->flags)) {
+		lwerror("Dimensions mismatch in lwtriangle");
 		return 0;
+	}
 
 	ptsize = ptarray_point_size(triangle->points);
 
@@ -896,9 +902,10 @@ static size_t gserialized2_from_lwcircstring(const LWCIRCSTRING *curve, uint8_t 
 	assert(curve);
 	assert(buf);
 
-	if (FLAGS_GET_ZM(curve->flags) != FLAGS_GET_ZM(curve->points->flags))
-		// lwerror("Dimensions mismatch in lwcircstring");
+	if (FLAGS_GET_ZM(curve->flags) != FLAGS_GET_ZM(curve->points->flags)) {
+		lwerror("Dimensions mismatch in lwcircstring");
 		return 0;
+	}
 
 	ptsize = ptarray_point_size(curve->points);
 	loc = buf;
@@ -949,9 +956,10 @@ LWGEOM *lwgeom_from_gserialized2(const GSERIALIZED *g) {
 
 	lwgeom = lwgeom_from_gserialized2_buffer(data_ptr, lwflags, &size, srid);
 
-	if (!lwgeom)
-		// lwerror("%s: unable create geometry", __func__); /* Ooops! */
+	if (!lwgeom) {
+		lwerror("%s: unable create geometry", __func__); /* Ooops! */
 		return NULL;
+	}
 
 	lwgeom->type = lwtype;
 	lwgeom->flags = lwflags;
@@ -989,9 +997,10 @@ static size_t gserialized2_from_lwcollection(const LWCOLLECTION *coll, uint8_t *
 
 	/* Serialize subgeoms. */
 	for (i = 0; i < coll->ngeoms; i++) {
-		if (FLAGS_GET_ZM(coll->flags) != FLAGS_GET_ZM(coll->geoms[i]->flags))
-			// lwerror("Dimensions mismatch in lwcollection");
+		if (FLAGS_GET_ZM(coll->flags) != FLAGS_GET_ZM(coll->geoms[i]->flags)) {
+			lwerror("Dimensions mismatch in lwcollection");
 			return 0;
+		}
 		subsize = gserialized2_from_lwgeom_any(coll->geoms[i], loc);
 		loc += subsize;
 	}
@@ -1026,9 +1035,10 @@ static size_t gserialized2_from_lwgeom_any(const LWGEOM *geom, uint8_t *buf) {
 	case COLLECTIONTYPE:
 		return gserialized2_from_lwcollection((LWCOLLECTION *)geom, buf);
 	// Need to do with postgis
-	default:
-		// lwerror("Unknown geometry type: %d - %s", geom->type, lwtype_name(geom->type));
+	default: {
+		lwerror("Unknown geometry type: %d - %s", geom->type, lwtype_name(geom->type));
 		return 0;
+	}
 	}
 }
 
@@ -1067,9 +1077,10 @@ int gserialized2_peek_first_point(const GSERIALIZED *g, POINT4D *out_point) {
 		double_array_start = (double *)(geometry_start + 2 * sizeof(uint32_t));
 		break;
 
-	default:
-		// lwerror("%s is currently not implemented for type %d", __func__, type);
+	default: {
+		lwerror("%s is currently not implemented for type %d", __func__, type);
 		return LW_FAILURE;
+	}
 	}
 
 	gserialized2_copy_point(double_array_start, g->gflags, out_point);

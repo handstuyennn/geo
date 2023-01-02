@@ -2262,4 +2262,124 @@ void GeoFunctions::GeometryAzimuthFunction(DataChunk &args, ExpressionState &sta
 	GeometryAzimuthBinaryExecutor<string_t, string_t, double>(geom1_arg, geom2_arg, result, args.size());
 }
 
+struct LengthUnaryOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA geom) {
+		if (geom.GetSize() == 0) {
+			return 0.0;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			return 0.0;
+		}
+		auto length = Geometry::GeometryLength(gser);
+		Geometry::DestroyGeometry(gser);
+		return length;
+	}
+};
+
+struct LengthBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom, TB use_spheroid) {
+		if (geom.GetSize() == 0) {
+			return 0;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry get length: could not getting length from geom");
+			return false;
+		}
+		auto length = Geometry::GeometryLength(gser, use_spheroid);
+		Geometry::DestroyGeometry(gser);
+		return length;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryLengthUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, LengthUnaryOperator>(geom, result, count);
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryLengthBinaryExecutor(Vector &geom, Vector &use_spheroid, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, LengthBinaryOperator>(geom, use_spheroid, result, count);
+}
+
+void GeoFunctions::GeometryLengthFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	if (args.data.size() == 1) {
+		GeometryLengthUnaryExecutor<string_t, double>(geom_arg, result, args.size());
+	} else if (args.data.size() == 2) {
+		auto &use_spheroid_arg = args.data[1];
+		GeometryLengthBinaryExecutor<string_t, bool, double>(geom_arg, use_spheroid_arg, result, args.size());
+	}
+}
+
+struct BoundingBoxUnaryOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA geom, Vector &result) {
+		if (geom.GetSize() == 0) {
+			return geom;
+		}
+		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry get bounding box: could not getting bounding box from geom");
+			return string_t();
+		}
+		auto gserBoundingBox = Geometry::GeometryBoundingBox(gser);
+		if (gser == gserBoundingBox) {
+			Geometry::DestroyGeometry(gser);
+			return geom;
+		}
+		idx_t rv_size = Geometry::GetGeometrySize(gserBoundingBox);
+		auto base = Geometry::GetBase(gserBoundingBox);
+		auto result_str = StringVector::EmptyString(result, rv_size);
+		memcpy(result_str.GetDataWriteable(), base, rv_size);
+		result_str.Finalize();
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserBoundingBox);
+		return result_str;
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryBoundingBoxUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
+	UnaryExecutor::ExecuteString<TA, TR, BoundingBoxUnaryOperator>(geom, result, count);
+}
+
+void GeoFunctions::GeometryBoundingBoxFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom_arg = args.data[0];
+	GeometryBoundingBoxUnaryExecutor<string_t, string_t>(geom_arg, result, args.size());
+}
+
+struct GeometryMaxDistanceBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		double dis = 0.00;
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+			return dis;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			throw ConversionException("Failure in geometry maximum distance: could not calculate maximum distance from geometries");
+		}
+		dis = Geometry::MaxDistance(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return dis;
+	}
+};
+
+template <typename TA, typename TB, typename TR>
+static void GeometryMaxDistanceBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, GeometryMaxDistanceBinaryOperator>(geom1, geom2, result, count);
+}
+
+void GeoFunctions::GeometryMaxDistanceFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &geom1_arg = args.data[0];
+	auto &geom2_arg = args.data[1];
+	GeometryMaxDistanceBinaryExecutor<string_t, string_t, double>(geom1_arg, geom2_arg, result, args.size());
+}
+
 } // namespace duckdb

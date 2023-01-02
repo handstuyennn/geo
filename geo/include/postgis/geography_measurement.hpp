@@ -36,6 +36,7 @@ double geography_distance(GSERIALIZED *geom1, GSERIALIZED *geom2, bool use_spher
 double geography_area(GSERIALIZED *g, bool use_spheroid);
 double geography_perimeter(GSERIALIZED *g, bool use_spheroid);
 double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2);
+double geography_length(GSERIALIZED *g, bool use_spheroid);
 
 #endif /* !defined _LIBGEOGRAPHY_MEASUREMENT_H  */
 

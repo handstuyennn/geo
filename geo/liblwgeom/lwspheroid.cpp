@@ -150,13 +150,11 @@ static double ptarray_area_spheroid(const POINTARRAY *pa, const SPHEROID *sphero
 	for (i = 0; i < pa->npoints - 1; i++) {
 		getPoint2d_p(pa, i, &p);
 		geod_polygon_addpoint(&gd, &poly, p.y, p.x);
-		LWDEBUGF(4, "geod_polygon_addpoint %d: %.12g %.12g", i, p.y, p.x);
 	}
 	i = geod_polygon_compute(&gd, &poly, 0, 1, &area, 0);
 	if (i != pa->npoints - 1) {
 		lwerror("ptarray_area_spheroid: different number of points %d vs %d", i, pa->npoints - 1);
 	}
-	LWDEBUGF(4, "geod_polygon_compute area: %.12g", area);
 	return fabs(area);
 }
 

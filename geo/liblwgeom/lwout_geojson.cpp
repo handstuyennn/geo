@@ -578,9 +578,10 @@ static size_t asgeojson_geom_size(const LWGEOM *geom, GBOX *bbox, int precision)
 		return asgeojson_multiline_size((LWMLINE *)geom, NULL, bbox, precision);
 	case MULTIPOLYGONTYPE:
 		return asgeojson_multipolygon_size((LWMPOLY *)geom, NULL, bbox, precision);
-	default:
+	default: {
 		lwerror("GeoJson: geometry not supported.");
 		return 0;
+	}
 	}
 }
 
@@ -619,10 +620,10 @@ lwvarlena_t *lwgeom_to_geojson(const LWGEOM *geom, const char *srs, int precisio
 		return asgeojson_collection((LWCOLLECTION *)geom, srs, bbox, precision);
 		// Need to do with postgis
 
-	default:
-		// lwerror("lwgeom_to_geojson: '%s' geometry type not supported",
-		//         lwtype_name(type));
+	default: {
+		lwerror("lwgeom_to_geojson: '%s' geometry type not supported", lwtype_name(type));
 		return NULL;
+	}
 	}
 
 	/* Never get here */
@@ -662,10 +663,11 @@ static size_t asgeojson_geom_buf(const LWGEOM *geom, char *output, GBOX *bbox, i
 		ptr += asgeojson_multipolygon_buf((LWMPOLY *)geom, NULL, ptr, bbox, precision);
 		break;
 
-	default:
+	default: {
 		if (bbox)
 			lwfree(bbox);
 		lwerror("GeoJson: geometry not supported.");
+	}
 	}
 
 	return (ptr - output);

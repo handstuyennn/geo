@@ -234,4 +234,44 @@ double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2) {
 	return azimuth;
 }
 
+/*
+** geography_length(GSERIALIZED *g)
+** returns double length in meters
+*/
+double geography_length(GSERIALIZED *g, bool use_spheroid) {
+	LWGEOM *lwgeom = NULL;
+	double length;
+	SPHEROID s;
+
+	/* Get our geometry object loaded into memory. */
+	lwgeom = lwgeom_from_gserialized(g);
+
+	/* EMPTY things have no length */
+	if (lwgeom_is_empty(lwgeom) || lwgeom->type == POLYGONTYPE || lwgeom->type == MULTIPOLYGONTYPE) {
+		lwgeom_free(lwgeom);
+		return 0.0;
+	}
+
+	/* Initialize spheroid */
+	spheroid_init_from_srid(gserialized_get_srid(g), &s);
+
+	/* User requests spherical calculation, turn our spheroid into a sphere */
+	if (!use_spheroid)
+		s.a = s.b = s.radius;
+
+	/* Calculate the length */
+	length = lwgeom_length_spheroid(lwgeom, &s);
+
+	/* Something went wrong... */
+	if (length < 0.0) {
+		throw "lwgeom_length_spheroid returned length < 0.0";
+		return 0.0;
+	}
+
+	/* Clean up */
+	lwgeom_free(lwgeom);
+
+	return length;
+}
+
 } // namespace duckdb

@@ -93,9 +93,10 @@ static LISTNODE *extract_pointarrays_from_lwgeom(LWGEOM *g) {
 
 		return n;
 	}
-	default:
-		// lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(g->type));
+	default: {
+		lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(g->type));
 		return NULL;
+	}
 	}
 
 	return NULL;

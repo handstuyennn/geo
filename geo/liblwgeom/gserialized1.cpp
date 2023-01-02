@@ -409,7 +409,7 @@ static LWCOLLECTION *lwcollection_from_gserialized1_buffer(uint8_t *data_ptr, lw
 		size_t subsize = 0;
 
 		if (!lwcollection_allows_subtype(type, subtype)) {
-			// lwerror("Invalid subtype (%s) for collection type (%s)", lwtype_name(subtype), lwtype_name(type));
+			lwerror("Invalid subtype (%s) for collection type (%s)", lwtype_name(subtype), lwtype_name(type));
 			lwfree(collection);
 			return NULL;
 		}
@@ -454,9 +454,10 @@ LWGEOM *lwgeom_from_gserialized1_buffer(uint8_t *data_ptr, lwflags_t lwflags, si
 		return (LWGEOM *)lwcollection_from_gserialized1_buffer(data_ptr, lwflags, g_size);
 		// Need to do with postgis
 
-	default:
-		// lwerror("Unknown geometry type: %d - %s", type, lwtype_name(type));
+	default: {
+		lwerror("Unknown geometry type: %d - %s", type, lwtype_name(type));
 		return NULL;
+	}
 	}
 }
 
@@ -481,9 +482,10 @@ LWGEOM *lwgeom_from_gserialized1(const GSERIALIZED *g) {
 
 	lwgeom = lwgeom_from_gserialized1_buffer(data_ptr, lwflags, &size);
 
-	if (!lwgeom)
-		// lwerror("%s: unable create geometry", __func__); /* Ooops! */
+	if (!lwgeom) {
+		lwerror("%s: unable create geometry", __func__); /* Ooops! */
 		return NULL;
+	}
 
 	lwgeom->type = lwtype;
 	lwgeom->flags = lwflags;
@@ -521,9 +523,10 @@ int gserialized1_peek_first_point(const GSERIALIZED *g, POINT4D *out_point) {
 		double_array_start = (double *)(geometry_start + 2 * sizeof(uint32_t));
 		break;
 
-	default:
-		// lwerror("%s is currently not implemented for type %d", __func__, type);
+	default: {
+		lwerror("%s is currently not implemented for type %d", __func__, type);
 		return LW_FAILURE;
+	}
 	}
 
 	gserialized1_copy_point(double_array_start, g->gflags, out_point);

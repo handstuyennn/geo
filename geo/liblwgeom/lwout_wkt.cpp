@@ -305,7 +305,7 @@ static void lwcompound_to_wkt_sb(const LWCOMPOUND *comp, stringbuffer_t *sb, int
 		else if (type == CIRCSTRINGTYPE) {
 			lwcircstring_to_wkt_sb((LWCIRCSTRING *)comp->geoms[i], sb, precision, variant);
 		} else {
-			// lwerror("lwcompound_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
+			lwerror("lwcompound_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 			return;
 		}
 	}
@@ -348,7 +348,7 @@ static void lwcurvepoly_to_wkt_sb(const LWCURVEPOLY *cpoly, stringbuffer_t *sb, 
 			lwcompound_to_wkt_sb((LWCOMPOUND *)cpoly->rings[i], sb, precision, variant);
 			break;
 		default:
-			// lwerror("lwcurvepoly_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
+			lwerror("lwcurvepoly_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 			return;
 		}
 	}
@@ -391,7 +391,7 @@ static void lwmcurve_to_wkt_sb(const LWMCURVE *mcurv, stringbuffer_t *sb, int pr
 			lwcompound_to_wkt_sb((LWCOMPOUND *)mcurv->geoms[i], sb, precision, variant);
 			break;
 		default:
-			// lwerror("lwmcurve_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
+			lwerror("lwmcurve_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 			return;
 		}
 	}
@@ -499,7 +499,7 @@ static void lwmsurface_to_wkt_sb(const LWMSURFACE *msurf, stringbuffer_t *sb, in
 			lwcurvepoly_to_wkt_sb((LWCURVEPOLY *)msurf->geoms[i], sb, precision, variant);
 			break;
 		default:
-			// lwerror("lwmsurface_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
+			lwerror("lwmsurface_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 			return;
 		}
 	}
@@ -585,10 +585,10 @@ static void lwgeom_to_wkt_sb(const LWGEOM *geom, stringbuffer_t *sb, int precisi
 		lwtin_to_wkt_sb((LWTIN *)geom, sb, precision, variant);
 		break;
 
-	default:
-		// lwerror("lwgeom_to_wkt_sb: Type %d - %s unsupported.",
-		//         geom->type, lwtype_name(geom->type));
+	default: {
+		lwerror("lwgeom_to_wkt_sb: Type %d - %s unsupported.", geom->type, lwtype_name(geom->type));
 		return;
+	}
 	}
 }
 
@@ -603,7 +603,7 @@ static stringbuffer_t *lwgeom_to_wkt_internal(const LWGEOM *geom, uint8_t varian
 	}
 	lwgeom_to_wkt_sb(geom, sb, precision, variant);
 	if (stringbuffer_getstring(sb) == NULL) {
-		// lwerror("Uh oh");
+		lwerror("Uh oh");
 		return NULL;
 	}
 	return sb;

@@ -177,9 +177,10 @@ LWGEOM *lwgeom_clone_deep(const LWGEOM *lwgeom) {
 	case TINTYPE:
 	case COLLECTIONTYPE:
 		return (LWGEOM *)lwcollection_clone_deep((LWCOLLECTION *)lwgeom);
-	default:
+	default: {
 		lwerror("lwgeom_clone_deep: Unknown geometry type: %s", lwtype_name(lwgeom->type));
 		return NULL;
+	}
 	}
 }
 
@@ -320,9 +321,10 @@ int lwgeom_dimension(const LWGEOM *geom) {
 		}
 		return maxdim;
 	}
-	default:
-		// lwerror("%s: unsupported input geometry type: %s", __func__, lwtype_name(geom->type));
+	default: {
+		lwerror("%s: unsupported input geometry type: %s", __func__, lwtype_name(geom->type));
 		return -1;
+	}
 	}
 	return -1;
 }
@@ -397,17 +399,23 @@ void lwgeom_free(LWGEOM *lwgeom) {
 		lwmline_free((LWMLINE *)lwgeom);
 		break;
 
+	case MULTIPOLYGONTYPE:
+		lwmpoly_free((LWMPOLY *)lwgeom);
+		break;
+
 	case CURVEPOLYTYPE:
 	case COMPOUNDTYPE:
 	case MULTICURVETYPE:
 	case MULTISURFACETYPE:
-	case COLLECTIONTYPE:
+	case COLLECTIONTYPE: {
 		lwcollection_free((LWCOLLECTION *)lwgeom);
 		break;
+	}
 
-	default:
-		// lwerror("lwgeom_free called with unknown type (%d) %s", lwgeom->type, lwtype_name(lwgeom->type));
+	default: {
+		lwerror("lwgeom_free called with unknown type (%d) %s", lwgeom->type, lwtype_name(lwgeom->type));
 		return;
+	}
 	}
 	return;
 }
@@ -441,9 +449,10 @@ LWGEOM *lwgeom_force_dims(const LWGEOM *geom, int hasz, int hasm, double zval, d
 		return lwcollection_as_lwgeom(lwcollection_force_dims((LWCOLLECTION *)geom, hasz, hasm, zval, mval));
 		// Need to do with postgis
 
-	default:
-		// lwerror("lwgeom_force_2d: unsupported geom type: %s", lwtype_name(geom->type));
+	default: {
+		lwerror("lwgeom_force_2d: unsupported geom type: %s", lwtype_name(geom->type));
 		return NULL;
+	}
 	}
 }
 
@@ -533,9 +542,10 @@ int lwgeom_startpoint(const LWGEOM *lwgeom, POINT4D *pt) {
 	case POLYHEDRALSURFACETYPE:
 		return lwcollection_startpoint((LWCOLLECTION *)lwgeom, pt);
 	// Need to do with postgis
-	default:
-		// lwerror("lwgeom_startpoint: unsupported geometry type: %s", lwtype_name(lwgeom->type));
+	default: {
+		lwerror("lwgeom_startpoint: unsupported geometry type: %s", lwtype_name(lwgeom->type));
 		return LW_FAILURE;
+	}
 	}
 }
 
@@ -598,9 +608,10 @@ LWGEOM *lwgeom_construct_empty(uint8_t type, int32_t srid, char hasz, char hasm)
 	case MULTIPOLYGONTYPE:
 	case COLLECTIONTYPE:
 		return lwcollection_as_lwgeom(lwcollection_construct_empty(type, srid, hasz, hasm));
-	default:
+	default: {
 		lwerror("lwgeom_construct_empty: unsupported geometry type: %s", lwtype_name(type));
 		return NULL;
+	}
 	}
 }
 

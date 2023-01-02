@@ -49,4 +49,21 @@ LWPOLY *lwpoly_clone_deep(const LWPOLY *g) {
 	return ret;
 }
 
+void lwmpoly_free(LWMPOLY *mpoly) {
+	uint32_t i;
+	if (!mpoly)
+		return;
+	if (mpoly->bbox)
+		lwfree(mpoly->bbox);
+
+	for (i = 0; i < mpoly->ngeoms; i++)
+		if (mpoly->geoms && mpoly->geoms[i])
+			lwpoly_free(mpoly->geoms[i]);
+
+	if (mpoly->geoms)
+		lwfree(mpoly->geoms);
+
+	lwfree(mpoly);
+}
+
 } // namespace duckdb

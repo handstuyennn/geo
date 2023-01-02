@@ -82,7 +82,7 @@ LWPOINT *lwcompound_get_lwpoint(const LWCOMPOUND *lwcmp, uint32_t where) {
 
 	npoints = lwgeom_count_vertices((LWGEOM *)lwcmp);
 	if (where >= npoints) {
-		// lwerror("%s: index %d is not in range of number of vertices (%d) in input", __func__, where, npoints);
+		lwerror("%s: index %d is not in range of number of vertices (%d) in input", __func__, where, npoints);
 		return nullptr;
 	}
 

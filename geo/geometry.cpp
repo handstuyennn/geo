@@ -303,6 +303,26 @@ double Geometry::GeometryAzimuth(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.geography_azimuth(geom1, geom2);
 }
 
+double Geometry::GeometryLength(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_length2d_linestring(geom);
+}
+
+double Geometry::GeometryLength(GSERIALIZED *geom, bool use_spheroid) {
+	Postgis postgis;
+	return postgis.geography_length(geom, use_spheroid);
+}
+
+GSERIALIZED *Geometry::GeometryBoundingBox(GSERIALIZED *geom) {
+	Postgis postgis;
+	return postgis.LWGEOM_envelope(geom);
+}
+
+double Geometry::MaxDistance(GSERIALIZED *g1, GSERIALIZED *g2) {
+	Postgis postgis;
+	return postgis.LWGEOM_maxdistance2d_linestring(g1, g2);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

@@ -409,7 +409,7 @@ int lwgeom_calculate_gbox_cartesian(const LWGEOM *lwgeom, GBOX *gbox) {
 		// Need to do with postgis
 	}
 	/* Never get here, please. */
-	// lwerror("unsupported type (%d) - %s", lwgeom->type, lwtype_name(lwgeom->type));
+	lwerror("unsupported type (%d) - %s", lwgeom->type, lwtype_name(lwgeom->type));
 	return LW_FAILURE;
 }
 

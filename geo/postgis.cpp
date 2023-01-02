@@ -202,6 +202,22 @@ double Postgis::geography_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::geography_azimuth(geom1, geom2);
 }
 
+double Postgis::LWGEOM_length2d_linestring(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_length2d_linestring(geom);
+}
+
+double Postgis::geography_length(GSERIALIZED *geom, bool use_spheroid) {
+	return duckdb::geography_length(geom, use_spheroid);
+}
+
+GSERIALIZED *Postgis::LWGEOM_envelope(GSERIALIZED *geom) {
+	return duckdb::LWGEOM_envelope(geom);
+}
+
+double Postgis::LWGEOM_maxdistance2d_linestring(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	return duckdb::LWGEOM_maxdistance2d_linestring(geom1, geom2);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

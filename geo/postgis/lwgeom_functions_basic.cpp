@@ -470,4 +470,124 @@ double LWGEOM_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return result;
 }
 
+/**
+ * @brief find the "length of a geometry"
+ *  	length2d(point) = 0
+ *  	length2d(line) = length of line
+ *  	length2d(polygon) = 0  -- could make sense to return sum(ring perimeter)
+ *  	uses euclidian 2d length (even if input is 3d)
+ */
+double LWGEOM_length2d_linestring(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	double dist = lwgeom_length_2d(lwgeom);
+	lwgeom_free(lwgeom);
+	return dist;
+}
+
+/**
+ *  makes a polygon of the features bvol - 1st point = LL 3rd=UR
+ *  2d only. (3d might be worth adding).
+ *  create new geometry of type polygon, 1 ring, 5 points
+ */
+GSERIALIZED *LWGEOM_envelope(GSERIALIZED *geom) {
+	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+	int32_t srid = lwgeom->srid;
+	POINT4D pt;
+	GBOX box;
+	POINTARRAY *pa;
+	GSERIALIZED *result;
+
+	if (lwgeom_is_empty(lwgeom)) {
+		/* must be the EMPTY geometry */
+		return geom;
+	}
+
+	if (lwgeom_calculate_gbox(lwgeom, &box) == LW_FAILURE) {
+		/* must be the EMPTY geometry */
+		return geom;
+	}
+
+	/*
+	 * Alter envelope type so that a valid geometry is always
+	 * returned depending upon the size of the geometry. The
+	 * code makes the following assumptions:
+	 *     - If the bounding box is a single point then return a
+	 *     POINT geometry
+	 *     - If the bounding box represents either a horizontal or
+	 *     vertical line, return a LINESTRING geometry
+	 *     - Otherwise return a POLYGON
+	 */
+
+	if ((box.xmin == box.xmax) && (box.ymin == box.ymax)) {
+		/* Construct and serialize point */
+		LWPOINT *point = lwpoint_make2d(srid, box.xmin, box.ymin);
+		result = geometry_serialize(lwpoint_as_lwgeom(point));
+		lwpoint_free(point);
+	} else if ((box.xmin == box.xmax) || (box.ymin == box.ymax)) {
+		LWLINE *line;
+		/* Construct point array */
+		pa = ptarray_construct_empty(0, 0, 2);
+
+		/* Assign coordinates to POINT2D array */
+		pt.x = box.xmin;
+		pt.y = box.ymin;
+		ptarray_append_point(pa, &pt, LW_TRUE);
+		pt.x = box.xmax;
+		pt.y = box.ymax;
+		ptarray_append_point(pa, &pt, LW_TRUE);
+
+		/* Construct and serialize linestring */
+		line = lwline_construct(srid, NULL, pa);
+		result = geometry_serialize(lwline_as_lwgeom(line));
+		lwline_free(line);
+	} else {
+		LWPOLY *poly;
+		POINTARRAY **ppa = (POINTARRAY **)lwalloc(sizeof(POINTARRAY *));
+		pa = ptarray_construct_empty(0, 0, 5);
+		ppa[0] = pa;
+
+		/* Assign coordinates to POINT2D array */
+		pt.x = box.xmin;
+		pt.y = box.ymin;
+		ptarray_append_point(pa, &pt, LW_TRUE);
+		pt.x = box.xmin;
+		pt.y = box.ymax;
+		ptarray_append_point(pa, &pt, LW_TRUE);
+		pt.x = box.xmax;
+		pt.y = box.ymax;
+		ptarray_append_point(pa, &pt, LW_TRUE);
+		pt.x = box.xmax;
+		pt.y = box.ymin;
+		ptarray_append_point(pa, &pt, LW_TRUE);
+		pt.x = box.xmin;
+		pt.y = box.ymin;
+		ptarray_append_point(pa, &pt, LW_TRUE);
+
+		/* Construct polygon  */
+		poly = lwpoly_construct(srid, NULL, 1, ppa);
+		result = geometry_serialize(lwpoly_as_lwgeom(poly));
+		lwpoly_free(poly);
+	}
+
+	return result;
+}
+
+/**
+ Maximum 2d distance between objects in geom1 and geom2.
+ */
+double LWGEOM_maxdistance2d_linestring(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	double maxdist;
+	LWGEOM *lwgeom1 = lwgeom_from_gserialized(geom1);
+	LWGEOM *lwgeom2 = lwgeom_from_gserialized(geom2);
+	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+	maxdist = lwgeom_maxdistance2d(lwgeom1, lwgeom2);
+
+	/*if called with empty geometries the ingoing mindistance is untouched, and makes us return NULL*/
+	if (maxdist > -1)
+		return maxdist;
+
+	return 0.0;
+}
+
 } // namespace duckdb

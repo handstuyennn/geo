@@ -45,5 +45,8 @@ double ST_Area(GSERIALIZED *geom);
 double LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3);
 double LWGEOM_perimeter2d_poly(GSERIALIZED *geom);
 double LWGEOM_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2);
+double LWGEOM_length2d_linestring(GSERIALIZED *geom);
+GSERIALIZED *LWGEOM_envelope(GSERIALIZED *geom);
+double LWGEOM_maxdistance2d_linestring(GSERIALIZED *geom1, GSERIALIZED *geom2);
 
 } // namespace duckdb

@@ -26,7 +26,6 @@ struct GeoFunctions {
 	static void GeometryGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryGeogFromFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryGeomFromGeoJsonFunction(DataChunk &args, ExpressionState &state, Vector &result);
-	static void GeometryDistanceFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromTextFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromWKBFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result);
@@ -74,10 +73,14 @@ struct GeoFunctions {
 	static void GeometryDWithinFunction(DataChunk &args, ExpressionState &state, Vector &result);
 
 	// **Measures (9)**
+	static void GeometryDistanceFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryAreaFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryAngleFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryPerimeterFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryAzimuthFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryLengthFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryBoundingBoxFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryMaxDistanceFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

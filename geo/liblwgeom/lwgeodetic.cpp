@@ -486,7 +486,7 @@ int edge_calculate_gbox(const POINT3D *A1, const POINT3D *A2, GBOX *gbox) {
 
 	/* Error out on antipodal edge */
 	if (FP_EQUALS(A1->x, -1 * A2->x) && FP_EQUALS(A1->y, -1 * A2->y) && FP_EQUALS(A1->z, -1 * A2->z)) {
-		// lwerror("Antipodal (180 degrees long) edge detected!");
+		lwerror("Antipodal (180 degrees long) edge detected!");
 		return LW_FAILURE;
 	}
 
@@ -693,8 +693,8 @@ int lwgeom_calculate_gbox_geodetic(const LWGEOM *geom, GBOX *gbox) {
 		result = lwcollection_calculate_gbox_geodetic((LWCOLLECTION *)geom, gbox);
 		break;
 	default:
-		// lwerror("lwgeom_calculate_gbox_geodetic: unsupported input geometry type: %d - %s",
-		//         geom->type, lwtype_name(geom->type));
+		lwerror("lwgeom_calculate_gbox_geodetic: unsupported input geometry type: %d - %s", geom->type,
+		        lwtype_name(geom->type));
 		break;
 	}
 	return result;
@@ -1206,7 +1206,7 @@ int gbox_pt_outside(const GBOX *gbox, POINT2D *pt_outside) {
 	}
 
 	/* This should never happen! */
-	// lwerror("BOOM! Could not generate outside point!");
+	lwerror("BOOM! Could not generate outside point!");
 	return LW_FAILURE;
 }
 
@@ -1283,10 +1283,10 @@ int lwgeom_check_geodetic(const LWGEOM *geom) {
 	case TINTYPE:
 	case COLLECTIONTYPE:
 		return lwcollection_check_geodetic((LWCOLLECTION *)geom);
-	default:
-		// lwerror("lwgeom_check_geodetic: unsupported input geometry type: %d - %s", geom->type,
-		// lwtype_name(geom->type));
+	default: {
+		lwerror("lwgeom_check_geodetic: unsupported input geometry type: %d - %s", geom->type, lwtype_name(geom->type));
 		return LW_FAILURE;
+	}
 	}
 	return LW_FALSE;
 }

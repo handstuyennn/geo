@@ -138,16 +138,6 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo geomfromjson_from_func_info(geomfromjson_from);
 	catalog.AddFunction(*con.context, &geomfromjson_from_func_info);
 
-	// ST_DISTANCE
-	ScalarFunctionSet distance("st_distance");
-	distance.AddFunction(
-	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryDistanceFunction));
-	distance.AddFunction(ScalarFunction({geo_type, geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE,
-	                                    GeoFunctions::GeometryDistanceFunction));
-
-	CreateScalarFunctionInfo distance_func_info(distance);
-	catalog.AddFunction(*con.context, &distance_func_info);
-
 	// ST_GEOMFROMTEXT
 	ScalarFunctionSet from_text("st_geomfromtext");
 	from_text.AddFunction(ScalarFunction({LogicalType::VARCHAR}, geo_type, GeoFunctions::GeometryFromTextFunction));
@@ -470,6 +460,47 @@ void GeoExtension::Load(DuckDB &db) {
 
 	CreateScalarFunctionInfo azimuth_func_info(azimuth);
 	catalog.AddFunction(*con.context, &azimuth_func_info);
+
+	// ST_DISTANCE
+	ScalarFunctionSet distance("st_distance");
+	distance.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryDistanceFunction));
+	distance.AddFunction(ScalarFunction({geo_type, geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE,
+	                                    GeoFunctions::GeometryDistanceFunction));
+
+	CreateScalarFunctionInfo distance_func_info(distance);
+	catalog.AddFunction(*con.context, &distance_func_info);
+
+	// ST_LENGTH
+	ScalarFunctionSet length("st_length");
+	length.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryLengthFunction));
+	length.AddFunction(
+	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryLengthFunction));
+
+	CreateScalarFunctionInfo length_func_info(length);
+	catalog.AddFunction(*con.context, &length_func_info);
+
+	// ST_BOUNDINGBOX (ALIAS: ST_ENVELOPE)
+	ScalarFunctionSet boundingbox("st_boundingbox");
+	ScalarFunctionSet envelope("st_envelope");
+	auto boundingboxUnaryFunc = ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryBoundingBoxFunction);
+
+	boundingbox.AddFunction(boundingboxUnaryFunc);
+	envelope.AddFunction(boundingboxUnaryFunc);
+
+	CreateScalarFunctionInfo boundingbox_func_info(boundingbox);
+	catalog.AddFunction(*con.context, &boundingbox_func_info);
+
+	CreateScalarFunctionInfo envelope_func_info(envelope);
+	catalog.AddFunction(*con.context, &envelope_func_info);
+
+	// ST_MAXDISTANCE
+	ScalarFunctionSet maxdistance("st_maxdistance");
+	maxdistance.AddFunction(
+	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryMaxDistanceFunction));
+
+	CreateScalarFunctionInfo maxdistance_func_info(maxdistance);
+	catalog.AddFunction(*con.context, &maxdistance_func_info);
 
 	con.Commit();
 }

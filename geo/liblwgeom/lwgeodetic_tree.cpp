@@ -492,9 +492,10 @@ CIRC_NODE *lwgeom_calculate_circ_tree(const LWGEOM *lwgeom) {
 
 		// Need to do with postgis
 
-	default:
+	default: {
 		lwerror("Unable to calculate spherical index tree for type %s", lwtype_name(lwgeom->type));
 		return NULL;
+	}
 	}
 }
 

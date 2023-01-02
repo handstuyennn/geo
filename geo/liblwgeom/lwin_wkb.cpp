@@ -86,7 +86,7 @@ LWGEOM *lwgeom_from_wkb_state(wkb_parse_state *s);
  */
 static inline void wkb_parse_state_check(wkb_parse_state *s, size_t next) {
 	if ((s->pos + next) > (s->wkb + s->wkb_size)) {
-		// lwerror("WKB structure does not match expected size!");
+		lwerror("WKB structure does not match expected size!");
 		s->error = LW_TRUE;
 	}
 }
@@ -118,7 +118,7 @@ static void lwtype_from_wkb_state(wkb_parse_state *s, uint32_t wkb_type) {
 
 	/* Catch strange Oracle WKB type numbers */
 	if (wkb_type >= 4000) {
-		// lwerror("Unknown WKB type (%d)!", wkb_type);
+		lwerror("Unknown WKB type (%d)!", wkb_type);
 		return;
 	}
 
@@ -190,7 +190,7 @@ static void lwtype_from_wkb_state(wkb_parse_state *s, uint32_t wkb_type) {
 		break;
 
 	default: /* Error! */
-		// lwerror("Unknown WKB type (%d)! Full WKB type number was (%d).", wkb_simple_type, wkb_type);
+		lwerror("Unknown WKB type (%d)! Full WKB type number was (%d).", wkb_simple_type, wkb_type);
 		break;
 	}
 
@@ -219,25 +219,29 @@ uint8_t *bytes_from_hexbytes(const char *hexbuf, size_t hexsize) {
 	uint8_t h1, h2;
 	uint32_t i;
 
-	if (hexsize % 2)
-		// lwerror("Invalid hex string, length (%d) has to be a multiple of two!", hexsize);
+	if (hexsize % 2) {
+		lwerror("Invalid hex string, length (%d) has to be a multiple of two!", hexsize);
 		return nullptr;
+	}
 
 	buf = (uint8_t *)lwalloc(hexsize / 2);
 
-	if (!buf)
-		// lwerror("Unable to allocate memory buffer.");
+	if (!buf) {
+		lwerror("Unable to allocate memory buffer.");
 		return nullptr;
+	}
 
 	for (i = 0; i < hexsize / 2; i++) {
 		h1 = hex2char[(int)hexbuf[2 * i]];
 		h2 = hex2char[(int)hexbuf[2 * i + 1]];
-		if (h1 > 15)
-			// lwerror("Invalid hex character (%c) encountered", hexbuf[2*i]);
+		if (h1 > 15) {
+			lwerror("Invalid hex character (%c) encountered", hexbuf[2 * i]);
 			return nullptr;
-		if (h2 > 15)
-			// lwerror("Invalid hex character (%c) encountered", hexbuf[2*i+1]);
+		}
+		if (h2 > 15) {
+			lwerror("Invalid hex character (%c) encountered", hexbuf[2 * i + 1]);
 			return nullptr;
+		}
 		/* First character is high bits, second is low bits */
 		buf[i] = ((h1 & 0x0F) << 4) | (h2 & 0x0F);
 	}
@@ -527,7 +531,7 @@ static LWPOLY *lwpoly_from_wkb_state(wkb_parse_state *s) {
 		if (s->check & LW_PARSER_CHECK_MINPOINTS && pa->npoints < 4) {
 			lwpoly_free(poly);
 			ptarray_free(pa);
-			// lwerror("%s must have at least four points in each ring", lwtype_name(s->lwtype));
+			lwerror("%s must have at least four points in each ring", lwtype_name(s->lwtype));
 			return NULL;
 		}
 
@@ -535,7 +539,7 @@ static LWPOLY *lwpoly_from_wkb_state(wkb_parse_state *s) {
 		if (s->check & LW_PARSER_CHECK_CLOSURE && !ptarray_is_closed_2d(pa)) {
 			lwpoly_free(poly);
 			ptarray_free(pa);
-			// lwerror("%s must have closed rings", lwtype_name(s->lwtype));
+			lwerror("%s must have closed rings", lwtype_name(s->lwtype));
 			return NULL;
 		}
 
@@ -543,7 +547,7 @@ static LWPOLY *lwpoly_from_wkb_state(wkb_parse_state *s) {
 		if (lwpoly_add_ring(poly, pa) == LW_FAILURE) {
 			lwpoly_free(poly);
 			ptarray_free(pa);
-			// lwerror("Unable to add ring to polygon");
+			lwerror("Unable to add ring to polygon");
 			return NULL;
 		}
 	}
@@ -569,7 +573,7 @@ static LWTRIANGLE *lwtriangle_from_wkb_state(wkb_parse_state *s) {
 
 	/* Should be only one ring. */
 	if (nrings != 1) {
-		// lwerror("Triangle has wrong number of rings: %d", nrings);
+		lwerror("Triangle has wrong number of rings: %d", nrings);
 		return nullptr;
 	}
 
@@ -583,13 +587,13 @@ static LWTRIANGLE *lwtriangle_from_wkb_state(wkb_parse_state *s) {
 	/* Check for at least four points. */
 	if (s->check & LW_PARSER_CHECK_MINPOINTS && pa->npoints < 4) {
 		ptarray_free(pa);
-		// lwerror("%s must have at least four points", lwtype_name(s->lwtype));
+		lwerror("%s must have at least four points", lwtype_name(s->lwtype));
 		return NULL;
 	}
 
 	if (s->check & LW_PARSER_CHECK_ZCLOSURE && !ptarray_is_closed_z(pa)) {
 		ptarray_free(pa);
-		// lwerror("%s must have closed rings", lwtype_name(s->lwtype));
+		lwerror("%s must have closed rings", lwtype_name(s->lwtype));
 		return NULL;
 	}
 
@@ -617,7 +621,7 @@ static LWCURVEPOLY *lwcurvepoly_from_wkb_state(wkb_parse_state *s) {
 		if (lwcurvepoly_add_ring(cp, geom) == LW_FAILURE) {
 			lwgeom_free(geom);
 			lwgeom_free((LWGEOM *)cp);
-			// lwerror("Unable to add geometry (%p) to curvepoly (%p)", geom, cp);
+			lwerror("Unable to add geometry (%p) to curvepoly (%p)", geom, cp);
 			return NULL;
 		}
 	}
@@ -649,7 +653,7 @@ static LWCOLLECTION *lwcollection_from_wkb_state(wkb_parse_state *s) {
 	s->depth++;
 	if (s->depth >= LW_PARSER_MAX_DEPTH) {
 		lwcollection_free(col);
-		// lwerror("Geometry has too many chained collections");
+		lwerror("Geometry has too many chained collections");
 		return NULL;
 	}
 	for (i = 0; i < ngeoms; i++) {
@@ -657,7 +661,7 @@ static LWCOLLECTION *lwcollection_from_wkb_state(wkb_parse_state *s) {
 		if (lwcollection_add_lwgeom(col, geom) == NULL) {
 			lwgeom_free(geom);
 			lwgeom_free((LWGEOM *)col);
-			// lwerror("Unable to add geometry (%p) to collection (%p)", geom, col);
+			lwerror("Unable to add geometry (%p) to collection (%p)", geom, col);
 			return NULL;
 		}
 	}
@@ -682,7 +686,7 @@ LWGEOM *lwgeom_from_wkb_state(wkb_parse_state *s) {
 	if (s->error)
 		return NULL;
 	if (wkb_little_endian != 1 && wkb_little_endian != 0) {
-		// lwerror("Invalid endian flag value encountered.");
+		lwerror("Invalid endian flag value encountered.");
 		return NULL;
 	}
 
@@ -741,9 +745,10 @@ LWGEOM *lwgeom_from_wkb_state(wkb_parse_state *s) {
 	case COLLECTIONTYPE:
 		return (LWGEOM *)lwcollection_from_wkb_state(s);
 	/* Unknown type! */
-	default:
-		// lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(s->lwtype));
+	default: {
+		lwerror("%s: Unsupported geometry type: %s", __func__, lwtype_name(s->lwtype));
 		return NULL;
+	}
 	}
 
 	/* Return value to keep compiler happy. */

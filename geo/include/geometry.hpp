@@ -90,6 +90,12 @@ public:
 	static double GeometryPerimeter(GSERIALIZED *geom);
 	static double GeometryPerimeter(GSERIALIZED *geom, bool use_spheroid);
 	static double GeometryAzimuth(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	static double GeometryLength(GSERIALIZED *geom);
+	static double GeometryLength(GSERIALIZED *geom, bool use_spheroid);
+	static GSERIALIZED *GeometryBoundingBox(GSERIALIZED *geom);
+	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
+	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
+	static double MaxDistance(GSERIALIZED *g1, GSERIALIZED *g2);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);
@@ -107,7 +113,5 @@ public:
 	static double XPoint(GSERIALIZED *geom);
 	static double YPoint(GSERIALIZED *geom);
 
-	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
-	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
 };
 } // namespace duckdb

@@ -177,7 +177,7 @@ LWLINE *lwline_from_lwgeom_array(int32_t srid, uint32_t ngeoms, LWGEOM **geoms) 
 			lwpointiterator_destroy(it);
 		} else {
 			ptarray_free(pa);
-			// lwerror("lwline_from_ptarray: invalid input type: %s", lwtype_name(g->type));
+			lwerror("lwline_from_ptarray: invalid input type: %s", lwtype_name(g->type));
 			return NULL;
 		}
 	}

@@ -295,7 +295,7 @@ void decode_geohash_bbox(char *geohash, double *lat, double *lon, int precision)
 		/* Valid characters are all digits in base32 */
 		char *base32_pos = strchr(const_cast<char *>(base32), c);
 		if (!base32_pos) {
-			// lwerror("%s: Invalid character '%c'", __func__, geohash[i]);
+			lwerror("%s: Invalid character '%c'", __func__, geohash[i]);
 			return;
 		}
 		char cd = base32_pos - base32;
@@ -408,8 +408,8 @@ lwvarlena_t *lwgeom_geohash(const LWGEOM *lwgeom, int precision) {
 
 	/* Return error if we are being fed something outside our working bounds */
 	if (gbox.xmin < -180 || gbox.ymin < -90 || gbox.xmax > 180 || gbox.ymax > 90) {
-		// lwerror("Geohash requires inputs in decimal degrees, got (%g %g, %g %g).", gbox.xmin, gbox.ymin, gbox.xmax,
-		//         gbox.ymax);
+		lwerror("Geohash requires inputs in decimal degrees, got (%g %g, %g %g).", gbox.xmin, gbox.ymin, gbox.xmax,
+		        gbox.ymax);
 		return NULL;
 	}
 

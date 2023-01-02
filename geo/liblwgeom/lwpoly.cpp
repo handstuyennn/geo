@@ -46,9 +46,10 @@ LWPOLY *lwpoly_construct(int32_t srid, GBOX *bbox, uint32_t nrings, POINTARRAY *
 	uint32_t i;
 #endif
 
-	if (nrings < 1)
-		// lwerror("lwpoly_construct: need at least 1 ring");
+	if (nrings < 1) {
+		lwerror("lwpoly_construct: need at least 1 ring");
 		return nullptr;
+	}
 
 	hasz = FLAGS_GET_Z(points[0]->flags);
 	hasm = FLAGS_GET_M(points[0]->flags);
@@ -56,9 +57,10 @@ LWPOLY *lwpoly_construct(int32_t srid, GBOX *bbox, uint32_t nrings, POINTARRAY *
 #ifdef CHECK_POLY_RINGS_ZM
 	zm = FLAGS_GET_ZM(points[0]->flags);
 	for (i = 1; i < nrings; i++) {
-		if (zm != FLAGS_GET_ZM(points[i]->flags))
-			// lwerror("lwpoly_construct: mixed dimensioned rings");
+		if (zm != FLAGS_GET_ZM(points[i]->flags)) {
+			lwerror("lwpoly_construct: mixed dimensioned rings");
 			return nullptr;
+		}
 	}
 #endif
 
@@ -190,27 +192,32 @@ LWPOLY *lwpoly_from_lwlines(const LWLINE *shell, uint32_t nholes, const LWLINE *
 	int32_t srid = shell->srid;
 	LWPOLY *ret;
 
-	if (shell->points->npoints < 4)
-		// lwerror("lwpoly_from_lwlines: shell must have at least 4 points");
+	if (shell->points->npoints < 4) {
+		lwerror("lwpoly_from_lwlines: shell must have at least 4 points");
 		return nullptr;
-	if (!ptarray_is_closed_2d(shell->points))
-		// lwerror("lwpoly_from_lwlines: shell must be closed");
+	}
+	if (!ptarray_is_closed_2d(shell->points)) {
+		lwerror("lwpoly_from_lwlines: shell must be closed");
 		return nullptr;
+	}
 	rings[0] = ptarray_clone_deep(shell->points);
 
 	for (nrings = 1; nrings <= nholes; nrings++) {
 		const LWLINE *hole = holes[nrings - 1];
 
-		if (hole->srid != srid)
-			// lwerror("lwpoly_from_lwlines: mixed SRIDs in input lines");
+		if (hole->srid != srid) {
+			lwerror("lwpoly_from_lwlines: mixed SRIDs in input lines");
 			return nullptr;
+		}
 
-		if (hole->points->npoints < 4)
-			// lwerror("lwpoly_from_lwlines: holes must have at least 4 points");
+		if (hole->points->npoints < 4) {
+			lwerror("lwpoly_from_lwlines: holes must have at least 4 points");
 			return nullptr;
-		if (!ptarray_is_closed_2d(hole->points))
-			// lwerror("lwpoly_from_lwlines: holes must be closed");
+		}
+		if (!ptarray_is_closed_2d(hole->points)) {
+			lwerror("lwpoly_from_lwlines: holes must be closed");
 			return nullptr;
+		}
 
 		rings[nrings] = ptarray_clone_deep(hole->points);
 	}

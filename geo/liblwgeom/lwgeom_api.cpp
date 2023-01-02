@@ -72,7 +72,7 @@ float next_float_up(double d) {
  */
 int getPoint2d_p(const POINTARRAY *pa, uint32_t n, POINT2D *point) {
 	if (!pa) {
-		// lwerror("%s [%d] NULL POINTARRAY input", __FILE__, __LINE__);
+		lwerror("%s [%d] NULL POINTARRAY input", __FILE__, __LINE__);
 		return 0;
 	}
 
@@ -179,7 +179,7 @@ int getPoint4d_p(const POINTARRAY *pa, uint32_t n, POINT4D *op) {
 	int zmflag;
 
 	if (!pa) {
-		// lwerror("%s [%d] NULL POINTARRAY input", __FILE__, __LINE__);
+		lwerror("%s [%d] NULL POINTARRAY input", __FILE__, __LINE__);
 		return 0;
 	}
 
@@ -215,7 +215,7 @@ int getPoint4d_p(const POINTARRAY *pa, uint32_t n, POINT4D *op) {
 		break;
 
 	default:
-		// lwerror("Unknown ZM flag ??");
+		lwerror("Unknown ZM flag ??");
 		return 0;
 	}
 	return 1;
