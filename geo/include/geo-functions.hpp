@@ -81,6 +81,7 @@ struct GeoFunctions {
 	static void GeometryLengthFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryBoundingBoxFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryMaxDistanceFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryExtentFunction(DataChunk &args, ExpressionState &state, Vector &result);
 };
 
 } // namespace duckdb

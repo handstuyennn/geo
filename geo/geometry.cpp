@@ -323,6 +323,11 @@ double Geometry::MaxDistance(GSERIALIZED *g1, GSERIALIZED *g2) {
 	return postgis.LWGEOM_maxdistance2d_linestring(g1, g2);
 }
 
+GSERIALIZED *Geometry::GeometryExtent(GSERIALIZED *gserArray[], int nelems) {
+	Postgis postgis;
+	return postgis.LWGEOM_envelope_garray(gserArray, nelems);
+}
+
 int Geometry::LWGEOM_dimension(GSERIALIZED *geom) {
 	Postgis postgis;
 	return postgis.LWGEOM_dimension(geom);

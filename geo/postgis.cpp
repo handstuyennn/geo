@@ -218,6 +218,10 @@ double Postgis::LWGEOM_maxdistance2d_linestring(GSERIALIZED *geom1, GSERIALIZED 
 	return duckdb::LWGEOM_maxdistance2d_linestring(geom1, geom2);
 }
 
+GSERIALIZED *Postgis::LWGEOM_envelope_garray(GSERIALIZED *gserArray[], int nelems) {
+	return duckdb::LWGEOM_envelope_garray(gserArray, nelems);
+}
+
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {
 	return duckdb::LWGEOM_dimension(geom);
 }

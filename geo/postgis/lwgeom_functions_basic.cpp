@@ -29,6 +29,7 @@
 #include "liblwgeom/liblwgeom.hpp"
 #include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
+#include "postgis/lwgeom_inout.hpp"
 
 #include <float.h>
 
@@ -588,6 +589,68 @@ double LWGEOM_maxdistance2d_linestring(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 		return maxdist;
 
 	return 0.0;
+}
+
+GSERIALIZED *LWGEOM_envelope_garray(GSERIALIZED *gserArray[], int nelems) {
+	GSERIALIZED *result = NULL, *colgser = NULL;
+	LWGEOM **geoms;
+	uint32 ngeoms;
+	int32_t srid = SRID_UNKNOWN;
+
+	/* Return null on 0-elements input array */
+	if (nelems == 0)
+		return nullptr;
+
+	/* possibly more then required */
+	geoms = (LWGEOM **)malloc(sizeof(LWGEOM *) * nelems);
+	ngeoms = 0;
+
+	for (size_t i = 0; i < (size_t)nelems; i++) {
+		GSERIALIZED *geom = gserArray[i];
+
+		if (!geom)
+			continue;
+
+		geoms[ngeoms++] = lwgeom_from_gserialized(geom);
+
+		/* Check SRID homogeneity */
+		if (ngeoms == 1) {
+			/* Get first geometry SRID */
+			srid = geoms[ngeoms - 1]->srid;
+			/* TODO: also get ZMflags */
+		} else
+			gserialized_error_if_srid_mismatch_reference(geom, srid, __func__);
+	}
+
+	/* Return null on 0-points input array */
+	if (ngeoms == 0) {
+		/* TODO: should we return LINESTRING EMPTY here ? */
+		return nullptr;
+	}
+
+	LWGEOM *col = (LWGEOM *)lwcollection_construct_empty(COLLECTIONTYPE, srid, FLAGS_GET_Z(geoms[ngeoms - 1]->flags),
+	                                                     FLAGS_GET_M(geoms[ngeoms - 1]->flags));
+	for (int i = 0; i < ngeoms; ++i) {
+		auto geom = geoms[i];
+		if (geom)
+			col = (LWGEOM *)lwcollection_add_lwgeom((LWCOLLECTION *)col, geom);
+		else {
+			lwgeom_free(col);
+			return nullptr;
+		}
+	}
+
+
+	colgser = geometry_serialize(col);
+	result = LWGEOM_envelope(colgser);
+
+	for (int i = 0; i < ngeoms; ++i) {
+		lwgeom_free(geoms[i]);
+	}
+	lwfree(geoms);
+	lwfree(colgser);
+
+	return result;
 }
 
 } // namespace duckdb

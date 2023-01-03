@@ -48,5 +48,6 @@ double LWGEOM_azimuth(GSERIALIZED *geom1, GSERIALIZED *geom2);
 double LWGEOM_length2d_linestring(GSERIALIZED *geom);
 GSERIALIZED *LWGEOM_envelope(GSERIALIZED *geom);
 double LWGEOM_maxdistance2d_linestring(GSERIALIZED *geom1, GSERIALIZED *geom2);
+GSERIALIZED *LWGEOM_envelope_garray(GSERIALIZED *gserArray[], int nelems);
 
 } // namespace duckdb

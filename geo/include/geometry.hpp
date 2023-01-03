@@ -96,6 +96,7 @@ public:
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
 	static double MaxDistance(GSERIALIZED *g1, GSERIALIZED *g2);
+	static GSERIALIZED *GeometryExtent(GSERIALIZED *gserArray[], int nelems);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

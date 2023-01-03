@@ -502,6 +502,13 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateScalarFunctionInfo maxdistance_func_info(maxdistance);
 	catalog.AddFunction(*con.context, &maxdistance_func_info);
 
+	// ST_EXTENT
+	ScalarFunctionSet extent("st_extent");
+	extent.AddFunction(ScalarFunction({LogicalType::LIST(geo_type)}, geo_type, GeoFunctions::GeometryExtentFunction));
+
+	CreateScalarFunctionInfo extent_func_info(extent);
+	catalog.AddFunction(*con.context, &extent_func_info);
+
 	con.Commit();
 }
 
