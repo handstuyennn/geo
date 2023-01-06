@@ -88,6 +88,9 @@ int sphere_project(const GEOGRAPHIC_POINT *r, double distance, double azimuth, G
 double edge_distance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *gp, GEOGRAPHIC_POINT *closest);
 double edge_distance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *closest1,
                              GEOGRAPHIC_POINT *closest2);
+double edge_maxdistance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *gp, GEOGRAPHIC_POINT *farest);
+double edge_maxdistance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *farest1,
+                                GEOGRAPHIC_POINT *farest2);
 int crosses_dateline(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e);
 void point_shift(GEOGRAPHIC_POINT *p, double shift);
 int geographic_point_equals(const GEOGRAPHIC_POINT *g1, const GEOGRAPHIC_POINT *g2);

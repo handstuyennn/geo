@@ -858,6 +858,36 @@ double edge_distance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *
 	return d_nearest;
 }
 
+double edge_maxdistance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *gp, GEOGRAPHIC_POINT *farest) {
+	double d2, d3, d_farest;
+	POINT3D n, p, k;
+	GEOGRAPHIC_POINT gk, g_farest;
+
+	/* Zero length edge, */
+	if (geographic_point_equals(&(e->start), &(e->end))) {
+		*farest = e->start;
+		return sphere_distance(&(e->start), gp);
+	}
+
+	d2 = sphere_distance(gp, &(e->start));
+	d3 = sphere_distance(gp, &(e->end));
+
+	d_farest = FLT_MIN;
+
+	if (d2 > d_farest) {
+		d_farest = d2;
+		g_farest = e->start;
+	}
+	if (d3 > d_farest) {
+		d_farest = d3;
+		g_farest = e->end;
+	}
+	if (farest)
+		*farest = g_farest;
+
+	return d_farest;
+}
+
 /**
  * Calculate the distance between two edges.
  * IMPORTANT: this test does not check for edge intersection!!! (distance == 0)
@@ -898,6 +928,50 @@ double edge_distance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e
 		*closest1 = c1;
 	if (closest2)
 		*closest2 = c2;
+
+	return d;
+}
+
+/**
+ * Calculate the distance between two edges.
+ * IMPORTANT: this test does not check for edge intersection!!! (distance == 0)
+ * You have to check for intersection before calling this function.
+ */
+double edge_maxdistance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *farest1,
+                                GEOGRAPHIC_POINT *farest2) {
+	double d;
+	GEOGRAPHIC_POINT gcp1s, gcp1e, gcp2s, gcp2e, c1, c2;
+	double d1s = edge_maxdistance_to_point(e1, &(e2->start), &gcp1s);
+	double d1e = edge_maxdistance_to_point(e1, &(e2->end), &gcp1e);
+	double d2s = edge_maxdistance_to_point(e2, &(e1->start), &gcp2s);
+	double d2e = edge_maxdistance_to_point(e2, &(e1->end), &gcp2e);
+
+	d = d1s;
+	c1 = gcp1s;
+	c2 = e2->start;
+
+	if (d1e > d) {
+		d = d1e;
+		c1 = gcp1e;
+		c2 = e2->end;
+	}
+
+	if (d2s > d) {
+		d = d2s;
+		c1 = e1->start;
+		c2 = gcp2s;
+	}
+
+	if (d2e > d) {
+		d = d2e;
+		c1 = e1->end;
+		c2 = gcp2e;
+	}
+
+	if (farest1)
+		*farest1 = c1;
+	if (farest2)
+		*farest2 = c2;
 
 	return d;
 }

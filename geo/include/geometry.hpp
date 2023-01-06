@@ -95,7 +95,7 @@ public:
 	static GSERIALIZED *GeometryBoundingBox(GSERIALIZED *geom);
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2);
 	static double Distance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid);
-	static double MaxDistance(GSERIALIZED *g1, GSERIALIZED *g2);
+	static double MaxDistance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid = true);
 	static GSERIALIZED *GeometryExtent(GSERIALIZED *gserArray[], int nelems);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);

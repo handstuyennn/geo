@@ -706,6 +706,115 @@ static double circ_tree_distance_tree_internal(const CIRC_NODE *n1, const CIRC_N
 	}
 }
 
+static double circ_tree_maxdistance_tree_internal(const CIRC_NODE *n1, const CIRC_NODE *n2, double *min_dist,
+                                                  double *max_dist, GEOGRAPHIC_POINT *farest1,
+                                                  GEOGRAPHIC_POINT *farest2) {
+	double min;
+	double d, d_max;
+	int32_t i;
+
+	/* If your maximum is greater than anyone's minimum, you can't hold the winner */
+	if (circ_node_max_distance(n1, n2) < *min_dist) {
+		return FLT_MIN;
+	}
+
+	/* If your minimum is a new low, we'll use that as our new global tolerance */
+	min = circ_node_min_distance(n1, n2);
+	if (min > *min_dist)
+		*min_dist = min;
+
+	/* Both leaf nodes, do a real distance calculation */
+	if (circ_node_is_leaf(n1) && circ_node_is_leaf(n2)) {
+		double d;
+		GEOGRAPHIC_POINT far1, far2;
+		/* One of the nodes is a point */
+		if (n1->p1 == n1->p2 || n2->p1 == n2->p2) {
+			GEOGRAPHIC_EDGE e;
+			GEOGRAPHIC_POINT gp1, gp2;
+
+			/* Both nodes are points! */
+			if (n1->p1 == n1->p2 && n2->p1 == n2->p2) {
+				geographic_point_init(n1->p1->x, n1->p1->y, &gp1);
+				geographic_point_init(n2->p1->x, n2->p1->y, &gp2);
+				far1 = gp1;
+				far2 = gp2;
+				d = sphere_distance(&gp1, &gp2);
+			}
+			/* Node 1 is a point */
+			else if (n1->p1 == n1->p2) {
+				geographic_point_init(n1->p1->x, n1->p1->y, &gp1);
+				geographic_point_init(n2->p1->x, n2->p1->y, &(e.start));
+				geographic_point_init(n2->p2->x, n2->p2->y, &(e.end));
+				far1 = gp1;
+				d = edge_maxdistance_to_point(&e, &gp1, &far2);
+			}
+			/* Node 2 is a point */
+			else {
+				geographic_point_init(n2->p1->x, n2->p1->y, &gp1);
+				geographic_point_init(n1->p1->x, n1->p1->y, &(e.start));
+				geographic_point_init(n1->p2->x, n1->p2->y, &(e.end));
+				far1 = gp1;
+				d = edge_maxdistance_to_point(&e, &gp1, &far2);
+			}
+		}
+		/* Both nodes are edges */
+		else {
+			GEOGRAPHIC_EDGE e1, e2;
+			GEOGRAPHIC_POINT g;
+			POINT3D A1, A2, B1, B2;
+			geographic_point_init(n1->p1->x, n1->p1->y, &(e1.start));
+			geographic_point_init(n1->p2->x, n1->p2->y, &(e1.end));
+			geographic_point_init(n2->p1->x, n2->p1->y, &(e2.start));
+			geographic_point_init(n2->p2->x, n2->p2->y, &(e2.end));
+			geog2cart(&(e1.start), &A1);
+			geog2cart(&(e1.end), &A2);
+			geog2cart(&(e2.start), &B1);
+			geog2cart(&(e2.end), &B2);
+			d = edge_maxdistance_to_edge(&e1, &e2, &far1, &far2);
+		}
+		if (d > *max_dist) {
+			*max_dist = d;
+			*farest1 = far1;
+			*farest2 = far2;
+		}
+		return d;
+	} else {
+		d_max = FLT_MIN;
+		/* Drive the recursion into the COLLECTION types first so we end up with */
+		/* pairings of primitive geometries that can be forced into the point-in-polygon */
+		/* tests above. */
+		if (n1->geom_type && lwtype_is_collection(n1->geom_type)) {
+			circ_internal_nodes_sort(n1->nodes, n1->num_nodes, n2);
+			for (i = n1->num_nodes - 1; i >= 0; i--) {
+				d = circ_tree_maxdistance_tree_internal(n1->nodes[i], n2, min_dist, max_dist, farest1, farest2);
+				d_max = FP_MAX(d_max, d);
+			}
+		} else if (n2->geom_type && lwtype_is_collection(n2->geom_type)) {
+			circ_internal_nodes_sort(n2->nodes, n2->num_nodes, n1);
+			for (i = n2->num_nodes - 1; i >= 0; i--) {
+				d = circ_tree_maxdistance_tree_internal(n1, n2->nodes[i], min_dist, max_dist, farest1, farest2);
+				d_max = FP_MAX(d_max, d);
+			}
+		} else if (!circ_node_is_leaf(n1)) {
+			circ_internal_nodes_sort(n1->nodes, n1->num_nodes, n2);
+			for (i = n1->num_nodes - 1; i >= 0; i--) {
+				d = circ_tree_maxdistance_tree_internal(n1->nodes[i], n2, min_dist, max_dist, farest1, farest2);
+				d_max = FP_MAX(d_max, d);
+			}
+		} else if (!circ_node_is_leaf(n2)) {
+			circ_internal_nodes_sort(n2->nodes, n2->num_nodes, n1);
+			for (i = n2->num_nodes - 1; i >= 0; i--) {
+				d = circ_tree_maxdistance_tree_internal(n1, n2->nodes[i], min_dist, max_dist, farest1, farest2);
+				d_max = FP_MAX(d_max, d);
+			}
+		} else {
+			/* Never get here */
+		}
+
+		return d_max;
+	}
+}
+
 double circ_tree_distance_tree(const CIRC_NODE *n1, const CIRC_NODE *n2, const SPHEROID *spheroid, double threshold) {
 	double min_dist = FLT_MAX;
 	double max_dist = FLT_MAX;
@@ -722,6 +831,22 @@ double circ_tree_distance_tree(const CIRC_NODE *n1, const CIRC_NODE *n2, const S
 		return spheroid->radius * sphere_distance(&closest1, &closest2);
 	} else {
 		return spheroid_distance(&closest1, &closest2, spheroid);
+	}
+}
+
+double circ_tree_maxdistance_tree(const CIRC_NODE *n1, const CIRC_NODE *n2, const SPHEROID *spheroid,
+                                  double threshold) {
+	double min_dist = FLT_MIN;
+	double max_dist = FLT_MIN;
+	GEOGRAPHIC_POINT farest1, farest2;
+
+	circ_tree_maxdistance_tree_internal(n1, n2, &min_dist, &max_dist, &farest1, &farest2);
+
+	/* Spherical case */
+	if (spheroid->a == spheroid->b) {
+		return spheroid->radius * sphere_distance(&farest1, &farest2);
+	} else {
+		return spheroid_distance(&farest1, &farest2, spheroid);
 	}
 }
 
@@ -786,6 +911,18 @@ int circ_tree_contains_point(const CIRC_NODE *node, const POINT2D *pt, const POI
 		}
 	}
 	return 0;
+}
+
+int circ_tree_get_point_outside(const CIRC_NODE *node, POINT2D *pt) {
+	POINT3D center3d;
+	GEOGRAPHIC_POINT g;
+	// if (node->radius >= M_PI) return LW_FAILURE;
+	geog2cart(&(node->center), &center3d);
+	vector_scale(&center3d, -1.0);
+	cart2geog(&center3d, &g);
+	pt->x = rad2deg(g.lon);
+	pt->y = rad2deg(g.lat);
+	return LW_SUCCESS;
 }
 
 } // namespace duckdb

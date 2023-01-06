@@ -35,6 +35,9 @@ namespace duckdb {
 int geography_tree_distance(const GSERIALIZED *g1, const GSERIALIZED *g2, const SPHEROID *s, double tolerance,
                             double *distance);
 
+int geography_tree_maxdistance(const GSERIALIZED *g1, const GSERIALIZED *g2, const SPHEROID *s, double tolerance,
+                               double *distance);
+
 #endif /* !defined _LIBGEOGRAPHY_MEASUREMENT_TREES_H  */
 
 } // namespace duckdb
