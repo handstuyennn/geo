@@ -123,7 +123,7 @@ ElevationMatrixCell &ElevationMatrix::getCell(const Coordinate &c) {
 
 	if (celloffset < 0 || celloffset >= (int)(cols * rows)) {
 		std::ostringstream s;
-		s << "ElevationMatrix::getCell got a Coordinate out of grid extent (" << env.toString() << ") - cols:" << cols
+		s << "ElevationMatrix::getCell got a Coordinate out of grid extent (Envelope) - cols:" << cols
 		  << " rows:" << rows;
 		throw util::IllegalArgumentException(s.str());
 	}

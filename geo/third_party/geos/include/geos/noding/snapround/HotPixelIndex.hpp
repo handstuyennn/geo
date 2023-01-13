@@ -22,7 +22,6 @@
 #include <geos/geom/PrecisionModel.hpp>
 #include <geos/index/kdtree/KdNodeVisitor.hpp>
 #include <geos/index/kdtree/KdTree.hpp>
-#include <geos/io/WKTWriter.hpp>
 #include <geos/noding/snapround/HotPixel.hpp>
 #include <geos/util/IllegalArgumentException.hpp>
 #include <map>

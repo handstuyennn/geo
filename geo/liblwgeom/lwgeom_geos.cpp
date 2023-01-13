@@ -605,4 +605,35 @@ LWGEOM *lwgeom_centroid(const LWGEOM *geom) {
 	return result;
 }
 
+GEOSGeometry *make_geos_point(double x, double y) {
+	GEOSCoordSequence *seq = GEOSCoordSeq_create(1, 2);
+	GEOSGeometry *geom = NULL;
+
+	if (!seq)
+		return NULL;
+
+	GEOSCoordSeq_setXY(seq, 0, x, y);
+
+	geom = GEOSGeom_createPoint(seq);
+	if (!geom)
+		GEOSCoordSeq_destroy(seq);
+	return geom;
+}
+
+GEOSGeometry *make_geos_segment(double x1, double y1, double x2, double y2) {
+	GEOSCoordSequence *seq = GEOSCoordSeq_create(2, 2);
+	GEOSGeometry *geom = NULL;
+
+	if (!seq)
+		return NULL;
+
+	GEOSCoordSeq_setXY(seq, 0, x1, y1);
+	GEOSCoordSeq_setXY(seq, 1, x2, y2);
+
+	geom = GEOSGeom_createLineString(seq);
+	if (!geom)
+		GEOSCoordSeq_destroy(seq);
+	return geom;
+}
+
 } // namespace duckdb

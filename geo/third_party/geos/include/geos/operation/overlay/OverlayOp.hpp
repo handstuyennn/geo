@@ -362,7 +362,3 @@ protected:
 } // namespace overlay
 } // namespace operation
 } // namespace geos
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif

@@ -17,6 +17,7 @@
 
 #include <geos/geom/CoordinateSequence.hpp>
 #include <geos/geom/Geometry.hpp>
+#include <geos/index/strtree/STRtree.hpp>
 #include <geos/util/Interrupt.hpp>
 #include <new>
 #include <stdexcept>
@@ -24,6 +25,7 @@
 // Some extra magic to make type declarations in geos_c.h work - for cross-checking of types in header.
 #define GEOSGeometry      geos::geom::Geometry
 #define GEOSCoordSequence geos::geom::CoordinateSequence
+#define GEOSSTRtree       geos::index::strtree::STRtree
 typedef struct GEOSBufParams_t GEOSBufferParams;
 
 #include "geos_c.hpp"
@@ -130,6 +132,10 @@ const CoordinateSequence *GEOSGeom_getCoordSeq(const Geometry *g) {
 
 CoordinateSequence *GEOSCoordSeq_create(unsigned int size, unsigned int dims) {
 	return GEOSCoordSeq_create_r(handle, size, dims);
+}
+
+void GEOSCoordSeq_destroy(CoordinateSequence *s) {
+	return GEOSCoordSeq_destroy_r(handle, s);
 }
 
 int GEOSCoordSeq_setOrdinate(CoordinateSequence *s, unsigned int idx, unsigned int dim, double val) {
@@ -258,6 +264,22 @@ int GEOSBufferParams_setSingleSided(GEOSBufferParams *p, int singleSided) {
 
 Geometry *GEOSBufferWithParams(const Geometry *g, const GEOSBufferParams *p, double w) {
 	return GEOSBufferWithParams_r(handle, g, p, w);
+}
+
+GEOSSTRtree *GEOSSTRtree_create(std::size_t nodeCapacity) {
+	return GEOSSTRtree_create_r(handle, nodeCapacity);
+}
+
+void GEOSSTRtree_insert(GEOSSTRtree *tree, const geos::geom::Geometry *g, void *item) {
+	GEOSSTRtree_insert_r(handle, tree, g, item);
+}
+
+void GEOSSTRtree_query(GEOSSTRtree *tree, const geos::geom::Geometry *g, GEOSQueryCallback cb, void *userdata) {
+	GEOSSTRtree_query_r(handle, tree, g, cb, userdata);
+}
+
+void GEOSSTRtree_destroy(GEOSSTRtree *tree) {
+	GEOSSTRtree_destroy_r(handle, tree);
 }
 
 //-----------------------------------------------------------------

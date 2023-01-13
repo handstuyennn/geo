@@ -191,5 +191,6 @@ public:
 		return eiList;
 	}
 };
+
 } // namespace geomgraph
 } // namespace geos

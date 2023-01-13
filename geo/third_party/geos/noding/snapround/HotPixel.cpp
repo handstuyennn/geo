@@ -235,12 +235,6 @@ bool HotPixel::intersectsPixelClosure(const Coordinate &p0, const Coordinate &p1
 	return false;
 }
 
-std::ostream &HotPixel::operator<<(std::ostream &os) {
-	// os << "HP(" << io::WKTWriter::toPoint(originalPt) << ")";
-	os << "HP(Point)";
-	return os;
-}
-
 } // namespace snapround
 } // namespace noding
 } // namespace geos

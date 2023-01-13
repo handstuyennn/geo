@@ -777,6 +777,15 @@ extern void lwgeom_add_bbox(LWGEOM *lwgeom);
 extern void lwgeom_refresh_bbox(LWGEOM *lwgeom);
 
 /**
+ * Get a non-empty geometry bounding box, computing and
+ * caching it if not already there
+ *
+ * NOTE: empty geometries don't have a bounding box so
+ *       you'd still get a NULL for them.
+ */
+extern const GBOX *lwgeom_get_bbox(const LWGEOM *lwgeom);
+
+/**
  * Return true or false depending on whether a geometry has
  * a valid SRID set.
  */

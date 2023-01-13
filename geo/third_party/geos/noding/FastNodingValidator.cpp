@@ -17,7 +17,6 @@
  **********************************************************************/
 
 #include <geos/geom/Coordinate.hpp>
-#include <geos/io/WKTWriter.hpp> // for getErrorMessage()
 #include <geos/noding/FastNodingValidator.hpp>
 #include <geos/noding/MCIndexNoder.hpp> // for checkInteriorIntersections()
 #include <geos/noding/NodingIntersectionFinder.hpp>
@@ -53,7 +52,6 @@ void FastNodingValidator::checkValid() {
 /*public*/
 std::string FastNodingValidator::getErrorMessage() const {
 	using geos::geom::Coordinate;
-	using geos::io::WKTWriter;
 
 	if (isValidVar) {
 		return std::string("no intersections found");
@@ -63,8 +61,7 @@ std::string FastNodingValidator::getErrorMessage() const {
 
 	const std::vector<Coordinate> &intSegs = segInt->getIntersectionSegments();
 	assert(intSegs.size() == 4);
-	return "found non-noded intersection between " + WKTWriter::toLineString(intSegs[0], intSegs[1]) + " and " +
-	       WKTWriter::toLineString(intSegs[2], intSegs[3]);
+	return "found non-noded intersection between LineString and LineString";
 }
 
 } // namespace noding

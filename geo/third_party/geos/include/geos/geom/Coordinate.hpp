@@ -220,7 +220,3 @@ inline bool operator<(const CoordinateXY &a, const CoordinateXY &b) {
 
 } // namespace geom
 } // namespace geos
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif

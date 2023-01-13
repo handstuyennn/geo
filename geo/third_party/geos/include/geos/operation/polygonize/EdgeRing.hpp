@@ -25,7 +25,6 @@
 #include <geos/geom/LinearRing.hpp>
 #include <geos/geom/Location.hpp>
 #include <geos/geom/Polygon.hpp>
-#include <geos/operation/polygonize/PolygonizeDirectedEdge.hpp>
 #include <memory>
 #include <vector>
 

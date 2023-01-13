@@ -879,4 +879,10 @@ double lwgeom_length_2d(const LWGEOM *geom) {
 		return 0.0;
 }
 
+const GBOX *lwgeom_get_bbox(const LWGEOM *lwg) {
+	/* add it if not already there */
+	lwgeom_add_bbox((LWGEOM *)lwg);
+	return lwg->bbox;
+}
+
 } // namespace duckdb

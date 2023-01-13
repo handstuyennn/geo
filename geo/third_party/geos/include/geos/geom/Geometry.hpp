@@ -629,12 +629,6 @@ private:
 	void *_userData;
 };
 
-/// \brief
-/// Write the Well-known Binary representation of this Geometry
-/// as an HEX string to the given output stream
-///
-GEOS_DLL std::ostream &operator<<(std::ostream &os, const Geometry &geom);
-
 struct GEOS_DLL GeometryGreaterThen {
 	bool operator()(const Geometry *first, const Geometry *second);
 };

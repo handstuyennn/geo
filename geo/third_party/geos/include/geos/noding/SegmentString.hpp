@@ -45,9 +45,7 @@ class GEOS_DLL SegmentString {
 public:
 	typedef std::vector<const SegmentString *> ConstVect;
 	typedef std::vector<SegmentString *> NonConstVect;
-
-	friend std::ostream &operator<<(std::ostream &os, const SegmentString &ss);
-
+	
 	/// \brief Construct a SegmentString.
 	///
 	/// @param newContext the context associated to this SegmentString
@@ -97,8 +95,6 @@ private:
 	SegmentString(const SegmentString &other) = delete;
 	SegmentString &operator=(const SegmentString &rhs) = delete;
 };
-
-std::ostream &operator<<(std::ostream &os, const SegmentString &ss);
 
 } // namespace noding
 } // namespace geos

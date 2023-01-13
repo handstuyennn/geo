@@ -10,6 +10,7 @@
 #include "postgis/lwgeom_in_geohash.hpp"
 #include "postgis/lwgeom_inout.hpp"
 #include "postgis/lwgeom_ogc.hpp"
+#include "postgis/lwgeom_window.hpp"
 
 namespace duckdb {
 Postgis::Postgis() {
@@ -224,6 +225,10 @@ double Postgis::geography_maxdistance(GSERIALIZED *geom1, GSERIALIZED *geom2, bo
 
 GSERIALIZED *Postgis::LWGEOM_envelope_garray(GSERIALIZED *gserArray[], int nelems) {
 	return duckdb::LWGEOM_envelope_garray(gserArray, nelems);
+}
+
+std::vector<int> Postgis::ST_ClusterDBSCAN(GSERIALIZED *gserArray[], int nelems, double tolerance, int minpoints) {
+	return duckdb::ST_ClusterDBSCAN(gserArray, nelems, tolerance, minpoints);
 }
 
 int Postgis::LWGEOM_dimension(GSERIALIZED *geom) {

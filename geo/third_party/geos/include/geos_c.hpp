@@ -126,6 +126,8 @@ typedef struct GEOSCoordSeq_t GEOSCoordSequence;
  */
 typedef struct GEOSBufParams_t GEOSBufferParams;
 
+typedef struct GEOSSTRtree_t GEOSSTRtree;
+
 #endif
 
 /** \cond */
@@ -162,6 +164,8 @@ enum GEOSGeomTypes {
 	/** Geometry collection, a heterogeneous collection of geometry */
 	GEOS_GEOMETRYCOLLECTION
 };
+
+typedef void (*GEOSQueryCallback)(void *item, void *userdata);
 
 /**
  * Set the notice handler callback function for run-time notice messages.
@@ -265,6 +269,11 @@ extern char GEOS_DLL GEOSRelatePattern_r(GEOSContextHandle_t handle, const GEOSG
 extern GEOSCoordSequence GEOS_DLL *GEOSCoordSeq_create_r(GEOSContextHandle_t handle, unsigned int size,
                                                          unsigned int dims);
 
+/*
+ * Destroy a Coordinate Sequence.
+ */
+extern void GEOS_DLL GEOSCoordSeq_destroy_r(GEOSContextHandle_t handle, GEOSCoordSequence *s);
+
 /** \see GEOSCoordSeq_setXY */
 extern int GEOS_DLL GEOSCoordSeq_setXY_r(GEOSContextHandle_t handle, GEOSCoordSequence *s, unsigned int idx, double x,
                                          double y);
@@ -325,6 +334,23 @@ extern GEOSGeometry GEOS_DLL *GEOSUnaryUnion_r(GEOSContextHandle_t handle, const
 
 /** \see GEOSGetCentroid */
 extern GEOSGeometry GEOS_DLL *GEOSGetCentroid_r(GEOSContextHandle_t handle, const GEOSGeometry *g);
+
+/************************************************************************
+ *
+ *  STRtree functions
+ *
+ ***********************************************************************/
+
+/*
+ * GEOSGeometry ownership is retained by caller
+ */
+
+extern GEOSSTRtree GEOS_DLL *GEOSSTRtree_create_r(GEOSContextHandle_t handle, size_t nodeCapacity);
+extern void GEOS_DLL GEOSSTRtree_query_r(GEOSContextHandle_t handle, GEOSSTRtree *tree, const GEOSGeometry *g,
+                                         GEOSQueryCallback callback, void *userdata);
+extern void GEOS_DLL GEOSSTRtree_insert_r(GEOSContextHandle_t handle, GEOSSTRtree *tree, const GEOSGeometry *g,
+                                          void *item);
+extern void GEOS_DLL GEOSSTRtree_destroy_r(GEOSContextHandle_t handle, GEOSSTRtree *tree);
 
 /* ========= Memory management ========= */
 
@@ -429,6 +455,11 @@ extern void GEOS_DLL initGEOS(GEOSMessageHandler notice_function, GEOSMessageHan
  * \return the sequence or NULL on exception
  */
 extern GEOSCoordSequence GEOS_DLL *GEOSCoordSeq_create(unsigned int size, unsigned int dims);
+
+/*
+ * Destroy a Coordinate Sequence.
+ */
+extern void GEOS_DLL GEOSCoordSeq_destroy(GEOSCoordSequence *s);
 
 /**
  * Set Z ordinate values in a coordinate sequence.
@@ -901,6 +932,50 @@ extern GEOSGeometry GEOS_DLL *GEOSIntersection(const GEOSGeometry *g1, const GEO
 extern GEOSGeometry GEOS_DLL *GEOSIntersectionPrec(const GEOSGeometry *g1, const GEOSGeometry *g2, double gridSize);
 
 ///@}
+
+/************************************************************************
+ *
+ *  STRtree functions
+ *
+ ***********************************************************************/
+
+/*
+ * GEOSGeometry ownership is retained by caller
+ */
+
+/*
+ * Create a new R-tree using the Sort-Tile-Recursive algorithm (STRtree) for two-dimensional
+ * spatial data.
+ *
+ * @param nodeCapacity the maximum number of child nodes that a node may have.  The minimum
+ *            recommended capacity value is 4.  If unsure, use a default node capacity of 10.
+ * @return a pointer to the created tree
+ */
+extern GEOSSTRtree GEOS_DLL *GEOSSTRtree_create(size_t nodeCapacity);
+
+/*
+ * Query an STRtree for items intersecting a specified envelope
+ *
+ * @param tree the STRtree to search
+ * @param g a GEOSGeomety from which a query envelope will be extracted
+ * @param callback a function to be executed for each item in the tree whose envelope intersects
+ *            the envelope of 'g'.  The callback function should take two parameters: a void
+ *            pointer representing the located item in the tree, and a void userdata pointer.
+ * @param userdata an optional pointer to pe passed to 'callback' as an argument
+ */
+extern void GEOS_DLL GEOSSTRtree_query(GEOSSTRtree *tree, const GEOSGeometry *g, GEOSQueryCallback callback,
+                                       void *userdata);
+
+extern void GEOS_DLL GEOSSTRtree_destroy(GEOSSTRtree *tree);
+
+/*
+ * Insert an item into an STRtree
+ *
+ * @param tree the STRtree in which the item should be inserted
+ * @param g a GEOSGeometry whose envelope corresponds to the extent of 'item'
+ * @param item the item to insert into the tree
+ */
+extern void GEOS_DLL GEOSSTRtree_insert(GEOSSTRtree *tree, const GEOSGeometry *g, void *item);
 
 /* ========== Construction Operations ========== */
 /** @name Geometric Constructions

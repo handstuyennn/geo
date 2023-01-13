@@ -91,8 +91,6 @@ public:
 
 	std::unique_ptr<Geometry> transform(const Geometry *nInputGeom);
 
-	void setSkipTransformedInvalidInteriorRings(bool b);
-
 protected:
 	const GeometryFactory *factory;
 

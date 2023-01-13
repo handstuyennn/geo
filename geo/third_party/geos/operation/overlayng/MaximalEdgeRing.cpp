@@ -18,7 +18,6 @@
 #include <geos/geom/CoordinateSequence.hpp>
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/Location.hpp>
-#include <geos/io/WKTWriter.hpp>
 #include <geos/operation/overlayng/MaximalEdgeRing.hpp>
 #include <geos/operation/overlayng/OverlayEdge.hpp>
 #include <geos/util/TopologyException.hpp>
@@ -173,22 +172,6 @@ OverlayEdge *MaximalEdgeRing::linkMaxInEdge(OverlayEdge *currOut, OverlayEdge *c
 
 	currIn->setNextResult(currMaxRingOut);
 	return nullptr;
-}
-
-/*public*/
-std::ostream &operator<<(std::ostream &os, const MaximalEdgeRing &mer) {
-	CoordinateArraySequence coords;
-	OverlayEdge *edge = mer.startEdge;
-	do {
-		coords.add(edge->orig());
-		if (edge->nextResultMax() == nullptr)
-			break;
-		edge = edge->nextResultMax();
-	} while (edge != mer.startEdge);
-	coords.add(edge->dest());
-	std::string wkt = io::WKTWriter::toLineString(coords);
-	os << wkt;
-	return os;
 }
 
 } // namespace overlayng

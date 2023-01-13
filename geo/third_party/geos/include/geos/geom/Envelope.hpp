@@ -32,9 +32,6 @@ namespace geom { // geos::geom
 
 class Envelope;
 
-/// Output operator
-GEOS_DLL std::ostream &operator<<(std::ostream &os, const Envelope &o);
-
 class Coordinate;
 
 /**
@@ -56,8 +53,6 @@ class Coordinate;
 class GEOS_DLL Envelope {
 
 public:
-	friend std::ostream &operator<<(std::ostream &os, const Envelope &o);
-
 	typedef std::unique_ptr<Envelope> Ptr;
 
 	/** \brief
@@ -95,12 +90,6 @@ public:
 	explicit Envelope(const CoordinateXY &p) {
 		init(p);
 	}
-
-	/** \brief
-	 * Create an Envelope from an Envelope string representation produced
-	 * by Envelope::toString()
-	 */
-	explicit Envelope(const std::string &str);
 
 	/** \brief
 	 * Test the point `q` to see whether it intersects the Envelope
@@ -570,13 +559,6 @@ public:
 	 * @return `true` if this and `other` Envelope objects are spatially equal
 	 */
 	bool equals(const Envelope *other) const;
-
-	/** \brief
-	 * Returns a `string` of the form `Env[minx:maxx,miny:maxy]`.
-	 *
-	 * @return a `string` of the form `Env[minx:maxx,miny:maxy]`
-	 */
-	std::string toString() const;
 
 	/** \brief
 	 * Computes the distance between this and another Envelope.

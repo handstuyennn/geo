@@ -26,12 +26,6 @@
 namespace geos {
 namespace geom { // geos::geom
 
-/* public */
-std::ostream &operator<<(std::ostream &os, const Envelope &o) {
-	os << "Env[" << o.minx << ":" << o.maxx << "," << o.miny << ":" << o.maxy << "]";
-	return os;
-}
-
 /*public*/
 bool Envelope::intersects(const CoordinateXY &p1, const CoordinateXY &p2, const CoordinateXY &q) {
 	// OptimizeIt shows that Math#min and Math#max here are a bottleneck.
@@ -109,13 +103,6 @@ bool Envelope::equals(const Envelope *other) const {
 		return other->isNull();
 	}
 	return other->minx == minx && other->maxx == maxx && other->miny == miny && other->maxy == maxy;
-}
-
-/*public*/
-std::string Envelope::toString() const {
-	std::ostringstream s;
-	s << *this;
-	return s.str();
 }
 
 } // namespace geom

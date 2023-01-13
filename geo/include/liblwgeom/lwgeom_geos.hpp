@@ -27,6 +27,7 @@
 #include "duckdb.hpp"
 #include "geos_c.hpp"
 #include "liblwgeom/liblwgeom.hpp"
+#include "liblwgeom/lwunionfind.hpp"
 
 namespace duckdb {
 
@@ -37,5 +38,11 @@ LWGEOM *GEOS2LWGEOM(const GEOSGeometry *geom, uint8_t want3d);
 GEOSGeometry *LWGEOM2GEOS(const LWGEOM *g, uint8_t autofix);
 
 POINTARRAY *ptarray_from_GEOSCoordSeq(const GEOSCoordSequence *cs, uint8_t want3d);
+
+GEOSGeometry *make_geos_point(double x, double y);
+GEOSGeometry *make_geos_segment(double x1, double y1, double x2, double y2);
+
+int union_dbscan(LWGEOM **geoms, uint32_t num_geoms, UNIONFIND *uf, double eps, uint32_t min_points,
+                 char **is_in_cluster_ret);
 
 } // namespace duckdb

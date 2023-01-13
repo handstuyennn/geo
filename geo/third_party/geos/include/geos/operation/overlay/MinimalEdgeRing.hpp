@@ -62,6 +62,7 @@ public:
 		de->setMinEdgeRing(er);
 	};
 };
+
 } // namespace overlay
 } // namespace operation
 } // namespace geos

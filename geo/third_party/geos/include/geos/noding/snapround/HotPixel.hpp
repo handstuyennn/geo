@@ -22,7 +22,6 @@
 #include <geos/export.hpp>
 #include <geos/geom/Coordinate.hpp> // for composition
 #include <geos/geom/Envelope.hpp>   // for unique_ptr
-#include <geos/io/WKTWriter.hpp>
 #include <geos/util/math.hpp>
 
 // Forward declarations
@@ -138,8 +137,6 @@ public:
 	void setToNode() {
 		hpIsNode = true;
 	};
-
-	std::ostream &operator<<(std::ostream &os);
 };
 
 } // namespace snapround

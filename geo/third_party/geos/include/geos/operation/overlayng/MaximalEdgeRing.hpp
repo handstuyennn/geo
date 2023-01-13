@@ -116,8 +116,6 @@ public:
 	 * - The edge and its sym are NOT both marked as being in the result
 	 */
 	static void linkResultAreaMaxRingAtNode(OverlayEdge *nodeEdge);
-
-	friend std::ostream &operator<<(std::ostream &os, const MaximalEdgeRing &mer);
 };
 
 } // namespace overlayng

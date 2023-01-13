@@ -46,10 +46,6 @@ GeometryTransformer::GeometryTransformer()
       preserveType(false), skipTransformedInvalidInteriorRings(false) {
 }
 
-void GeometryTransformer::setSkipTransformedInvalidInteriorRings(bool b) {
-	skipTransformedInvalidInteriorRings = b;
-}
-
 /*public*/
 std::unique_ptr<Geometry> GeometryTransformer::transform(const Geometry *nInputGeom) {
 	using geos::util::IllegalArgumentException;

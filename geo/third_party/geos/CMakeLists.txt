@@ -21,7 +21,6 @@ add_library(
   algorithm/Length.cpp
   edgegraph/HalfEdge.cpp
   math/DD.cpp
-  io/WKTWriter.cpp
   operation/valid/IsSimpleOp.cpp
   operation/valid/IsValidOp.cpp
   operation/valid/RepeatedPointRemover.cpp
@@ -102,7 +101,6 @@ add_library(
   noding/NodedSegmentString.cpp
   noding/SegmentNodeList.cpp
   noding/SegmentNode.cpp
-  noding/SegmentString.cpp
   noding/Octant.cpp
   noding/FastNodingValidator.cpp
   noding/ValidatingNoder.cpp
@@ -132,6 +130,8 @@ add_library(
   index/chain/MonotoneChainOverlapAction.cpp
   index/kdtree/KdNode.cpp
   index/kdtree/KdTree.cpp
+  index/strtree/SimpleSTRtree.cpp
+  index/strtree/SimpleSTRnode.cpp
   geomgraph/index/MonotoneChainEdge.cpp
   geomgraph/index/MonotoneChainIndexer.cpp
   geomgraph/index/SegmentIntersector.cpp

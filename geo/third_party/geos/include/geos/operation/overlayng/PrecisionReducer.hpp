@@ -47,12 +47,6 @@ using namespace geos::geom;
  * This provides an effective way to node / snap-round a collection of {@link geom::LineString}s.
  */
 class GEOS_DLL PrecisionReducer {
-
-private:
-	// Members
-
-	// Methods
-
 public:
 	PrecisionReducer() {};
 

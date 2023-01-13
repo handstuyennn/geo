@@ -30,8 +30,6 @@
 #include <geos/geom/LinearRing.hpp>
 #include <geos/geom/Location.hpp>
 #include <geos/operation/polygonize/EdgeRing.hpp>
-#include <geos/operation/polygonize/PolygonizeEdge.hpp>
-#include <geos/planargraph/DirectedEdge.hpp>
 #include <geos/util.hpp> // TODO: drop this, includes too much
 #include <geos/util/IllegalArgumentException.hpp>
 #include <vector>

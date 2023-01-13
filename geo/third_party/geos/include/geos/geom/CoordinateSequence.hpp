@@ -217,12 +217,6 @@ public:
 	bool isRing() const;
 };
 
-GEOS_DLL std::ostream &operator<<(std::ostream &os, const CoordinateSequence &cs);
-
-GEOS_DLL bool operator==(const CoordinateSequence &s1, const CoordinateSequence &s2);
-
-GEOS_DLL bool operator!=(const CoordinateSequence &s1, const CoordinateSequence &s2);
-
 } // namespace geom
 } // namespace geos
 

@@ -24,6 +24,7 @@
 #include <geos/geom/GeometryFactory.hpp>
 #include <geos/geom/LineString.hpp>
 #include <geos/geom/Point.hpp>
+#include <geos/index/strtree/SimpleSTRtree.hpp>
 #include <geos/operation/buffer/BufferOp.hpp>
 #include <geos/operation/buffer/BufferParameters.hpp>
 #include <geos/operation/overlayng/OverlayNG.hpp>
@@ -50,6 +51,7 @@
 #define GEOSGeometry      geos::geom::Geometry
 #define GEOSCoordSequence geos::geom::CoordinateSequence
 #define GEOSBufferParams  geos::operation::buffer::BufferParameters
+#define GEOSSTRtree       geos::index::strtree::SimpleSTRtree
 
 #include "geos_c.hpp"
 
@@ -183,6 +185,21 @@ typedef struct GEOSContextHandle_HS {
 		}
 	}
 } GEOSContextHandleInternal_t;
+
+// CAPI_ItemVisitor is used internally by the CAPI STRtree
+// wrappers. It's defined here just to keep it out of the
+// extern "C" block.
+class CAPI_ItemVisitor : public geos::index::ItemVisitor {
+	GEOSQueryCallback callback;
+	void *userdata;
+
+public:
+	CAPI_ItemVisitor(GEOSQueryCallback cb, void *ud) : ItemVisitor(), callback(cb), userdata(ud) {
+	}
+	void visitItem(void *item) override {
+		callback(item, userdata);
+	}
+};
 
 // Execute a lambda, using the given context handle to process errors.
 // Return errval on error.
@@ -333,6 +350,10 @@ CoordinateSequence *GEOSCoordSeq_create_r(GEOSContextHandle_t extHandle, unsigne
 		}
 		}
 	});
+}
+
+void GEOSCoordSeq_destroy_r(GEOSContextHandle_t extHandle, CoordinateSequence *s) {
+	return execute(extHandle, [&]() { delete s; });
 }
 
 int GEOSCoordSeq_setXY_r(GEOSContextHandle_t extHandle, CoordinateSequence *cs, unsigned int idx, double x, double y) {
@@ -790,6 +811,30 @@ Geometry *GEOSBufferWithParams_r(GEOSContextHandle_t extHandle, const Geometry *
 		g3->setSRID(g1->getSRID());
 		return g3.release();
 	});
+}
+
+//-----------------------------------------------------------------
+// STRtree
+//-----------------------------------------------------------------
+
+GEOSSTRtree *GEOSSTRtree_create_r(GEOSContextHandle_t extHandle, std::size_t nodeCapacity) {
+	return execute(extHandle, [&]() { return new GEOSSTRtree(nodeCapacity); });
+}
+
+void GEOSSTRtree_insert_r(GEOSContextHandle_t extHandle, GEOSSTRtree *tree, const geos::geom::Geometry *g, void *item) {
+	execute(extHandle, [&]() { tree->insert(g->getEnvelopeInternal(), item); });
+}
+
+void GEOSSTRtree_query_r(GEOSContextHandle_t extHandle, GEOSSTRtree *tree, const geos::geom::Geometry *g,
+                         GEOSQueryCallback callback, void *userdata) {
+	execute(extHandle, [&]() {
+		CAPI_ItemVisitor visitor(callback, userdata);
+		tree->query(g->getEnvelopeInternal(), visitor);
+	});
+}
+
+void GEOSSTRtree_destroy_r(GEOSContextHandle_t extHandle, GEOSSTRtree *tree) {
+	return execute(extHandle, [&]() { delete tree; });
 }
 
 //-----------------------------------------------------------------
