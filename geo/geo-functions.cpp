@@ -109,6 +109,11 @@ struct MakeLineBinaryOperator {
 			throw ConversionException("Failure in geometry distance: could not calculate distance from geometries");
 		}
 		auto gser = Geometry::MakeLine(gser1, gser2);
+		if (!gser) {
+			Geometry::DestroyGeometry(gser1);
+			Geometry::DestroyGeometry(gser2);
+			return string_t();
+		}
 		idx_t rv_size = Geometry::GetGeometrySize(gser);
 		auto base = Geometry::GetBase(gser);
 		Geometry::DestroyGeometry(gser1);
@@ -276,6 +281,14 @@ void GeoFunctions::MakePolygonFunction(DataChunk &args, ExpressionState &state, 
 			auto geom_value = values[value_index];
 			auto gser = Geometry::GetGserialized(geom_value);
 			auto gserpoly = Geometry::MakePolygon(gser, &gserArray[0], list_entry.length);
+			if (!gserpoly) {
+				for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {
+					Geometry::DestroyGeometry(gserArray[child_idx]);
+				}
+				Geometry::DestroyGeometry(gser);
+				result_entries[i] = string_t();
+				continue;
+			}
 			idx_t rv_size = Geometry::GetGeometrySize(gserpoly);
 			auto base = Geometry::GetBase(gserpoly);
 			for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {

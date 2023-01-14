@@ -73,7 +73,7 @@ GSERIALIZED *LWGEOM_from_WKB(const char *bytea_wkb, size_t byte_size, int srid) 
 
 	lwgeom = lwgeom_from_wkb((const uint8_t *)bytea_wkb, byte_size, LW_PARSER_CHECK_ALL);
 	if (!lwgeom) {
-		// lwpgerror("Unable to parse WKB");
+		lwerror("Unable to parse WKB");
 		return NULL;
 	}
 
@@ -106,7 +106,7 @@ GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom1) {
 
 	lwgeom = lwgeom_from_gserialized(geom1);
 	if (!lwgeom) {
-		// lwpgerror("POSTGIS2GEOS: unable to deserialize input");
+		lwerror("POSTGIS2GEOS: unable to deserialize input");
 		return nullptr;
 	}
 
@@ -173,7 +173,7 @@ double LWGEOM_x_point(GSERIALIZED *geom) {
 	POINT4D pt;
 
 	if (gserialized_get_type(geom) != POINTTYPE) {
-		// lwpgerror("Argument to ST_X() must have type POINT");
+		lwerror("Argument to ST_X() must have type POINT");
 		throw Exception("Argument to ST_X() must have type POINT");
 		return LW_FAILURE;
 	}
@@ -192,7 +192,7 @@ double LWGEOM_y_point(GSERIALIZED *geom) {
 	POINT4D pt;
 
 	if (gserialized_get_type(geom) != POINTTYPE) {
-		// lwpgerror("Argument to ST_Y() must have type POINT");
+		lwerror("Argument to ST_Y() must have type POINT");
 		throw Exception("Argument to ST_Y() must have type POINT");
 		return LW_FAILURE;
 	}

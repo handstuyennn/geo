@@ -66,7 +66,7 @@ GSERIALIZED *LWGEOM_makeline(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 
 	if ((gserialized_get_type(geom1) != POINTTYPE && gserialized_get_type(geom1) != LINETYPE) ||
 	    (gserialized_get_type(geom2) != POINTTYPE && gserialized_get_type(geom2) != LINETYPE)) {
-		// elog(ERROR, "Input geometries must be points or lines");
+		throw "Input geometries must be points or lines";
 		return NULL;
 	}
 
@@ -145,7 +145,7 @@ GSERIALIZED *LWGEOM_makepoly(GSERIALIZED *pglwg1, GSERIALIZED *gserArray[], int 
 
 	/* Get input shell */
 	if (gserialized_get_type(pglwg1) != LINETYPE) {
-		// lwpgerror("Shell is not a line");
+		lwerror("Shell is not a line");
 		return nullptr;
 	}
 	shell = lwgeom_as_lwline(lwgeom_from_gserialized(pglwg1));
@@ -157,7 +157,7 @@ GSERIALIZED *LWGEOM_makepoly(GSERIALIZED *pglwg1, GSERIALIZED *gserArray[], int 
 			LWLINE *hole;
 			auto g = gserArray[i];
 			if (gserialized_get_type(g) != LINETYPE) {
-				// lwpgerror("Hole %d is not a line", i);
+				lwerror("Hole %d is not a line", i);
 				return nullptr;
 			}
 			hole = lwgeom_as_lwline(lwgeom_from_gserialized(g));
@@ -639,7 +639,6 @@ GSERIALIZED *LWGEOM_envelope_garray(GSERIALIZED *gserArray[], int nelems) {
 			return nullptr;
 		}
 	}
-
 
 	colgser = geometry_serialize(col);
 	result = LWGEOM_envelope(colgser);

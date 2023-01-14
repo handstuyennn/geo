@@ -182,12 +182,18 @@ lwvarlena_t *LWGEOM_asBinary(GSERIALIZED *geom, string text) {
 	}
 
 	/* Write to WKB and free the geometry */
-	auto binary = lwgeom_to_wkb_varlena(lwgeom, variant);
+	// auto binary = lwgeom_to_wkb_varlena(lwgeom, variant);
+	std::string rstr = "";
+	rstr = lwgeom_to_hexwkb_buffer(lwgeom, variant);
 	lwgeom_free(lwgeom);
-	if (!binary) {
-		return nullptr;
-	}
-	return binary;
+	// if (!binary) {
+	// 	return nullptr;
+	// }
+	size_t size = rstr.size();
+	lwvarlena_t *output = (lwvarlena_t *)lwalloc(size);
+	memcpy(output->data, rstr.c_str(), size);
+	output->size = size;
+	return output;
 }
 
 std::string LWGEOM_asBinary(const void *base, size_t size) {

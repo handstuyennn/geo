@@ -40,13 +40,13 @@ namespace duckdb {
 #ifndef _LIBLWGEOM_H
 #define _LIBLWGEOM_H 1
 
-#if POSTGIS_PROJ_VERSION < 49
-/* Use the old (pre-2.2) geodesic functions */
-#undef PROJ_GEODESIC
-#else
-/* Enable new geodesic functions API */
-#define PROJ_GEODESIC
-#endif
+// #if POSTGIS_PROJ_VERSION < 49
+// /* Use the old (pre-2.2) geodesic functions */
+// #undef PROJ_GEODESIC
+// #else
+// /* Enable new geodesic functions API */
+// #define PROJ_GEODESIC
+// #endif
 
 // /* For PROJ6 we cache several extra values to avoid calls to proj_get_source_crs
 //  * or proj_get_target_crs since those are very costly
