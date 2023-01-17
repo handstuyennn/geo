@@ -51,23 +51,23 @@ static const std::vector<ScalarFunctionSet> GetPredicateScalarFunctions(LogicalT
 	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryEqualsFunction));
 	func_set.push_back(equals);
 
-    // ST_INTERSECTS
+	// ST_INTERSECTS
 	ScalarFunctionSet intersects("st_intersects");
 	intersects.AddFunction(
 	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryIntersectsFunction));
-    func_set.push_back(intersects);
+	func_set.push_back(intersects);
 
-    // ST_TOUCHES
+	// ST_TOUCHES
 	ScalarFunctionSet touches("st_touches");
 	touches.AddFunction(
 	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryTouchesFunction));
-    func_set.push_back(touches);
+	func_set.push_back(touches);
 
-    // ST_WITHIN
+	// ST_WITHIN
 	ScalarFunctionSet within("st_within");
 	within.AddFunction(
 	    ScalarFunction({geo_type, geo_type}, LogicalType::BOOLEAN, GeoFunctions::GeometryWithinFunction));
-    func_set.push_back(within);
+	func_set.push_back(within);
 
 	return func_set;
 }

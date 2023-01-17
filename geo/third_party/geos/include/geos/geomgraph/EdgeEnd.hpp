@@ -161,4 +161,3 @@ struct GEOS_DLL EdgeEndLT {
 
 } // namespace geomgraph
 } // namespace geos
-

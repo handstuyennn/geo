@@ -201,8 +201,15 @@ lwvarlena_t *ST_GeoHash(GSERIALIZED *geom, size_t m_chars) {
 	lwvarlena_t *geohash = NULL;
 
 	geohash = lwgeom_geohash((LWGEOM *)(lwgeom_from_gserialized(geom)), precision);
-	if (geohash)
-		return geohash;
+
+	if (geohash) {
+		size_t size = geohash->size / 4 - LWVARHDRSZ + 1;
+		lwvarlena_t *output = (lwvarlena_t *)lwalloc(size);
+		memcpy(output->data, geohash->data, size);
+		output->data[size - 1] = '\0';
+		output->size = size;
+		return output;
+	}
 
 	return nullptr;
 }

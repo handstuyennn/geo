@@ -15,69 +15,69 @@ namespace duckdb {
 static const std::vector<ScalarFunctionSet> GetMeasureScalarFunctions(LogicalType geo_type) {
 	std::vector<ScalarFunctionSet> func_set {};
 
-    // ST_ANGLE
+	// ST_ANGLE
 	ScalarFunctionSet angle("st_angle");
 	angle.AddFunction(
 	    ScalarFunction({geo_type, geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAngleFunction));
-    func_set.push_back(angle);
+	func_set.push_back(angle);
 
-    // ST_AREA
+	// ST_AREA
 	ScalarFunctionSet area("st_area");
 	area.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAreaFunction));
 	area.AddFunction(
 	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryAreaFunction));
-    func_set.push_back(area);
+	func_set.push_back(area);
 
-    // ST_AZIMUTH
+	// ST_AZIMUTH
 	ScalarFunctionSet azimuth("st_azimuth");
 	azimuth.AddFunction(
 	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAzimuthFunction));
-    func_set.push_back(azimuth);
+	func_set.push_back(azimuth);
 
-    // ST_BOUNDINGBOX (ALIAS: ST_ENVELOPE)
+	// ST_BOUNDINGBOX (ALIAS: ST_ENVELOPE)
 	ScalarFunctionSet boundingbox("st_boundingbox");
 	ScalarFunctionSet envelope("st_envelope");
 	auto boundingboxUnaryFunc = ScalarFunction({geo_type}, geo_type, GeoFunctions::GeometryBoundingBoxFunction);
 
 	boundingbox.AddFunction(boundingboxUnaryFunc);
 	envelope.AddFunction(boundingboxUnaryFunc);
-    func_set.push_back(boundingbox);
-    func_set.push_back(envelope);
+	func_set.push_back(boundingbox);
+	func_set.push_back(envelope);
 
-    // ST_EXTENT
+	// ST_EXTENT
 	ScalarFunctionSet extent("st_extent");
 	extent.AddFunction(ScalarFunction({LogicalType::LIST(geo_type)}, geo_type, GeoFunctions::GeometryExtentFunction));
-    func_set.push_back(extent);
+	func_set.push_back(extent);
 
-    // ST_DISTANCE
+	// ST_DISTANCE
 	ScalarFunctionSet distance("st_distance");
 	distance.AddFunction(
 	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryDistanceFunction));
 	distance.AddFunction(ScalarFunction({geo_type, geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE,
 	                                    GeoFunctions::GeometryDistanceFunction));
-    func_set.push_back(distance);
+	func_set.push_back(distance);
 
-    // ST_LENGTH
+	// ST_LENGTH
 	ScalarFunctionSet length("st_length");
 	length.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryLengthFunction));
 	length.AddFunction(
 	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryLengthFunction));
-    func_set.push_back(length);
+	func_set.push_back(length);
 
-    // ST_MAXDISTANCE
+	// ST_MAXDISTANCE
 	ScalarFunctionSet maxdistance("st_maxdistance");
 	maxdistance.AddFunction(
 	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryMaxDistanceFunction));
-    func_set.push_back(maxdistance);
+	func_set.push_back(maxdistance);
 
-    // ST_PERIMETER
+	// ST_PERIMETER
 	ScalarFunctionSet perimeter("st_perimeter");
 	perimeter.AddFunction(ScalarFunction({geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryPerimeterFunction));
 	perimeter.AddFunction(
 	    ScalarFunction({geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE, GeoFunctions::GeometryPerimeterFunction));
-    func_set.push_back(perimeter);
+	func_set.push_back(perimeter);
 
-    return func_set;
+	return func_set;
 }
 
 } // namespace duckdb
