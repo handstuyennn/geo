@@ -260,8 +260,8 @@ std::unique_ptr<Geometry> SnapOp(const Geometry *g0, const Geometry *g1, int opC
 	const Geometry &operand1 = *rG1;
 
 #else // don't CBR before snapping
-    const Geometry& operand0 = *g0;
-    const Geometry& operand1 = *g1;
+	const Geometry &operand0 = *g0;
+	const Geometry &operand1 = *g1;
 #endif
 
 	GeometrySnapper snapper0(operand0);
@@ -471,16 +471,16 @@ std::unique_ptr<Geometry> HeuristicOverlay(const Geometry *g0, const Geometry *g
 	}
 
 #endif
-// USE_PRECISION_REDUCTION_POLICY }
+	// USE_PRECISION_REDUCTION_POLICY }
 
-/**************************************************************************/
+	/**************************************************************************/
 
-// {
-// USE_FIXED_PRECISION_OVERLAYNG }
+	// {
+	// USE_FIXED_PRECISION_OVERLAYNG }
 
-/**************************************************************************/
+	/**************************************************************************/
 
-// {
+	// {
 	// USE_TP_SIMPLIFY_POLICY }
 
 	/**************************************************************************/

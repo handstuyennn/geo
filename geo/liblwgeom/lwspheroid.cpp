@@ -596,7 +596,6 @@ double lwgeom_area_spheroid(const LWGEOM *lwgeom, const SPHEROID *spheroid) {
 		if (poly->nrings < 1)
 			return 0.0;
 
-
 		/* First, the area of the outer ring */
 		area += ptarray_area_spheroid(poly->rings[0], spheroid);
 

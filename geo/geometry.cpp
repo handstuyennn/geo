@@ -331,7 +331,8 @@ GSERIALIZED *Geometry::GeometryExtent(GSERIALIZED *gserArray[], int nelems) {
 	return postgis.LWGEOM_envelope_garray(gserArray, nelems);
 }
 
-std::vector<int> Geometry::GeometryClusterDBScan(GSERIALIZED *gserArray[], int nelems, double tolerance, int minpoints) {
+std::vector<int> Geometry::GeometryClusterDBScan(GSERIALIZED *gserArray[], int nelems, double tolerance,
+                                                 int minpoints) {
 	Postgis postgis;
 	return postgis.ST_ClusterDBSCAN(gserArray, nelems, tolerance, minpoints);
 }

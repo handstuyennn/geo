@@ -93,7 +93,8 @@ void ElevationMatrix::add(const Coordinate &c) {
 		emc.add(c);
 	} catch (const util::IllegalArgumentException &exp) {
 		// coordinate do not overlap matrix
-		std::cerr << "ElevationMatrix::add(Coordinate): Coordinate does not overlap grid extent: " << exp.what() << std::endl;
+		std::cerr << "ElevationMatrix::add(Coordinate): Coordinate does not overlap grid extent: " << exp.what()
+		          << std::endl;
 		return;
 	}
 }

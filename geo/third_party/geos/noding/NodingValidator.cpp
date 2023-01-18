@@ -100,7 +100,8 @@ void NodingValidator::checkInteriorIntersections(const SegmentString &e0, std::s
 	li.computeIntersection(p00, p01, p10, p11);
 	if (li.hasIntersection()) {
 		if (li.isProper() || hasInteriorIntersection(li, p00, p01) || hasInteriorIntersection(li, p10, p11)) {
-			throw util::TopologyException("found non-noded intersection at Coordinate-Coordinate and Coordinate-Coordinate");
+			throw util::TopologyException(
+			    "found non-noded intersection at Coordinate-Coordinate and Coordinate-Coordinate");
 		}
 	}
 }

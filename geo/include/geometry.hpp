@@ -98,7 +98,8 @@ public:
 	static double MaxDistance(GSERIALIZED *g1, GSERIALIZED *g2, bool use_spheroid = true);
 	static GSERIALIZED *GeometryExtent(GSERIALIZED *gserArray[], int nelems);
 
-	static std::vector<int> GeometryClusterDBScan(GSERIALIZED *gserArray[], int nelems, double tolerance, int minpoints);
+	static std::vector<int> GeometryClusterDBScan(GSERIALIZED *gserArray[], int nelems, double tolerance,
+	                                              int minpoints);
 
 	static int LWGEOM_dimension(GSERIALIZED *geom);
 	static std::vector<GSERIALIZED *> LWGEOM_dump(GSERIALIZED *geom);

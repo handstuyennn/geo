@@ -20,7 +20,7 @@
 
 #include <geos/export.hpp>
 #include <geos/geom/GeometryFactory.hpp> // for GeometryFactory::Ptr
-#include <memory>                      // for unique_ptr
+#include <memory>                        // for unique_ptr
 
 // Forward declarations
 namespace geos {

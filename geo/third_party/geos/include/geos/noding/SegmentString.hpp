@@ -45,7 +45,7 @@ class GEOS_DLL SegmentString {
 public:
 	typedef std::vector<const SegmentString *> ConstVect;
 	typedef std::vector<SegmentString *> NonConstVect;
-	
+
 	/// \brief Construct a SegmentString.
 	///
 	/// @param newContext the context associated to this SegmentString

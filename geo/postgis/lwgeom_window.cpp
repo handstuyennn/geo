@@ -32,7 +32,7 @@
 namespace duckdb {
 
 std::vector<int> ST_ClusterDBSCAN(GSERIALIZED *gserArray[], int ngeoms, double tolerance, int minpoints) {
-	if (ngeoms <= 0 ) {
+	if (ngeoms <= 0) {
 		return {};
 	}
 	uint32_t i;

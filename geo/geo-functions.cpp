@@ -466,7 +466,14 @@ struct GeoHashUnaryOperator {
 			return geom;
 		}
 		auto gser = Geometry::GetGserialized(geom);
+		if (!gser) {
+			throw ConversionException("Failure in geometry geohash");
+		}
 		auto geojson = Geometry::GeoHash(gser);
+		if (!geojson) {
+			Geometry::DestroyGeometry(gser);
+			return string_t();
+		}
 		std::string geoText = std::string(geojson->data);
 		auto result_str = StringVector::EmptyString(result, geoText.size());
 		memcpy(result_str.GetDataWriteable(), geoText.c_str(), geoText.size());
@@ -487,6 +494,10 @@ struct GeoHashBinaryOperator {
 			throw ConversionException("Failure in geometry geohash");
 		}
 		auto geojson = Geometry::GeoHash(gser, m_chars);
+		if (!geojson) {
+			Geometry::DestroyGeometry(gser);
+			return string_t();
+		}
 		std::string geoText = std::string(geojson->data);
 		Geometry::DestroyGeometry(gser);
 		return string_t(geoText.c_str(), geoText.size());
@@ -520,6 +531,10 @@ struct GeogFromUnaryOperator {
 			return string_t();
 		}
 		auto gser = Geometry::ToGserialized(text);
+		if (!gser) {
+			throw ConversionException("Failure in geometry parser!");
+			return string_t();
+		}
 		idx_t size = Geometry::GetGeometrySize(gser);
 		auto base = Geometry::GetBase(gser);
 		auto result_str = StringVector::EmptyString(result, size);
