@@ -27,7 +27,7 @@ statement ok
 INSERT INTO geometries VALUES(''), (NULL)
 
 query R
-select ST_GEOHASH(g) from geometries
+select ST_ASTEXT(g) from geometries
 ----
 NULL
 NULL
