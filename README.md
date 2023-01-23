@@ -1,5 +1,71 @@
 # DuckDB geo extension
-This extension will provide a `GEO` type for DuckDB and enable basic GIS data analysis in it. It is currently a work-in-progress. A `TODO` will be shared shortly.
+This extension will provide a `GEO` type for DuckDB and enable basic GIS data analysis in it. It is currently a work-in-progress. 
+It only support [geography](https://gis.stackexchange.com/questions/26082/what-is-the-difference-between-geometric-and-geographic-columns) types and operations.
+
+## Installation
+
+
+Actually the geo is build with the version v0.6.2-dev1218.
+
+Be sure to have a compiler and git client installed.
+
+Clone into a folder.
+```
+$ git clone ...
+$ cd geo
+```
+
+Build it with the command `make`
+
+At the end of compilation you should have a new build directory present.
+
+```
+$ ls
+CMakeLists.txt README.md      duckdb         geo
+Makefile       build          examples       test
+```
+
+Copy the geo duckdb extension to the extensions directory of DuckDB.
+
+`cp build/release/extension/geo/geo.duckdb_extension ~/.duckdb/extensions/e2dfc274b0/osx_arm64`
+
+note : adapt to your OS and duckdb build
+
+## Usage with DuckDB
+
+### CLI
+
+Launch duckdb with unsigned parameter.
+
+```
+duckdb -unsigned
+v0.6.2-dev1218 e2dfc274b0
+Enter ".help" for usage hints.
+D LOAD geo;
+D SELECT ST_MAKEPOINT(52.347113,4.869454);
+┌────────────────────────────────────────────┐
+│     st_makepoint(52.347113, 4.869454)      │
+│                  geometry                  │
+├────────────────────────────────────────────┤
+│ 01010000001B82E3326E2C4A406B813D26527A1340 │
+```
+
+### Python
+
+
+Install the master version of DuckDB.
+
+```
+$ python
+>>> import duckdb
+
+>>> con = duckdb.connect(config={'allow_unsigned_extensions' : 'true'})
+>>> con.load('geo')
+>>> result = con.execute("SELECT ST_MAKEPOINT(52.347113,4.869454);")
+>>> print(result.fetchall())
+[(b'\x01\x01\x00\x00\x00\x1b\x82\xe32n,J@k\x81=&Rz\x13@',)]
+```
+
 
 ## Supported functions
 
