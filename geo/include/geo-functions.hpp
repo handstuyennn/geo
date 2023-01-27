@@ -29,7 +29,7 @@ struct GeoFunctions {
 	static void GeometryFromTextFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromWKBFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryFromGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result);
-	static void GeometryBoundaryFunction(DataChunk &args, ExpressionState &state, Vector &result);
+	static void GeometryGPointFromGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result);
 
 	// **Accessors (15)**
 	static void GeometryDimensionFunction(DataChunk &args, ExpressionState &state, Vector &result);
@@ -49,6 +49,7 @@ struct GeoFunctions {
 	static void GeometryGetYFunction(DataChunk &args, ExpressionState &state, Vector &result);
 
 	// **Transformations (10)**:
+	static void GeometryBoundaryFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryDifferenceFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryClosestPointFunction(DataChunk &args, ExpressionState &state, Vector &result);
 	static void GeometryUnionFunction(DataChunk &args, ExpressionState &state, Vector &result);

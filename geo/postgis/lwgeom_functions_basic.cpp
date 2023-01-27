@@ -204,7 +204,7 @@ lwvarlena_t *ST_GeoHash(GSERIALIZED *geom, size_t m_chars) {
 
 	if (geohash) {
 		size_t size = geohash->size / 4 - LWVARHDRSZ + 1;
-		lwvarlena_t *output = (lwvarlena_t *)lwalloc(size);
+		lwvarlena_t *output = (lwvarlena_t *)lwalloc(size + LWVARHDRSZ);
 		memcpy(output->data, geohash->data, size);
 		output->data[size - 1] = '\0';
 		output->size = size;

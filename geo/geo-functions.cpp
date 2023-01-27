@@ -870,6 +870,72 @@ void GeoFunctions::GeometryFromGeoHashFunction(DataChunk &args, ExpressionState 
 	}
 }
 
+struct GPointFromGeoHashUnaryOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA text) {
+		if (text.GetSize() == 0) {
+			return text;
+		}
+		auto gser = Geometry::FromGeoHash(text);
+		if (!gser) {
+			throw ConversionException("Failure in geometry from geo hash: could not convert geo hash to geometry");
+		}
+		auto gserCentroid = Geometry::Centroid(gser);
+		if (!gserCentroid) {
+			Geometry::DestroyGeometry(gser);
+			throw ConversionException("Failure in geometry from geo hash: could not convert geo hash to geometry");
+		}
+		idx_t size = Geometry::GetGeometrySize(gserCentroid);
+		auto base = Geometry::GetBase(gserCentroid);
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserCentroid);
+		return string_t((const char *)base, size);
+	}
+};
+
+struct GPointFromGeoHashBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA text, TB precision) {
+		if (text.GetSize() == 0) {
+			return text;
+		}
+		auto gser = Geometry::FromGeoHash(text, precision);
+		if (!gser) {
+			throw ConversionException("Failure in geometry from geo hash: could not convert geo hash to geometry");
+		}
+		auto gserCentroid = Geometry::Centroid(gser);
+		if (!gserCentroid) {
+			Geometry::DestroyGeometry(gser);
+			throw ConversionException("Failure in geometry from geo hash: could not convert geo hash to geometry");
+		}
+		idx_t size = Geometry::GetGeometrySize(gserCentroid);
+		auto base = Geometry::GetBase(gserCentroid);
+		Geometry::DestroyGeometry(gser);
+		Geometry::DestroyGeometry(gserCentroid);
+		return string_t((const char *)base, size);
+	}
+};
+
+template <typename TA, typename TR>
+static void GeometryGPointFromGeoHashUnaryExecutor(Vector &text, Vector &result, idx_t count) {
+	UnaryExecutor::Execute<TA, TR, GPointFromGeoHashUnaryOperator>(text, result, count);
+}
+
+template <typename TA, typename TB, typename TR>
+static void GeometryGPointFromGeoHashBinaryExecutor(Vector &text, Vector &precision, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteStandard<TA, TB, TR, GPointFromGeoHashBinaryOperator>(text, precision, result, count);
+}
+
+void GeoFunctions::GeometryGPointFromGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &text_arg = args.data[0];
+	if (args.data.size() == 1) {
+		GeometryGPointFromGeoHashUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
+	} else if (args.data.size() == 2) {
+		auto &precision_arg = args.data[1];
+		GeometryGPointFromGeoHashBinaryExecutor<string_t, int32_t, string_t>(text_arg, precision_arg, result, args.size());
+	}
+}
+
 struct BoundaryUnaryOperator {
 	template <class TA, class TR>
 	static inline TR Operation(TA geom) {

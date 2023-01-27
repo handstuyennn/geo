@@ -75,6 +75,63 @@ void Centroid::add(const Geometry &geom) {
 }
 
 /* private */
+void Centroid::setAreaBasePoint(const Coordinate &basePt) {
+	areaBasePt.reset(new Coordinate(basePt));
+}
+
+/* private */
+void Centroid::add(const Polygon &poly) {
+	addShell(*poly.getExteriorRing()->getCoordinatesRO());
+	for (std::size_t i = 0; i < poly.getNumInteriorRing(); i++) {
+		addHole(*poly.getInteriorRingN(i)->getCoordinatesRO());
+	}
+}
+
+/* private */
+void Centroid::addShell(const CoordinateSequence &pts) {
+	std::size_t len = pts.size();
+	if (len > 0) {
+		setAreaBasePoint(pts[0]);
+	}
+	bool isPositiveArea = !Orientation::isCCW(&pts);
+	for (std::size_t i = 0; i < len - 1; ++i) {
+		addTriangle(*areaBasePt, pts[i], pts[i + 1], isPositiveArea);
+	}
+	addLineSegments(pts);
+}
+
+/* private */
+void Centroid::addHole(const CoordinateSequence &pts) {
+	bool isPositiveArea = Orientation::isCCW(&pts);
+	for (std::size_t i = 0, e = pts.size() - 1; i < e; ++i) {
+		addTriangle(*areaBasePt, pts[i], pts[i + 1], isPositiveArea);
+	}
+	addLineSegments(pts);
+}
+
+/* private */
+void Centroid::addTriangle(const Coordinate &p0, const Coordinate &p1, const Coordinate &p2, bool isPositiveArea) {
+	double sign = (isPositiveArea) ? 1.0 : -1.0;
+	centroid3(p0, p1, p2, triangleCent3);
+	double a2 = area2(p0, p1, p2);
+	cg3.x += sign * a2 * triangleCent3.x;
+	cg3.y += sign * a2 * triangleCent3.y;
+	areasum2 += sign * a2;
+}
+
+/* static private */
+void Centroid::centroid3(const Coordinate &p1, const Coordinate &p2, const Coordinate &p3, Coordinate &c) {
+	c.x = p1.x + p2.x + p3.x;
+	c.y = p1.y + p2.y + p3.y;
+	return;
+}
+
+/* static private */
+double Centroid::area2(const Coordinate &p1, const Coordinate &p2, const Coordinate &p3) {
+	return (p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y);
+}
+
+/* private */
 void Centroid::addLineSegments(const CoordinateSequence &pts) {
 	std::size_t npts = pts.size();
 	double lineLen = 0.0;

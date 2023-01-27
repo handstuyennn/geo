@@ -35,7 +35,8 @@ static const std::vector<ScalarFunctionSet> GetParserScalarFunctions(LogicalType
 	ScalarFunctionSet geogfromtext("st_geogfromtext");
 
 	auto fromtextunary = ScalarFunction({LogicalType::VARCHAR}, geo_type, GeoFunctions::GeometryFromTextFunction);
-	auto fromtextbinary = ScalarFunction({LogicalType::VARCHAR, LogicalType::INTEGER}, geo_type, GeoFunctions::GeometryFromTextFunction);
+	auto fromtextbinary =
+	    ScalarFunction({LogicalType::VARCHAR, LogicalType::INTEGER}, geo_type, GeoFunctions::GeometryFromTextFunction);
 	geomfromtext.AddFunction(fromtextunary);
 	geomfromtext.AddFunction(fromtextbinary);
 	geogfromtext.AddFunction(fromtextunary);
@@ -47,7 +48,8 @@ static const std::vector<ScalarFunctionSet> GetParserScalarFunctions(LogicalType
 	ScalarFunctionSet geomfromwkb("st_geomfromwkb");
 	ScalarFunctionSet geogfromwkb("st_geogfromwkb");
 	auto fromwkbunary = ScalarFunction({LogicalType::BLOB}, geo_type, GeoFunctions::GeometryFromWKBFunction);
-	auto fromwkbbinary = ScalarFunction({LogicalType::BLOB, LogicalType::INTEGER}, geo_type, GeoFunctions::GeometryFromWKBFunction);
+	auto fromwkbbinary =
+	    ScalarFunction({LogicalType::BLOB, LogicalType::INTEGER}, geo_type, GeoFunctions::GeometryFromWKBFunction);
 	geomfromwkb.AddFunction(fromwkbunary);
 	geomfromwkb.AddFunction(fromwkbbinary);
 	geogfromwkb.AddFunction(fromwkbunary);
@@ -55,13 +57,23 @@ static const std::vector<ScalarFunctionSet> GetParserScalarFunctions(LogicalType
 	func_set.push_back(geomfromwkb);
 	func_set.push_back(geogfromwkb);
 
-	// ST_GEOMFROMGEOHASH
-	ScalarFunctionSet from_geohash("st_geomfromgeohash");
-	from_geohash.AddFunction(
-	    ScalarFunction({LogicalType::VARCHAR}, geo_type, GeoFunctions::GeometryFromGeoHashFunction));
-	from_geohash.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::INTEGER}, geo_type,
-	                                        GeoFunctions::GeometryFromGeoHashFunction));
-	func_set.push_back(from_geohash);
+	// ST_GEOMFROMGEOHASH/ST_GEOGPOINTFROMGEOHASH
+	ScalarFunctionSet geomfromgeohash("st_geomfromgeohash");
+	auto fromgeohashunary = ScalarFunction({LogicalType::VARCHAR}, geo_type, GeoFunctions::GeometryFromGeoHashFunction);
+	auto fromgeohashbinary = ScalarFunction({LogicalType::VARCHAR, LogicalType::INTEGER}, geo_type,
+	                                        GeoFunctions::GeometryFromGeoHashFunction);
+	geomfromgeohash.AddFunction(fromgeohashunary);
+	geomfromgeohash.AddFunction(fromgeohashbinary);
+
+	ScalarFunctionSet geogpointfromgeohash("st_geogpointfromgeohash");
+	auto gpointfromgeohashunary =
+	    ScalarFunction({LogicalType::VARCHAR}, geo_type, GeoFunctions::GeometryGPointFromGeoHashFunction);
+	auto gpointfromgeohashbinary = ScalarFunction({LogicalType::VARCHAR, LogicalType::INTEGER}, geo_type,
+	                                              GeoFunctions::GeometryGPointFromGeoHashFunction);
+	geogpointfromgeohash.AddFunction(gpointfromgeohashunary);
+	geogpointfromgeohash.AddFunction(gpointfromgeohashbinary);
+	func_set.push_back(geomfromgeohash);
+	func_set.push_back(geogpointfromgeohash);
 
 	return func_set;
 }

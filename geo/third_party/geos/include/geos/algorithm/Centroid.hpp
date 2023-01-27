@@ -87,11 +87,11 @@ public:
 	bool getCentroid(geom::CoordinateXY &cent) const;
 
 private:
-	std::unique_ptr<geom::CoordinateXY> areaBasePt;
-	geom::CoordinateXY triangleCent3;
-	geom::CoordinateXY cg3;
-	geom::CoordinateXY lineCentSum;
-	geom::CoordinateXY ptCentSum;
+	std::unique_ptr<geom::Coordinate> areaBasePt;
+	geom::Coordinate triangleCent3;
+	geom::Coordinate cg3;
+	geom::Coordinate lineCentSum;
+	geom::Coordinate ptCentSum;
 	double areasum2;
 	double totalLength;
 	int ptCount;
@@ -102,6 +102,31 @@ private:
 	 * @param geom the geometry to add
 	 */
 	void add(const geom::Geometry &geom);
+
+	void setAreaBasePoint(const geom::Coordinate &basePt);
+
+	void add(const geom::Polygon &poly);
+
+	void addShell(const geom::CoordinateSequence &pts);
+
+	void addHole(const geom::CoordinateSequence &pts);
+
+	void addTriangle(const geom::Coordinate &p0, const geom::Coordinate &p1, const geom::Coordinate &p2,
+	                 bool isPositiveArea);
+
+	/**
+	 * Computes three times the centroid of the triangle p1-p2-p3.
+	 * The factor of 3 is
+	 * left in to permit division to be avoided until later.
+	 */
+	static void centroid3(const geom::Coordinate &p1, const geom::Coordinate &p2, const geom::Coordinate &p3,
+	                      geom::Coordinate &c);
+
+	/**
+	 * Returns twice the signed area of the triangle p1-p2-p3.
+	 * The area is positive if the triangle is oriented CCW, and negative if CW.
+	 */
+	static double area2(const geom::Coordinate &p1, const geom::Coordinate &p2, const geom::Coordinate &p3);
 
 	/**
 	 * Adds the line segments defined by an array of coordinates
