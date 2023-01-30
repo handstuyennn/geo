@@ -33,4 +33,19 @@ GSERIALIZED *geometry_serialize(LWGEOM *lwgeom) {
 	return g;
 }
 
+/**
+ * Utility method to call the serialization and then set the
+ * PgSQL varsize header appropriately with the serialized size.
+ */
+GSERIALIZED *geography_serialize(LWGEOM *lwgeom) {
+	size_t ret_size;
+	GSERIALIZED *g;
+	/** force to geodetic in case it's not **/
+	lwgeom_set_geodetic(lwgeom, true);
+
+	g = gserialized_from_lwgeom(lwgeom, &ret_size);
+	SET_VARSIZE(g, ret_size);
+	return g;
+}
+
 } // namespace duckdb

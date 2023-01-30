@@ -58,6 +58,15 @@ LWMPOINT *lwgeom_as_lwmpoint(const LWGEOM *lwgeom) {
 		return NULL;
 }
 
+LWMLINE *lwgeom_as_lwmline(const LWGEOM *lwgeom) {
+	if (lwgeom == NULL)
+		return NULL;
+	if (lwgeom->type == MULTILINETYPE)
+		return (LWMLINE *)lwgeom;
+	else
+		return NULL;
+}
+
 LWPOLY *lwgeom_as_lwpoly(const LWGEOM *lwgeom) {
 	if (lwgeom == NULL)
 		return NULL;
@@ -517,6 +526,47 @@ int lwgeom_calculate_gbox(const LWGEOM *lwgeom, GBOX *gbox) {
 		return lwgeom_calculate_gbox_geodetic(lwgeom, gbox);
 	else
 		return lwgeom_calculate_gbox_cartesian(lwgeom, gbox);
+}
+
+void lwgeom_set_geodetic(LWGEOM *geom, int value) {
+	LWPOINT *pt;
+	LWLINE *ln;
+	LWPOLY *ply;
+	LWCOLLECTION *col;
+	uint32_t i;
+
+	FLAGS_SET_GEODETIC(geom->flags, value);
+	if (geom->bbox)
+		FLAGS_SET_GEODETIC(geom->bbox->flags, value);
+
+	switch (geom->type) {
+	case POINTTYPE:
+		pt = (LWPOINT *)geom;
+		if (pt->point)
+			FLAGS_SET_GEODETIC(pt->point->flags, value);
+		break;
+	case LINETYPE:
+		ln = (LWLINE *)geom;
+		if (ln->points)
+			FLAGS_SET_GEODETIC(ln->points->flags, value);
+		break;
+	case POLYGONTYPE:
+		ply = (LWPOLY *)geom;
+		for (i = 0; i < ply->nrings; i++)
+			FLAGS_SET_GEODETIC(ply->rings[i]->flags, value);
+		break;
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COLLECTIONTYPE:
+		col = (LWCOLLECTION *)geom;
+		for (i = 0; i < col->ngeoms; i++)
+			lwgeom_set_geodetic(col->geoms[i], value);
+		break;
+	default:
+		lwerror("lwgeom_set_geodetic: unsupported geom type: %s", lwtype_name(geom->type));
+		return;
+	}
 }
 
 int lwgeom_startpoint(const LWGEOM *lwgeom, POINT4D *pt) {

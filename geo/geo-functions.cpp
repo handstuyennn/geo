@@ -1787,8 +1787,8 @@ struct BufferTextTernaryOperator {
 			Geometry::DestroyGeometry(gser);
 			return geom;
 		}
-		idx_t rv_size = Geometry::GetGeometrySize(gser);
-		auto base = Geometry::GetBase(gser);
+		idx_t rv_size = Geometry::GetGeometrySize(gserBuffer);
+		auto base = Geometry::GetBase(gserBuffer);
 		Geometry::DestroyGeometry(gser);
 		Geometry::DestroyGeometry(gserBuffer);
 		return string_t((const char *)base, rv_size);

@@ -491,6 +491,7 @@ typedef struct {
 } LWTIN;
 
 /* Casts LWGEOM->LW* (return NULL if cast is illegal) */
+extern LWMLINE *lwgeom_as_lwmline(const LWGEOM *lwgeom);
 extern LWMPOLY *lwgeom_as_lwmpoly(const LWGEOM *lwgeom);
 extern LWMPOINT *lwgeom_as_lwmpoint(const LWGEOM *lwgeom);
 extern LWPOLY *lwgeom_as_lwpoly(const LWGEOM *lwgeom);
@@ -838,10 +839,12 @@ extern LWGEOM *lwgeom_construct_empty(uint8_t type, int32_t srid, char hasz, cha
 extern LWPOINT *lwpoint_construct_empty(int32_t srid, char hasz, char hasm);
 extern LWLINE *lwline_construct_empty(int32_t srid, char hasz, char hasm);
 extern LWPOLY *lwpoly_construct_empty(int32_t srid, char hasz, char hasm);
+extern LWMLINE *lwmline_construct_empty(int32_t srid, char hasz, char hasm);
 extern LWCURVEPOLY *lwcurvepoly_construct_empty(int32_t srid, char hasz, char hasm);
 extern LWCIRCSTRING *lwcircstring_construct_empty(int32_t srid, char hasz, char hasm);
 extern LWTRIANGLE *lwtriangle_construct_empty(int32_t srid, char hasz, char hasm);
 extern LWCOLLECTION *lwcollection_construct_empty(uint8_t type, int32_t srid, char hasz, char hasm);
+extern LWMPOLY *lwmpoly_construct_empty(int32_t srid, char hasz, char hasm);
 
 /* Other constructors */
 extern LWPOINT *lwpoint_make2d(int32_t srid, double x, double y);
@@ -871,6 +874,14 @@ extern LWGEOM *lwgeom_from_geojson(const char *geojson, char **srs);
  * Initialize a spheroid object for use in geodetic functions.
  */
 extern void spheroid_init(SPHEROID *s, double a, double b);
+
+/**
+ * Calculate the geodetic distance from lwgeom1 to lwgeom2 on the spheroid.
+ * A spheroid with major axis == minor axis will be treated as a sphere.
+ * Pass in a tolerance in spheroid units.
+ */
+extern double lwgeom_distance_spheroid(const LWGEOM *lwgeom1, const LWGEOM *lwgeom2, const SPHEROID *spheroid,
+                                       double tolerance);
 
 /**
  * Calculate the bearing between two points on a spheroid.
@@ -1155,6 +1166,11 @@ extern uint8_t *bytes_from_hexbytes(const char *hexbuf, size_t hexsize);
 extern int lwgeom_check_geodetic(const LWGEOM *geom);
 
 /**
+ * Set the FLAGS geodetic bit on geometry an all sub-geometries and pointlists
+ */
+extern void lwgeom_set_geodetic(LWGEOM *geom, int value);
+
+/**
  * Calculate the geodetic bounding box for an LWGEOM. Z/M coordinates are
  * ignored for this calculation. Pass in non-null, geodetic bounding box for function
  * to fill out. LWGEOM must have been built from a GSERIALIZED to provide
@@ -1218,6 +1234,11 @@ extern int gbox_merge(const GBOX *new_box, GBOX *merged_box);
  * Return a copy of the #GBOX, based on dimensionality of flags.
  */
 extern GBOX *gbox_copy(const GBOX *gbox);
+
+/**
+ * Return #LW_TRUE if the #GBOX overlaps, #LW_FALSE otherwise.
+ */
+extern int gbox_overlaps(const GBOX *g1, const GBOX *g2);
 
 /**
  * Initialize a #GBOX using the values of the point.

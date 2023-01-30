@@ -99,6 +99,8 @@ int edge_intersection(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOG
 int lwpoly_pt_outside(const LWPOLY *poly, POINT2D *pt_outside);
 double ptarray_area_sphere(const POINTARRAY *pa);
 double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s);
+int ptarray_contains_point_sphere(const POINTARRAY *pa, const POINT2D *pt_outside, const POINT2D *pt_to_test);
+int lwpoly_covers_point2d(const LWPOLY *poly, const POINT2D *pt_to_test);
 
 /*
 ** Prototypes for spheroid functions.
