@@ -932,7 +932,8 @@ void GeoFunctions::GeometryGPointFromGeoHashFunction(DataChunk &args, Expression
 		GeometryGPointFromGeoHashUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
 	} else if (args.data.size() == 2) {
 		auto &precision_arg = args.data[1];
-		GeometryGPointFromGeoHashBinaryExecutor<string_t, int32_t, string_t>(text_arg, precision_arg, result, args.size());
+		GeometryGPointFromGeoHashBinaryExecutor<string_t, int32_t, string_t>(text_arg, precision_arg, result,
+		                                                                     args.size());
 	}
 }
 
@@ -1559,13 +1560,19 @@ void GeoFunctions::GeometryUnionArrayFunction(DataChunk &args, ExpressionState &
 			gserArray[child_idx] = gser;
 		}
 		auto gsergeom = Geometry::GeometryUnionGArray(&gserArray[0], list_entry.length);
-		idx_t rv_size = Geometry::GetGeometrySize(gsergeom);
-		auto base = Geometry::GetBase(gsergeom);
-		for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {
-			Geometry::DestroyGeometry(gserArray[child_idx]);
+		if (gsergeom) {
+			idx_t rv_size = Geometry::GetGeometrySize(gsergeom);
+			auto base = Geometry::GetBase(gsergeom);
+			if (list_entry.length > 1) {
+				for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {
+					Geometry::DestroyGeometry(gserArray[child_idx]);
+				}
+			}
+			Geometry::DestroyGeometry(gsergeom);
+			result_entries[i] = string_t((const char *)base, rv_size);
+		} else {
+			result_entries[i] = string_t();
 		}
-		Geometry::DestroyGeometry(gsergeom);
-		result_entries[i] = string_t((const char *)base, rv_size);
 	}
 }
 
