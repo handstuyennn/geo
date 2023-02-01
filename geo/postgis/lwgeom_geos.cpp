@@ -102,7 +102,8 @@ bool LWGEOM_isring(GSERIALIZED *geom) {
 
 	if (GEOSGeomTypeId(g1) != GEOS_LINESTRING) {
 		GEOSGeom_destroy(g1);
-		throw "ST_IsRing() should only be called on a linear feature";
+		// throw "ST_IsRing() should only be called on a linear feature";
+		return false;
 	}
 
 	result = GEOSisRing(g1);

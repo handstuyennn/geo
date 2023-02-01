@@ -996,14 +996,17 @@ void GeoFunctions::GeometryDimensionFunction(DataChunk &args, ExpressionState &s
 	GeometryDimensionUnaryExecutor<string_t, int>(geom_arg, result, args.size());
 }
 
-void GeoFunctions::GeometryDumpFunction(DataChunk &args, ExpressionState &state, Vector &result) {
-	D_ASSERT(args.GetTypes().size() == 1);
-	auto &geom_arg = args.data[0];
-	auto child_type = ListType::GetChildType(result.GetType());
-
-	auto geom = args.GetValue(0, 0).GetValueUnsafe<string_t>();
-
+void GeometryDumpOperator(string_t geom, idx_t idx, LogicalType child_type, Vector &result) {
+	if (geom.GetSize() == 0) {
+		auto val = Value::LIST(child_type, vector<Value> {});
+		result.SetValue(idx, val);
+		return;
+	}
 	auto gser = Geometry::GetGserialized(geom);
+	if (!gser) {
+		throw ConversionException("Failure in geometry dump: could not getting dump from geom");
+		return;
+	}
 	auto gserArray = Geometry::LWGEOM_dump(gser);
 
 	vector<Value> geom_values;
@@ -1017,13 +1020,108 @@ void GeoFunctions::GeometryDumpFunction(DataChunk &args, ExpressionState &state,
 		geom_values.emplace_back(value);
 	}
 	auto val = Value::LIST(child_type, geom_values);
-	result.Reference(val);
+	result.SetValue(idx, val);
 	Geometry::DestroyGeometry(gser);
+}
+
+void GeoFunctions::GeometryDumpFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	D_ASSERT(args.GetTypes().size() == 1);
+	auto &geom_arg = args.data[0];
+	auto count = args.size();
+	auto child_type = ListType::GetChildType(result.GetType());
+
+	string_t *ldata;
+	ValidityMask mask, result_mask;
+	switch (geom_arg.GetVectorType()) {
+	case VectorType::CONSTANT_VECTOR: {
+		ldata = ConstantVector::GetData<string_t>(geom_arg);
+		if (ConstantVector::IsNull(geom_arg)) {
+			ConstantVector::SetNull(result, true);
+			return;
+		} else {
+			GeometryDumpOperator(ldata[0], 0, child_type, result);
+			return;
+		}
+		break;
+	}
+	case VectorType::FLAT_VECTOR: {
+		ldata = FlatVector::GetData<string_t>(geom_arg);
+		mask = FlatVector::Validity(geom_arg);
+		result_mask = FlatVector::Validity(result);
+		break;
+	}
+	default: {
+		UnifiedVectorFormat vdata;
+		geom_arg.ToUnifiedFormat(count, vdata);
+		ldata = (string_t *)vdata.data;
+		mask = vdata.validity;
+		result_mask = FlatVector::Validity(result);
+		break;
+	}
+	}
+
+	result_mask.Copy(mask, count);
+	idx_t base_idx = 0;
+	auto entry_count = ValidityMask::EntryCount(count);
+	for (idx_t entry_idx = 0; entry_idx < entry_count; entry_idx++) {
+		auto validity_entry = mask.GetValidityEntry(entry_idx);
+		idx_t next = MinValue<idx_t>(base_idx + ValidityMask::BITS_PER_VALUE, count);
+		if (ValidityMask::AllValid(validity_entry)) {
+			// all valid: perform operation
+			for (; base_idx < next; base_idx++) {
+				GeometryDumpOperator(ldata[base_idx], base_idx, child_type, result);
+			}
+		} else if (ValidityMask::NoneValid(validity_entry)) {
+			// nothing valid: skip all
+			base_idx = next;
+			continue;
+		} else {
+			// partially valid: need to check individual elements for validity
+			idx_t start = base_idx;
+			for (; base_idx < next; base_idx++) {
+				if (ValidityMask::RowIsValid(validity_entry, base_idx - start)) {
+					D_ASSERT(mask.RowIsValid(base_idx));
+					GeometryDumpOperator(ldata[base_idx], base_idx, child_type, result);
+				} else {
+					auto val = Value::LIST(child_type, vector<Value> {});
+					result.SetValue(base_idx, val);
+					result_mask.SetInvalid(base_idx);
+				}
+			}
+		}
+	}
+
+	// auto geom = ldata[0];
+	// if (geom.GetSize() == 0) {
+	// 	auto val = Value::LIST(child_type, vector<Value> {});
+	// 	result.Reference(val);
+	// 	return;
+	// }
+	// auto gser = Geometry::GetGserialized(geom);
+	// if (!gser) {
+	// 	throw ConversionException("Failure in geometry dump: could not getting dump from geom");
+	// 	return;
+	// }
+	// auto gserArray = Geometry::LWGEOM_dump(gser);
+
+	// vector<Value> geom_values;
+	// for (idx_t i = 0; i < gserArray.size(); i++) {
+	// 	auto gserChild = gserArray[i];
+	// 	idx_t rv_size = Geometry::GetGeometrySize(gserChild);
+	// 	auto base = Geometry::GetBase(gserChild);
+	// 	Geometry::DestroyGeometry(gserChild);
+	// 	auto value = Value::BLOB((const_data_ptr_t)base, rv_size);
+	// 	value.type().CopyAuxInfo(child_type);
+	// 	geom_values.emplace_back(value);
+	// }
+	// auto val = Value::LIST(child_type, geom_values);
+	// result.Reference(val);
+	// Geometry::DestroyGeometry(gser);
 }
 
 struct EndPointUnaryOperator {
 	template <class TA, class TR>
-	static inline TR Operation(TA geom) {
+	static inline TR Operation(TA geom, ValidityMask &result_mask, idx_t i, void *dataptr) {
 		if (geom.GetSize() == 0) {
 			return string_t();
 		}
@@ -1033,6 +1131,11 @@ struct EndPointUnaryOperator {
 			return string_t();
 		}
 		auto gserEndpoint = Geometry::LWGEOM_endpoint_linestring(gser);
+		if (!gserEndpoint) {
+			Geometry::DestroyGeometry(gser);
+			result_mask.SetInvalid(i);
+			return string_t();
+		}
 		idx_t size = Geometry::GetGeometrySize(gserEndpoint);
 		auto base = Geometry::GetBase(gserEndpoint);
 		Geometry::DestroyGeometry(gser);
@@ -1043,7 +1146,7 @@ struct EndPointUnaryOperator {
 
 template <typename TA, typename TR>
 static void GeometryEndPointUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
-	UnaryExecutor::Execute<TA, TR, EndPointUnaryOperator>(geom, result, count);
+	UnaryExecutor::GenericExecute<TA, TR, EndPointUnaryOperator>(geom, result, count, (void *)&result);
 }
 
 void GeoFunctions::GeometryEndPointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
