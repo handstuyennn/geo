@@ -37,8 +37,8 @@ static const int STRTREE_NODE_CAPACITY = 10;
 /* Utility struct used to accumulate items in GEOSSTRtree_query callback */
 struct QueryContext {
 	void **items_found;
-	uint32_t items_found_size;
 	uint32_t num_items_found;
+	uint32_t items_found_size;
 };
 
 /* Utility struct to keep GEOSSTRtree and associated structures to be freed after use */
