@@ -25,7 +25,7 @@ jobs:
         make pull
 
     - name: Build
-      run: make release_bundled
+      run: make release
 
     - name: Test
-      run: make test_release
+      run: make test_all

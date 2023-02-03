@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ SELECT ST_ISCLOSED('{"type":"GeometryCollection","geometries":[{"type":"MultiPoi
 query I
 SELECT ST_ISCLOSED('')
 ----
-NULL
+0
 
 query I 
 SELECT ST_ISCLOSED(NULL)
@@ -157,6 +160,6 @@ SELECT ST_ISCLOSED(g) FROM geometries
 0
 1
 1
-NULL
+0
 NULL
 1

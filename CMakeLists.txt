@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 2.8.12)
+
+if(DEFINED EXTERNAL_EXTENSION_DIRECTORIES)
+  # Extension is being built from DuckDB CMake file, just add the extension dir
+  add_subdirectory(geo)
+else()
 set(TARGET_NAME geo)
 project(${TARGET_NAME})
 
@@ -20,3 +25,5 @@ set(EXTERNAL_EXTENSION_DIRECTORIES ../${TARGET_NAME})
 add_subdirectory(duckdb)
 
 target_link_libraries(unittest ${TARGET_NAME}_extension)
+
+endif()

@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 # test basic 2D make line
@@ -51,10 +54,8 @@ statement error
 SELECT ST_MakeLine('POINT(5 6)', 'POLYGON((175 150, 20 40,50 60, 125 100, 175 150))')
 
 # test invalid decodes
-query I
+statement error
 SELECT ST_MAKELINE('POINT(5 6)', 'a')
-----
-NULL
 
 # test invalid parameters
 statement error

@@ -3,6 +3,9 @@
 # group: [function]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 statement ok
@@ -29,7 +32,7 @@ INSERT INTO geometries VALUES(''), (NULL)
 query R
 select ST_ASGEOJSON(g) from geometries
 ----
-NULL
+(empty)
 NULL
 
 query I
@@ -67,10 +70,8 @@ SELECT ST_ASGEOJSON('010700000003000000010200000004000000EC51B81E85EB07400AD7A37
 ----
 {"type":"GeometryCollection","geometries":[{"type":"LineString","coordinates":[[2.99,90.16],[71,74],[20,140],[171,154]]},{"type":"Point","coordinates":[2.99,90.16]},{"type":"Polygon","coordinates":[[[159.33,163.69],[171,154],[161.31,142.33],[159.33,163.69]]]}]}
 
-query I
+statement error
 SELECT ST_ASGEOJSON('aaa')
-----
-NULL
 
 query I
 SELECT ST_ASGEOJSON(NULL)
@@ -80,7 +81,7 @@ NULL
 query I
 SELECT ST_ASGEOJSON('')
 ----
-NULL
+(empty)
 
 #test with invalid input
 statement error

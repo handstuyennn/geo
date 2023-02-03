@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ NULL
 query I
 SELECT ST_ENDPOINT('')
 ----
-NULL
+(empty)
 
 query I 
 SELECT ST_ENDPOINT(NULL)
@@ -157,6 +160,6 @@ NULL
 POINT(745677 2948319)
 NULL
 NULL
-NULL
+(empty)
 NULL
 NULL

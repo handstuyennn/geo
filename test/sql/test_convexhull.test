@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ POLYGON((-89.734635 31.492072,-117 32,-117 33,-89.734956 31.492237999999997,-89.
 query I
 SELECT ST_CONVEXHULL('')
 ----
-NULL
+(empty)
 
 query I 
 SELECT ST_CONVEXHULL(NULL)
@@ -157,6 +160,6 @@ POINT(0.9 0.9)
 POINT(30 10.2323)
 POLYGON((-71.040943 42.2856,-71.04096 42.285752,-71.040878 42.285678,-71.040943 42.2856))
 POINT(-71.064544 43.28787)
-NULL
+(empty)
 NULL
 POLYGON((10 4091,0 4096,0 4101,10 4096,10 4091))

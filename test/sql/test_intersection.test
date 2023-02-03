@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -310,7 +313,7 @@ POINT(25 169)
 query I
 SELECT ST_INTERSECTION('', 'GEOMETRYCOLLECTION(LINESTRING(25 169,89 114,40 70,86 43), POINT(25 169),POLYGON((78.26 40.98,83.98 50.74,86 43,78.26 40.98)) )')
 ----
-NULL
+(empty)
 
 query I 
 SELECT ST_INTERSECTION(NULL, NULL)
@@ -351,6 +354,6 @@ MULTILINESTRING((25 169,89 114),(89 114,40 70),(40 70,86 43))
 POINT EMPTY
 POLYGON EMPTY
 POINT EMPTY
-NULL
+(empty)
 NULL
 POLYGON((5 4096,10 4096,10 4091,5 4096))

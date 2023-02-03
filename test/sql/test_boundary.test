@@ -3,6 +3,9 @@
 # group: [function]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 query I
@@ -25,15 +28,13 @@ SELECT ST_astext(ST_boundary('POLYGON((0 0, 0 10, 10 10, 10 0, 0 0),(2 2, 2 4, 4
 ----
 MULTILINESTRING((0 0,0 10,10 10,10 0,0 0),(2 2,2 4,4 4,4 2,2 2))
 
-query I
+statement error
 SELECT ST_boundary('aaa')
-----
-NULL
 
 query I
 SELECT ST_boundary('')
 ----
-NULL
+(empty)
 
 statement error
 SELECT ST_boundary(22)
@@ -62,5 +63,5 @@ INSERT INTO geometries VALUES(''), (NULL)
 query R
 select ST_ASTEXT(ST_boundary(g)) from geometries
 ----
-NULL
+(empty)
 NULL

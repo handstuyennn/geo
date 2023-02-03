@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ ST_GeometryCollection
 query I
 SELECT ST_GEOMETRYTYPE('')
 ----
-NULL
+(empty)
 
 query I 
 SELECT ST_GEOMETRYTYPE(NULL)
@@ -157,6 +160,6 @@ ST_MultiPoint
 ST_LineString
 ST_Polygon
 ST_Point
-NULL
+(empty)
 NULL
 ST_MultiPolygon

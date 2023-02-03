@@ -1342,6 +1342,15 @@ extern void lwfree(void *mem);
  */
 void lwnotice(const char *fmt, ...);
 
+static std::string lwgeomTypeName[] = {"Unknown",        "Point",
+                                       "LineString",     "Polygon",
+                                       "MultiPoint",     "MultiLineString",
+                                       "MultiPolygon",   "GeometryCollection",
+                                       "CircularString", "CompoundCurve",
+                                       "CurvePolygon",   "MultiCurve",
+                                       "MultiSurface",   "PolyhedralSurface",
+                                       "Triangle",       "Tin"};
+
 /**
  * Write a notice out to the error handler.
  *

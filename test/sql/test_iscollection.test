@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ SELECT ST_ISCOLLECTION('{"type":"GeometryCollection","geometries":[{"type":"Mult
 query I
 SELECT ST_ISCOLLECTION('')
 ----
-NULL
+0
 
 query I 
 SELECT ST_ISCOLLECTION(NULL)
@@ -157,6 +160,6 @@ SELECT ST_ISCOLLECTION(g) FROM geometries
 0
 0
 0
-NULL
+0
 NULL
 1

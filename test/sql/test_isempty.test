@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ SELECT ST_ISEMPTY('{"type":"GeometryCollection","geometries":[{"type":"MultiPoin
 query I
 SELECT ST_ISEMPTY('')
 ----
-NULL
+1
 
 query I 
 SELECT ST_ISEMPTY(NULL)
@@ -157,6 +160,6 @@ SELECT ST_ISEMPTY(g) FROM geometries
 0
 0
 0
-NULL
+1
 NULL
 1

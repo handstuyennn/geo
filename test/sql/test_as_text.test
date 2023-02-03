@@ -3,6 +3,9 @@
 # group: [function]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 statement ok
@@ -28,7 +31,7 @@ INSERT INTO geometries VALUES(''), (NULL)
 query R
 select ST_ASTEXT(g) from geometries
 ----
-NULL
+(empty)
 NULL
 
 query I
@@ -66,10 +69,8 @@ SELECT ST_ASTEXT('010700000003000000010200000004000000EC51B81E85EB07400AD7A3703D
 ----
 GEOMETRYCOLLECTION(LINESTRING(2.99 90.16,71 74,20 140,171 154),POINT(2.99 90.16),POLYGON((159.33 163.69,171 154,161.31 142.33,159.33 163.69)))
 
-query I
+statement error
 SELECT ST_ASTEXT('aaa')
-----
-NULL
 
 query I
 SELECT ST_ASTEXT(NULL)
@@ -79,7 +80,7 @@ NULL
 query I
 SELECT ST_ASTEXT('')
 ----
-NULL
+(empty)
 
 #test with invalid input
 statement error

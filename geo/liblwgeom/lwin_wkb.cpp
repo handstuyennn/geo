@@ -464,6 +464,8 @@ static LWLINE *lwline_from_wkb_state(wkb_parse_state *s) {
 	}
 
 	if (s->check & LW_PARSER_CHECK_MINPOINTS && pa->npoints < 2) {
+		auto error_msg = std::string(lwtype_name(s->lwtype)) + " must have at least two points";
+		lwerror(error_msg.c_str());
 		return NULL;
 	}
 

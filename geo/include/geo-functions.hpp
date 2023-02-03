@@ -9,6 +9,7 @@
 #pragma once
 
 #include "duckdb/function/cast/cast_function_set.hpp"
+#include "duckdb/function/function_set.hpp"
 #include "duckdb/function/scalar_function.hpp"
 
 namespace duckdb {

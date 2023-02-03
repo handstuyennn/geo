@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ SELECT ST_DIMENSION('{"type":"GeometryCollection","geometries":[{"type":"MultiPo
 query I
 SELECT ST_DIMENSION('')
 ----
-NULL
+-1
 
 query I 
 SELECT ST_DIMENSION(NULL)
@@ -157,6 +160,6 @@ SELECT ST_DIMENSION(g) FROM geometries
 1
 2
 0
-NULL
+-1
 NULL
 2

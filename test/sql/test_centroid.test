@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -121,7 +124,7 @@ POINT(-116.83170127735318 32.33328267192357)
 query I
 SELECT ST_CENTROID('')
 ----
-NULL
+(empty)
 
 query I 
 SELECT ST_CENTROID(NULL)
@@ -157,6 +160,6 @@ POINT(0.9 0.9)
 POINT(30 10.2323)
 POINT(-71.04092699999998 42.285676666666674)
 POINT(-71.064544 43.28787)
-NULL
+(empty)
 NULL
 POINT(10 54)

@@ -4,41 +4,43 @@
 #include "duckdb/common/vector_operations/generic_executor.hpp"
 #include "geometry.hpp"
 
+#include <unistd.h>
+
 namespace duckdb {
+int loopindex = 1;
+std::vector<int> queue {};
 
 bool GeoFunctions::CastVarcharToGEO(Vector &source, Vector &result, idx_t count, CastParameters &parameters) {
-	auto constant = source.GetVectorType() == VectorType::CONSTANT_VECTOR;
-
-	UnifiedVectorFormat vdata;
-	source.ToUnifiedFormat(count, vdata);
-
-	auto input = (string_t *)vdata.data;
-	auto result_data = FlatVector::GetData<string_t>(result);
+	int currindex = loopindex;
+	queue.push_back(currindex);
+	loopindex++;
+	while (queue.size() > 0 && queue[0] != currindex) {
+		usleep(30);
+	}
 	bool success = true;
-	for (idx_t i = 0; i < (constant ? 1 : count); i++) {
-		auto idx = vdata.sel->get_index(i);
-
-		if (!vdata.validity.RowIsValid(idx)) {
-			FlatVector::SetNull(result, i, true);
-			continue;
-		}
-
-		auto gser = Geometry::ToGserialized(input[idx]);
-		if (!gser) {
-			FlatVector::SetNull(result, i, true);
-			success = false;
-			continue;
-		}
-		idx_t rv_size = Geometry::GetGeometrySize(gser);
-		string_t rv = StringVector::EmptyString(result, rv_size);
-		Geometry::ToGeometry(gser, (data_ptr_t)rv.GetDataWriteable());
-		Geometry::DestroyGeometry(gser);
-		rv.Finalize();
-		result_data[i] = rv;
+	try {
+		UnaryExecutor::ExecuteWithNulls<string_t, string_t>(
+		    source, result, count, [&](string_t input, ValidityMask &mask, idx_t idx) {
+			    if (input.GetSize() == 0) {
+				    return string_t();
+			    }
+			    auto gser = Geometry::ToGserialized(input);
+			    if (!gser) {
+				    throw ConversionException("Failure in geometry cast: could not cast geometry from varchar");
+				    success = false;
+				    return string_t();
+			    }
+			    idx_t size = Geometry::GetGeometrySize(gser);
+			    auto base = Geometry::GetBase(gser);
+			    Geometry::DestroyGeometry(gser);
+			    return string_t((const char *)base, size);
+		    });
+	} catch (const std::exception &e) {
+		queue.erase(queue.begin());
+		throw Exception(e.what());
+		return false;
 	}
-	if (constant) {
-		result.SetVectorType(VectorType::CONSTANT_VECTOR);
-	}
+	queue.erase(queue.begin());
 	return success;
 }
 
@@ -651,7 +653,7 @@ struct CentroidUnaryOperator {
 	template <class TA, class TR>
 	static inline TR Operation(TA geom, Vector &result) {
 		if (geom.GetSize() == 0) {
-			return NULL;
+			return string_t();
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
@@ -717,6 +719,7 @@ struct FromTextUnaryOperator {
 		auto gser = Geometry::FromText(&text.GetString()[0]);
 		if (!gser) {
 			throw ConversionException("Failure in geometry from text: could not convert text to geometry");
+			return string_t();
 		}
 		idx_t size = Geometry::GetGeometrySize(gser);
 		auto base = Geometry::GetBase(gser);
@@ -734,6 +737,7 @@ struct FromTextBinaryOperator {
 		auto gser = Geometry::FromText(&text.GetString()[0], srid);
 		if (!gser) {
 			throw ConversionException("Failure in geometry from text: could not convert text to geometry");
+			return string_t();
 		}
 		idx_t size = Geometry::GetGeometrySize(gser);
 		auto base = Geometry::GetBase(gser);
@@ -753,18 +757,31 @@ static void GeometryFromTextBinaryExecutor(Vector &text, Vector &srid, Vector &r
 }
 
 void GeoFunctions::GeometryFromTextFunction(DataChunk &args, ExpressionState &state, Vector &result) {
-	auto &text_arg = args.data[0];
-	if (args.data.size() == 1) {
-		GeometryFromTextUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
-	} else if (args.data.size() == 2) {
-		auto &srid_arg = args.data[1];
-		GeometryFromTextBinaryExecutor<string_t, int32_t, string_t>(text_arg, srid_arg, result, args.size());
+	int currindex = loopindex;
+	queue.push_back(currindex);
+	loopindex++;
+	while (queue.size() > 0 && queue[0] != currindex) {
+		usleep(30);
 	}
+	try {
+		auto &text_arg = args.data[0];
+		if (args.data.size() == 1) {
+			GeometryFromTextUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
+		} else if (args.data.size() == 2) {
+			auto &srid_arg = args.data[1];
+			GeometryFromTextBinaryExecutor<string_t, int32_t, string_t>(text_arg, srid_arg, result, args.size());
+		}
+	} catch (const std::exception &e) {
+		queue.erase(queue.begin());
+		throw Exception(e.what());
+		return;
+	}
+	queue.erase(queue.begin());
 }
 
 struct FromWKBUnaryOperator {
 	template <class TA, class TR>
-	static inline TR Operation(TA text) {
+	static inline TR Operation(TA text, ValidityMask &result_mask, idx_t i, void *dataptr) {
 		if (text.GetSize() == 0) {
 			return text;
 		}
@@ -798,7 +815,7 @@ struct FromWKBBinaryOperator {
 
 template <typename TA, typename TR>
 static void GeometryFromWKBUnaryExecutor(Vector &text, Vector &result, idx_t count) {
-	UnaryExecutor::Execute<TA, TR, FromWKBUnaryOperator>(text, result, count);
+	UnaryExecutor::GenericExecute<TA, TR, FromWKBUnaryOperator>(text, result, count, (void *)&result);
 }
 
 template <typename TA, typename TB, typename TR>

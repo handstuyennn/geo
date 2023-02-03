@@ -3,6 +3,9 @@
 # group: [sql]
 
 statement ok
+LOAD 'build/release/extension/geo/geo.duckdb_extension';
+
+statement ok
 PRAGMA enable_verification
 
 #test with POINT
@@ -310,7 +313,7 @@ POINT(-71.1776585052917 42.3902909739571)
 query I
 SELECT ST_CLOSESTPOINT('', 'GEOMETRYCOLLECTION(LINESTRING(25 169,89 114,40 70,86 43), POINT(25 169),POLYGON((78.26 40.98,83.98 50.74,86 43,78.26 40.98)) )')
 ----
-NULL
+(empty)
 
 query I 
 SELECT ST_CLOSESTPOINT(NULL, NULL)
@@ -349,6 +352,6 @@ POINT(0.9 0.9)
 POINT(30 10.2323)
 POINT(-71.04096 42.285752)
 POINT(-71.064544 43.28787)
-NULL
+(empty)
 NULL
 POINT(10 4091)
