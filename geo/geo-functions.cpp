@@ -485,26 +485,27 @@ struct GeoHashUnaryOperator {
 	}
 };
 
-struct GeoHashBinaryOperator {
-	template <class TA, class TB, class TR>
-	static inline TR Operation(TA geom, TB m_chars) {
-		if (geom.GetSize() == 0) {
-			return string_t();
-		}
-		auto gser = Geometry::GetGserialized(geom);
-		if (!gser) {
-			throw ConversionException("Failure in geometry geohash");
-		}
-		auto geojson = Geometry::GeoHash(gser, m_chars);
-		if (!geojson) {
-			Geometry::DestroyGeometry(gser);
-			return string_t();
-		}
-		std::string geoText = std::string(geojson->data);
-		Geometry::DestroyGeometry(gser);
-		return string_t(geoText.c_str(), geoText.size());
+template <typename TA, typename TB, typename TR>
+static TR GeoHashScalarFunction(Vector &result, TA geom, TB m_chars) {
+	if (geom.GetSize() == 0) {
+		return geom;
 	}
-};
+	auto gser = Geometry::GetGserialized(geom);
+	if (!gser) {
+		throw ConversionException("Failure in geometry geohash");
+	}
+	auto geojson = Geometry::GeoHash(gser, m_chars);
+	if (!geojson) {
+		Geometry::DestroyGeometry(gser);
+		return string_t();
+	}
+	std::string geoText = std::string(geojson->data);
+	auto result_str = StringVector::EmptyString(result, geoText.size());
+	memcpy(result_str.GetDataWriteable(), geoText.c_str(), geoText.size());
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser);
+	return result_str;
+}
 
 template <typename TA, typename TR>
 static void GeometryGeoHashUnaryExecutor(Vector &text, Vector &result, idx_t count) {
@@ -512,8 +513,10 @@ static void GeometryGeoHashUnaryExecutor(Vector &text, Vector &result, idx_t cou
 }
 
 template <typename TA, typename TB, typename TR>
-static void GeometryGeoHashBinaryExecutor(Vector &geom, Vector &m_chars, Vector &result, idx_t count) {
-	BinaryExecutor::ExecuteStandard<TA, TB, TR, GeoHashBinaryOperator>(geom, m_chars, result, count);
+static void GeometryGeoHashBinaryExecutor(Vector &geoms, Vector &m_chars_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geoms, m_chars_vec, result, count, [&](TA geom, TB m_chars) {
+		return GeoHashScalarFunction<TA, TB, TR>(result, geom, m_chars);
+	});
 }
 
 void GeoFunctions::GeometryGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result) {
