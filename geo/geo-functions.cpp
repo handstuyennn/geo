@@ -1317,12 +1317,12 @@ struct NPointsUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE geom) {
 		if (geom.GetSize() == 0) {
-			return true;
+			return 0;
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
-			return true;
+			return 0;
 		}
 		auto nPoints = Geometry::NPoints(gser);
 		Geometry::DestroyGeometry(gser);
@@ -1344,12 +1344,12 @@ struct NumGeometriesUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE geom) {
 		if (geom.GetSize() == 0) {
-			return true;
+			return 0;
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
-			return true;
+			return 0;
 		}
 		auto numGeometries = Geometry::NumGeometries(gser);
 		Geometry::DestroyGeometry(gser);
@@ -1371,16 +1371,16 @@ struct NumPointsUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE geom) {
 		if (geom.GetSize() == 0) {
-			return true;
+			return 0;
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
-			return true;
+			return 0;
 		}
-		auto numGeometries = Geometry::NumPoints(gser);
+		auto numPoints = Geometry::NumPoints(gser);
 		Geometry::DestroyGeometry(gser);
-		return numGeometries;
+		return numPoints;
 	}
 };
 
@@ -1395,7 +1395,7 @@ void GeoFunctions::GeometryNumPointsFunction(DataChunk &args, ExpressionState &s
 }
 
 template <typename TA, typename TB, typename TR>
-static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
+static TR PointNScalarFunction(Vector &result, TA geom, TB index, ValidityMask &mask, idx_t idx) {
 	if (geom.GetSize() == 0) {
 		return string_t();
 	}
@@ -1405,6 +1405,10 @@ static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
 		return string_t();
 	}
 	auto gserPointN = Geometry::PointN(gser, index);
+	if (!gserPointN) {
+		mask.SetInvalid(idx);
+		return string_t();
+	}
 	idx_t rv_size = Geometry::GetGeometrySize(gserPointN);
 	auto base = Geometry::GetBase(gserPointN);
 	auto result_str = StringVector::EmptyString(result, rv_size);
@@ -1417,9 +1421,10 @@ static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
 
 template <typename TA, typename TB, typename TR>
 static void GeometryPointNBinaryExecutor(Vector &geom_vec, Vector &index_vec, Vector &result, idx_t count) {
-	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, index_vec, result, count, [&](TA geom, TB index) {
-		return PointNScalarFunction<TA, TB, TR>(result, geom, index);
-	});
+	BinaryExecutor::ExecuteWithNulls<TA, TB, TR>(
+	    geom_vec, index_vec, result, count, [&](TA geom, TB index, ValidityMask &mask, idx_t idx) {
+		    return PointNScalarFunction<TA, TB, TR>(result, geom, index, mask, idx);
+	    });
 }
 
 void GeoFunctions::GeometryPointNFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -1430,7 +1435,7 @@ void GeoFunctions::GeometryPointNFunction(DataChunk &args, ExpressionState &stat
 
 struct StartPointUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
-	static RESULT_TYPE Operation(INPUT_TYPE geom, Vector &result) {
+	static inline RESULT_TYPE Operation(INPUT_TYPE geom, ValidityMask &result_mask, idx_t i, void *dataptr) {
 		if (geom.GetSize() == 0) {
 			return string_t();
 		}
@@ -1440,20 +1445,22 @@ struct StartPointUnaryOperator {
 			return string_t();
 		}
 		auto gserStartPoint = Geometry::StartPoint(gser);
+		if (!gserStartPoint) {
+			result_mask.SetInvalid(i);
+			return string_t();
+		}
 		idx_t rv_size = Geometry::GetGeometrySize(gserStartPoint);
 		auto base = Geometry::GetBase(gserStartPoint);
-		auto result_str = StringVector::EmptyString(result, rv_size);
-		memcpy(result_str.GetDataWriteable(), base, rv_size);
-		result_str.Finalize();
 		Geometry::DestroyGeometry(gser);
 		Geometry::DestroyGeometry(gserStartPoint);
-		return result_str;
+		return string_t((const char *)base, rv_size);
+		;
 	}
 };
 
 template <typename TA, typename TR>
 static void GeometryStartPointUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
-	UnaryExecutor::ExecuteString<TA, TR, StartPointUnaryOperator>(geom, result, count);
+	UnaryExecutor::GenericExecute<TA, TR, StartPointUnaryOperator>(geom, result, count, (void *)&result);
 }
 
 void GeoFunctions::GeometryStartPointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
