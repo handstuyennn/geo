@@ -625,8 +625,9 @@ GSERIALIZED *LWGEOM_envelope_garray(GSERIALIZED *gserArray[], int nelems) {
 			/* Get first geometry SRID */
 			srid = geoms[ngeoms - 1]->srid;
 			/* TODO: also get ZMflags */
-		} else
+		} else {
 			gserialized_error_if_srid_mismatch_reference(geom, srid, __func__);
+		}
 	}
 
 	/* Return null on 0-points input array */

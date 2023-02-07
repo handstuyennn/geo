@@ -103,12 +103,19 @@ struct MakeLineBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA point1, TB point2) {
 		if (point1.GetSize() == 0 || point2.GetSize() == 0) {
-			return NULL;
+			return string_t();
 		}
 		auto gser1 = Geometry::GetGserialized(point1);
 		auto gser2 = Geometry::GetGserialized(point2);
 		if (!gser1 || !gser2) {
-			throw ConversionException("Failure in geometry distance: could not calculate distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get make line: could not getting make line from geom");
+			return string_t();
 		}
 		auto gser = Geometry::MakeLine(gser1, gser2);
 		if (!gser) {
@@ -600,7 +607,14 @@ struct GeometryDistanceBinaryOperator {
 		auto gser1 = Geometry::GetGserialized(geom1);
 		auto gser2 = Geometry::GetGserialized(geom2);
 		if (!gser1 || !gser2) {
-			throw ConversionException("Failure in geometry distance: could not calculate distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get distance: could not getting distance from geom");
+			return dis;
 		}
 		dis = Geometry::Distance(gser1, gser2);
 		Geometry::DestroyGeometry(gser1);
@@ -619,7 +633,14 @@ struct GeometryDistanceTernaryOperator {
 		auto gser1 = Geometry::GetGserialized(geom1);
 		auto gser2 = Geometry::GetGserialized(geom2);
 		if (!gser1 || !gser2) {
-			throw ConversionException("Failure in geometry distance: could not calculate distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get distance: could not getting distance from geom");
+			return dis;
 		}
 		dis = Geometry::Distance(gser1, gser2, use_spheroid);
 		Geometry::DestroyGeometry(gser1);
@@ -1539,9 +1560,15 @@ static TR DifferenceScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-		throw ConversionException("Failure in geometry get difference: could not getting difference from geom");
-		return string_t();
-	}
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get difference: could not getting difference from geom");
+			return string_t();
+		}
 	auto gserDiff = Geometry::Difference(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserDiff);
 	auto base = Geometry::GetBase(gserDiff);
@@ -1575,9 +1602,15 @@ static TR ClosestPointScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-		throw ConversionException("Failure in geometry get closest point: could not getting closest point from geom");
-		return string_t();
-	}
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get closest point: could not getting closest point from geom");
+			return string_t();
+		}
 	auto gserClosestPoint = Geometry::ClosestPoint(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserClosestPoint);
 	auto base = Geometry::GetBase(gserClosestPoint);
@@ -1611,9 +1644,15 @@ static TR UnionScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-		throw ConversionException("Failure in geometry get union: could not getting union from geom");
-		return string_t();
-	}
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get union: could not getting union from geom");
+			return string_t();
+		}
 	auto gserUnion = Geometry::GeometryUnion(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserUnion);
 	auto base = Geometry::GetBase(gserUnion);
@@ -1714,9 +1753,15 @@ static TR IntersectionScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-		throw ConversionException("Failure in geometry get intersection: could not getting intersection from geom");
-		return string_t();
-	}
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get intersection: could not getting intersecion from geom");
+			return string_t();
+		}
 	auto gserIntersection = Geometry::GeometryIntersection(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserIntersection);
 	auto base = Geometry::GetBase(gserIntersection);
@@ -2377,7 +2422,7 @@ struct AngleTernaryOperator {
 				Geometry::DestroyGeometry(gser3);
 			}
 			throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
-			return false;
+			return 0.0;
 		}
 		auto angle = Geometry::GeometryAngle(gser1, gser2, gser3);
 		Geometry::DestroyGeometry(gser1);
@@ -2409,6 +2454,7 @@ struct PerimeterUnaryOperator {
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
+			throw ConversionException("Failure in geometry get perimeter: could not getting perimeter from geom");
 			return 0.0;
 		}
 		auto perimeter = Geometry::GeometryPerimeter(gser);
@@ -2426,7 +2472,7 @@ struct PerimeterBinaryOperator {
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry get perimeter: could not getting perimeter from geom");
-			return false;
+			return 0;
 		}
 		auto perimeter = Geometry::GeometryPerimeter(gser, use_spheroid);
 		Geometry::DestroyGeometry(gser);
@@ -2454,37 +2500,42 @@ void GeoFunctions::GeometryPerimeterFunction(DataChunk &args, ExpressionState &s
 	}
 }
 
-struct AzimuthBinaryOperator {
-	template <class TA, class TB, class TR>
-	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
-			return true;
-		}
-		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
-			return false;
-		}
-		auto gser1 = Geometry::GetGserialized(geom1);
-		auto gser2 = Geometry::GetGserialized(geom2);
-		if (!gser1 || !gser2) {
-			if (gser1) {
-				Geometry::DestroyGeometry(gser1);
-			}
-			if (gser2) {
-				Geometry::DestroyGeometry(gser2);
-			}
-			throw ConversionException("Failure in geometry get azimuth: could not getting azimuth from geom");
-			return false;
-		}
-		auto azimuthRv = Geometry::GeometryAzimuth(gser1, gser2);
-		Geometry::DestroyGeometry(gser1);
-		Geometry::DestroyGeometry(gser2);
-		return azimuthRv;
+template <typename TA, typename TB, typename TR>
+static TR AzimuthScalarFunction(Vector &result, TA geom1, TB geom2, ValidityMask &mask, idx_t idx) {
+	if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
+		return 0.0;
 	}
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+		return 0.0;
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	if (!gser1 || !gser2) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get azimuth: could not getting azimuth from geom");
+		return 0.0;
+	}
+	auto azimuthRv = Geometry::GeometryAzimuth(gser1, gser2);
+	if (isnan(azimuthRv)) {
+		mask.SetInvalid(idx);
+		return 0.0;
+	}
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	return azimuthRv;
 };
 
 template <typename TA, typename TB, typename TR>
-static void GeometryAzimuthBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
-	BinaryExecutor::ExecuteStandard<TA, TB, TR, AzimuthBinaryOperator>(geom1, geom2, result, count);
+static void GeometryAzimuthBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteWithNulls<TA, TB, TR>(
+	    geom1_vec, geom2_vec, result, count, [&](TA geom1, TB geom2, ValidityMask &mask, idx_t idx) {
+		    return AzimuthScalarFunction<TA, TB, TR>(result, geom1, geom2, mask, idx);
+	    });
 }
 
 void GeoFunctions::GeometryAzimuthFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -2558,6 +2609,11 @@ struct BoundingBoxUnaryOperator {
 			return string_t();
 		}
 		auto gserBoundingBox = Geometry::GeometryBoundingBox(gser);
+		if (!gserBoundingBox) {
+			Geometry::DestroyGeometry(gser);
+			throw ConversionException("Failure in geometry get bounding box: could not getting bounding box from geom");
+			return string_t();
+		}
 		if (gser == gserBoundingBox) {
 			Geometry::DestroyGeometry(gser);
 			return geom;
@@ -2593,8 +2649,14 @@ struct GeometryMaxDistanceBinaryOperator {
 		auto gser1 = Geometry::GetGserialized(geom1);
 		auto gser2 = Geometry::GetGserialized(geom2);
 		if (!gser1 || !gser2) {
-			throw ConversionException(
-			    "Failure in geometry maximum distance: could not calculate maximum distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get max distance: could not getting max distance from geom");
+			return dis;
 		}
 		dis = Geometry::MaxDistance(gser1, gser2);
 		Geometry::DestroyGeometry(gser1);

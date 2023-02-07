@@ -110,9 +110,12 @@ void gserialized_error_if_srid_mismatch(const GSERIALIZED *g1, const GSERIALIZED
 
 void gserialized_error_if_srid_mismatch_reference(const GSERIALIZED *g1, const int32_t srid2, const char *funcname) {
 	int32_t srid1 = gserialized_get_srid(g1);
-	if (srid1 != srid2)
-		lwerror("%s: Operation on mixed SRID geometries %s %d != %d", funcname, lwtype_name(gserialized1_get_type(g1)),
-		        srid1, srid2);
+	if (srid1 != srid2) {
+		std::ostringstream s;
+		s << funcname << ": Operation on mixed SRID geometries " << lwtype_name(gserialized1_get_type(g1)) << " " << srid1 << " != " << srid2;
+		std::string errormsg = s.str();
+		lwerror(errormsg.c_str());
+	}
 }
 
 /**

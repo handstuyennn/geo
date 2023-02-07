@@ -68,6 +68,8 @@ static const std::vector<ScalarFunctionSet> GetMeasureScalarFunctions(LogicalTyp
 	ScalarFunctionSet maxdistance("st_maxdistance");
 	maxdistance.AddFunction(
 	    ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryMaxDistanceFunction));
+	maxdistance.AddFunction(ScalarFunction({geo_type, geo_type, LogicalType::BOOLEAN}, LogicalType::DOUBLE,
+	                                       GeoFunctions::GeometryMaxDistanceFunction));
 	func_set.push_back(maxdistance);
 
 	// ST_PERIMETER
