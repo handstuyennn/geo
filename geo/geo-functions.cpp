@@ -1560,15 +1560,15 @@ static TR DifferenceScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-			if (gser1) {
-				Geometry::DestroyGeometry(gser1);
-			}
-			if (gser2) {
-				Geometry::DestroyGeometry(gser2);
-			}
-			throw ConversionException("Failure in geometry get difference: could not getting difference from geom");
-			return string_t();
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
 		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get difference: could not getting difference from geom");
+		return string_t();
+	}
 	auto gserDiff = Geometry::Difference(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserDiff);
 	auto base = Geometry::GetBase(gserDiff);
@@ -1602,15 +1602,15 @@ static TR ClosestPointScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-			if (gser1) {
-				Geometry::DestroyGeometry(gser1);
-			}
-			if (gser2) {
-				Geometry::DestroyGeometry(gser2);
-			}
-			throw ConversionException("Failure in geometry get closest point: could not getting closest point from geom");
-			return string_t();
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
 		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get closest point: could not getting closest point from geom");
+		return string_t();
+	}
 	auto gserClosestPoint = Geometry::ClosestPoint(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserClosestPoint);
 	auto base = Geometry::GetBase(gserClosestPoint);
@@ -1644,15 +1644,15 @@ static TR UnionScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-			if (gser1) {
-				Geometry::DestroyGeometry(gser1);
-			}
-			if (gser2) {
-				Geometry::DestroyGeometry(gser2);
-			}
-			throw ConversionException("Failure in geometry get union: could not getting union from geom");
-			return string_t();
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
 		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get union: could not getting union from geom");
+		return string_t();
+	}
 	auto gserUnion = Geometry::GeometryUnion(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserUnion);
 	auto base = Geometry::GetBase(gserUnion);
@@ -1753,15 +1753,15 @@ static TR IntersectionScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-			if (gser1) {
-				Geometry::DestroyGeometry(gser1);
-			}
-			if (gser2) {
-				Geometry::DestroyGeometry(gser2);
-			}
-			throw ConversionException("Failure in geometry get intersection: could not getting intersecion from geom");
-			return string_t();
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
 		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get intersection: could not getting intersecion from geom");
+		return string_t();
+	}
 	auto gserIntersection = Geometry::GeometryIntersection(gser1, gser2);
 	idx_t rv_size = Geometry::GetGeometrySize(gserIntersection);
 	auto base = Geometry::GetBase(gserIntersection);
@@ -2399,6 +2399,34 @@ void GeoFunctions::GeometryAreaFunction(DataChunk &args, ExpressionState &state,
 	}
 }
 
+struct AngleBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
+			return 0.0;
+		}
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+			return 0.0;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
+			return 0.0;
+		}
+		auto angle = Geometry::GeometryAngle(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return angle;
+	}
+};
+
 struct AngleTernaryOperator {
 	template <class TA, class TB, class TC, class TR>
 	static inline TR Operation(TA geom1, TB geom2, TC geom3) {
@@ -2424,7 +2452,7 @@ struct AngleTernaryOperator {
 			throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
 			return 0.0;
 		}
-		auto angle = Geometry::GeometryAngle(gser1, gser2, gser3);
+		auto angle = Geometry::GeometryAngle(std::vector<GSERIALIZED *> {gser1, gser2, gser3});
 		Geometry::DestroyGeometry(gser1);
 		Geometry::DestroyGeometry(gser2);
 		Geometry::DestroyGeometry(gser3);
@@ -2432,18 +2460,74 @@ struct AngleTernaryOperator {
 	}
 };
 
+template <typename TA, typename TB, typename TR>
+static void GeometryAngleBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom1, geom2, result, count, AngleBinaryOperator::Operation<TA, TB, TR>);
+}
+
 template <typename TA, typename TB, typename TC, typename TR>
 static void GeometryAngleTernaryExecutor(Vector &geom1, Vector &geom2, Vector &geom3, Vector &result, idx_t count) {
 	TernaryExecutor::Execute<TA, TB, TC, TR>(geom1, geom2, geom3, result, count,
 	                                         AngleTernaryOperator::Operation<TA, TB, TC, TR>);
 }
 
+static double AngleQuaternaryScalarFunction(string_t geom1, string_t geom2, string_t geom3, string_t geom4) {
+	if (geom1.GetSize() == 0 && geom2.GetSize() == 0 && geom3.GetSize() == 0 && geom4.GetSize() == 0) {
+		return 0.0;
+	}
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0 || geom3.GetSize() == 0 || geom4.GetSize() == 0) {
+		return 0.0;
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	auto gser3 = Geometry::GetGserialized(geom3);
+	auto gser4 = Geometry::GetGserialized(geom4);
+	if (!gser1 || !gser2 || !gser3 || !gser4) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		if (gser3) {
+			Geometry::DestroyGeometry(gser3);
+		}
+		if (gser4) {
+			Geometry::DestroyGeometry(gser4);
+		}
+		throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
+		return 0.0;
+	}
+	auto angle = Geometry::GeometryAngle(std::vector<GSERIALIZED *> {gser1, gser2, gser3, gser4});
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	Geometry::DestroyGeometry(gser3);
+	Geometry::DestroyGeometry(gser4);
+	return angle;
+}
+
 void GeoFunctions::GeometryAngleFunction(DataChunk &args, ExpressionState &state, Vector &result) {
 	auto &geom1_arg = args.data[0];
 	auto &geom2_arg = args.data[1];
-	auto &geom3_arg = args.data[2];
-	GeometryAngleTernaryExecutor<string_t, string_t, string_t, double>(geom1_arg, geom2_arg, geom3_arg, result,
-	                                                                   args.size());
+
+	if (args.data.size() == 2) {
+		GeometryAngleBinaryExecutor<string_t, string_t, double>(geom1_arg, geom2_arg, result, args.size());
+	} else if (args.data.size() > 2) {
+		auto &geom3_arg = args.data[2];
+		if (args.data.size() == 3) {
+			GeometryAngleTernaryExecutor<string_t, string_t, string_t, double>(geom1_arg, geom2_arg, geom3_arg, result,
+			                                                                   args.size());
+		} else {
+			auto &geom4_arg = args.data[3];
+			GenericExecutor::ExecuteQuaternary<PrimitiveType<string_t>, PrimitiveType<string_t>,
+			                                   PrimitiveType<string_t>, PrimitiveType<string_t>, PrimitiveType<double>>(
+			    geom1_arg, geom2_arg, geom3_arg, geom4_arg, result, args.size(),
+			    [&](PrimitiveType<string_t> geom1, PrimitiveType<string_t> geom2, PrimitiveType<string_t> geom3,
+			        PrimitiveType<string_t> geom4) {
+				    return AngleQuaternaryScalarFunction(geom1.val, geom2.val, geom3.val, geom4.val);
+			    });
+		}
+	}
 }
 
 struct PerimeterUnaryOperator {

@@ -17,8 +17,11 @@ static const std::vector<ScalarFunctionSet> GetMeasureScalarFunctions(LogicalTyp
 
 	// ST_ANGLE
 	ScalarFunctionSet angle("st_angle");
+	angle.AddFunction(ScalarFunction({geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAngleFunction));
 	angle.AddFunction(
 	    ScalarFunction({geo_type, geo_type, geo_type}, LogicalType::DOUBLE, GeoFunctions::GeometryAngleFunction));
+	angle.AddFunction(ScalarFunction({geo_type, geo_type, geo_type, geo_type}, LogicalType::DOUBLE,
+	                                 GeoFunctions::GeometryAngleFunction));
 	func_set.push_back(angle);
 
 	// ST_AREA

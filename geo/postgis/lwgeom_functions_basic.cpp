@@ -30,6 +30,7 @@
 #include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
 #include "postgis/lwgeom_inout.hpp"
+#include "postgis/lwgeom_ogc.hpp"
 
 #include <float.h>
 
@@ -298,6 +299,29 @@ double ST_Area(GSERIALIZED *geom) {
 	return area;
 }
 
+double LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2)) {
+		lwerror("Empty geometry");
+		return 0.0;
+	}
+
+	if (gserialized_get_type(geom1) != LINETYPE || gserialized_get_type(geom2) != LINETYPE) {
+		lwerror("Argument must be LINESTRING geometries");
+		return 0.0;
+	}
+
+	std::vector<GSERIALIZED *> point_vec {LWGEOM_startpoint_linestring(geom1), LWGEOM_endpoint_linestring(geom1),
+	                                      LWGEOM_startpoint_linestring(geom2), LWGEOM_endpoint_linestring(geom2)};
+	auto angle = LWGEOM_angle(point_vec);
+
+	for (auto point : point_vec) {
+		if (point) {
+			LWGEOM_free(point);
+		}
+	}
+	return angle;
+}
+
 /**
  * Compute the angle defined by 3 points or the angle between 2 vectors
  * defined by 4 points
@@ -305,7 +329,7 @@ double ST_Area(GSERIALIZED *geom) {
  * @return NULL on exception (same point).
  * 		Return radians otherwise (always positive).
  */
-double LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3) {
+double LWGEOM_angle(std::vector<GSERIALIZED *> geom_vec) {
 	GSERIALIZED *seri_geoms[4];
 	LWGEOM *geom_unser;
 	LWPOINT *lwpoint;
@@ -316,17 +340,11 @@ double LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3) 
 	int i = 0;
 	int j = 0;
 	int err_code = 0;
-	int n_args = 3;
+	int n_args = geom_vec.size();
 
 	/* no deserialize, checking for common error first*/
 	for (i = 0; i < n_args; i++) {
-		if (i == 0) {
-			seri_geoms[i] = geom1;
-		} else if (i == 1) {
-			seri_geoms[i] = geom2;
-		} else if (i == 2) {
-			seri_geoms[i] = geom3;
-		}
+		seri_geoms[i] = geom_vec[i];
 		if (gserialized_is_empty(seri_geoms[i])) { /* empty geom */
 			if (i == 3) {
 				n_args = 3;

@@ -86,7 +86,8 @@ public:
 
 	static double GeometryArea(GSERIALIZED *geom);
 	static double GeometryArea(GSERIALIZED *geom, bool use_spheroid);
-	static double GeometryAngle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3);
+	static double GeometryAngle(GSERIALIZED *geom1, GSERIALIZED *geom2);
+	static double GeometryAngle(std::vector<GSERIALIZED *> geom_vec);
 	static double GeometryPerimeter(GSERIALIZED *geom);
 	static double GeometryPerimeter(GSERIALIZED *geom, bool use_spheroid);
 	static double GeometryAzimuth(GSERIALIZED *geom1, GSERIALIZED *geom2);
