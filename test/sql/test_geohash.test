@@ -9,13 +9,13 @@ statement ok
 PRAGMA enable_verification
 
 statement ok
-CREATE TABLE geometries(g Geometry)
+CREATE TABLE geographies(g Geography)
 
 statement ok
-INSERT INTO geometries VALUES('0101000000295C8FC2F5281440E17A14AE47E12540'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('POLYGON((-71.040878 42.285678,-71.040943 42.2856,-71.04096 42.285752,-71.040878 42.285678))'),(NULL)
+INSERT INTO geographies VALUES('0101000000295C8FC2F5281440E17A14AE47E12540'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('POLYGON((-71.040878 42.285678,-71.040943 42.2856,-71.04096 42.285752,-71.040878 42.285678))'),(NULL)
 
 query R
-select ST_GEOHASH(g) from geometries
+select ST_GEOHASH(g) from geographies
 ----
 s1gw4xw40eb3ur11nctj
 d3v6nysrkngr51n0w0rt
@@ -24,7 +24,7 @@ NULL
 
 # hash with precision
 query R
-select ST_GEOHASH(g, 10) from geometries
+select ST_GEOHASH(g, 10) from geographies
 ----
 s1gw4xw40e
 d3v6nysrkn
@@ -33,19 +33,19 @@ NULL
 
 # test with null and empty
 statement ok
-DELETE FROM geometries
+DELETE FROM geographies
 
 statement ok
-INSERT INTO geometries VALUES(''), (NULL)
+INSERT INTO geographies VALUES(''), (NULL)
 
 query R
-select ST_GEOHASH(g) from geometries
+select ST_GEOHASH(g) from geographies
 ----
 (empty)
 NULL
 
 query R
-select ST_GEOHASH(g,20) from geometries
+select ST_GEOHASH(g,20) from geographies
 ----
 (empty)
 NULL

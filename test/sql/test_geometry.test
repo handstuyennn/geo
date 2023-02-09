@@ -1,5 +1,5 @@
 # name: test/sql/test_geometry.test
-# description: GEOMETRY tests
+# description: GEOGRAPHY tests
 # group: [sql]
 
 statement ok
@@ -9,14 +9,14 @@ statement ok
 PRAGMA enable_verification
 
 statement ok
-CREATE TABLE geometries (g Geometry);
+CREATE TABLE geographies (g Geography);
 
-# Insert valid geometry strings
+# Insert valid geography strings
 statement ok
-INSERT INTO geometries VALUES('010100000000000000000024400000000000004B40'), ('01010000000000000000003E40BBB88D06F0762440'), ('0101000000CB49287D21C451C0F0BF95ECD8244540'), ('0101000000CB49287D21C451C0F0BF95ECD8A44540')
+INSERT INTO geographies VALUES('010100000000000000000024400000000000004B40'), ('01010000000000000000003E40BBB88D06F0762440'), ('0101000000CB49287D21C451C0F0BF95ECD8244540'), ('0101000000CB49287D21C451C0F0BF95ECD8A44540')
 
 query T
-SELECT * FROM geometries
+SELECT * FROM geographies
 ----
 010100000000000000000024400000000000004B40
 01010000000000000000003E40BBB88D06F0762440
@@ -25,13 +25,13 @@ SELECT * FROM geometries
 
 # Insert valid strings with text
 statement ok
-DELETE FROM geometries
+DELETE FROM geographies
 
 statement ok
-INSERT INTO geometries VALUES('POINT(10 54)'), ('POINT(-71.064544 42.28787)'), ('POINT(-71.064544 43.28787)')
+INSERT INTO geographies VALUES('POINT(10 54)'), ('POINT(-71.064544 42.28787)'), ('POINT(-71.064544 43.28787)')
 
 query T
-SELECT * FROM geometries
+SELECT * FROM geographies
 ----
 010100000000000000000024400000000000004B40
 0101000000CB49287D21C451C0F0BF95ECD8244540
@@ -39,13 +39,13 @@ SELECT * FROM geometries
 
 # Insert valid strings with geojson
 statement ok
-DELETE FROM geometries
+DELETE FROM geographies
 
 statement ok
-INSERT INTO geometries VALUES('{"type":"Point","coordinates":[30,10.2323]}'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('{"type":"Point","coordinates":[30,43.28787]}')
+INSERT INTO geographies VALUES('{"type":"Point","coordinates":[30,10.2323]}'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('{"type":"Point","coordinates":[30,43.28787]}')
 
 query T
-SELECT * FROM geometries
+SELECT * FROM geographies
 ----
 01010000000000000000003E40BBB88D06F0762440
 0101000000CB49287D21C451C0BBB88D06F0762440
@@ -53,38 +53,38 @@ SELECT * FROM geometries
 
 # Insert invalid binary string (invalid hex chars: G, H, I)
 statement error
-INSERT INTO geometries('010100000000000G0000003E40BBB8HD06F07I2440')
+INSERT INTO geographies('010100000000000G0000003E40BBB8HD06F07I2440')
 
 # Insert invalid text string
 statement error
-INSERT INTO geometries(('PAOINT(-71.064544 42.28787)'))
+INSERT INTO geographies(('PAOINT(-71.064544 42.28787)'))
 
 # Insert invalid geojson string
 statement error
-INSERT INTO geometries(('{"type":"Pointttttt","coordinates":[30,10.2323]}'))
+INSERT INTO geographies(('{"type":"Pointttttt","coordinates":[30,10.2323]}'))
 
-# GEOMETRY null and empty values
+# GEOGRAPHY null and empty values
 query T
-SELECT ''::GEOMETRY
+SELECT ''::GEOGRAPHY
 ----
 (empty)
 
 query T
-SELECT NULL::GEOMETRY
+SELECT NULL::GEOGRAPHY
 ----
 NULL
 
 statement ok
-CREATE TABLE geometry_empty (g Geometry);
+CREATE TABLE geography_empty (g Geography);
 
 statement ok
-INSERT INTO geometry_empty VALUES(''), (''::GEOMETRY)
+INSERT INTO geography_empty VALUES(''), (''::GEOGRAPHY)
 
 statement ok
-INSERT INTO geometry_empty VALUES(NULL), (NULL::GEOMETRY)
+INSERT INTO geography_empty VALUES(NULL), (NULL::GEOGRAPHY)
 
 query T
-SELECT * FROM geometry_empty
+SELECT * FROM geography_empty
 ----
 (empty)
 (empty)

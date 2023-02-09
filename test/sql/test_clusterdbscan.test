@@ -9,13 +9,13 @@ statement ok
 PRAGMA enable_verification
 
 statement ok
-CREATE TABLE dbscan_inputs (id int, geom geometry)
+CREATE TABLE dbscan_inputs (id int, geo geography)
 
 statement ok
 INSERT INTO dbscan_inputs VALUES (0, 'POINT EMPTY'),(1, 'POINT (0 0)'),(2, 'POINT (1 1)'),(3, 'POINT (-0.5 0.5)'),(4, 'POINT (1 0)'),(5, 'POINT (0 1)'),(6, 'POINT (1.0 0.5)')
 
 query II
-SELECT id, ST_ASTEXT(geom) from dbscan_inputs
+SELECT id, ST_ASTEXT(geo) from dbscan_inputs
 ----
 0	POINT EMPTY
 1	POINT(0 0)
@@ -26,7 +26,7 @@ SELECT id, ST_ASTEXT(geom) from dbscan_inputs
 6	POINT(1 0.5)
 
 query III
-SELECT id, ST_ASTEXT(geom) as geom_text, ST_CLUSTERDBSCAN(geom, 1e5, 1) over () as m from dbscan_inputs
+SELECT id, ST_ASTEXT(geo) as geom_text, ST_CLUSTERDBSCAN(geo, 1e5, 1) over () as m from dbscan_inputs
 ----
 0	POINT EMPTY	NULL
 1	POINT(0 0)	0
@@ -38,7 +38,7 @@ SELECT id, ST_ASTEXT(geom) as geom_text, ST_CLUSTERDBSCAN(geom, 1e5, 1) over () 
 
 
 query II
-SELECT id, ST_CLUSTERDBSCAN(geom, 0.6, 1) over (order by id desc rows between 3 preceding and current row) as m from dbscan_inputs
+SELECT id, ST_CLUSTERDBSCAN(geo, 0.6, 1) over (order by id desc rows between 3 preceding and current row) as m from dbscan_inputs
 ----
 6	0
 5	1
@@ -52,7 +52,7 @@ statement ok
 INSERT INTO dbscan_inputs VALUES (7, 'POINT EMPTY'),(8, 'MULTIPOINT(1 1, 2 2, 4 4, 5 2)'),(9, 'POINT(14 15)'),(10, 'LINESTRING(40 1, 42 34, 44 39)'),(11, 'POLYGON((40 2, 40 1, 41 2, 40 2))')
 
 query III
-SELECT id, ST_ASTEXT(geom) as geom_text, ST_CLUSTERDBSCAN(geom, 1e5, 1) over () as m from dbscan_inputs
+SELECT id, ST_ASTEXT(geo) as geom_text, ST_CLUSTERDBSCAN(geo, 1e5, 1) over () as m from dbscan_inputs
 ----
 0	POINT EMPTY	NULL
 1	POINT(0 0)	0
@@ -68,7 +68,7 @@ SELECT id, ST_ASTEXT(geom) as geom_text, ST_CLUSTERDBSCAN(geom, 1e5, 1) over () 
 11	POLYGON((40 2,40 1,41 2,40 2))	7
 
 query II
-SELECT id, ST_CLUSTERDBSCAN(geom, 0.6, 1) over (order by id desc rows between 3 preceding and current row) as m from dbscan_inputs
+SELECT id, ST_CLUSTERDBSCAN(geo, 0.6, 1) over (order by id desc rows between 3 preceding and current row) as m from dbscan_inputs
 ----
 11	0
 10	0

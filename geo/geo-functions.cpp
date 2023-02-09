@@ -616,7 +616,7 @@ struct GeometryDistanceBinaryOperator {
 			throw ConversionException("Failure in geometry get distance: could not getting distance from geom");
 			return dis;
 		}
-		dis = Geometry::Distance(gser1, gser2);
+		dis = Geometry::Distance(gser1, gser2, false);
 		Geometry::DestroyGeometry(gser1);
 		Geometry::DestroyGeometry(gser2);
 		return dis;
@@ -682,8 +682,17 @@ struct CentroidUnaryOperator {
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry centroid: could not calculate centroid from geometry");
+			return string_t();
 		}
-		auto gserCentroid = Geometry::Centroid(gser);
+		auto gserCentroid = Geometry::Centroid(gser, false);
+		if (!gserCentroid) {
+			Geometry::DestroyGeometry(gser);
+			throw ConversionException("Failure in geometry asgeojson");
+			return string_t();
+		} else if (gserCentroid == gser) {
+			Geometry::DestroyGeometry(gser);
+			return geom;
+		}
 		idx_t rv_size = Geometry::GetGeometrySize(gserCentroid);
 		auto base = Geometry::GetBase(gserCentroid);
 		auto result_str = StringVector::EmptyString(result, rv_size);
@@ -2356,7 +2365,7 @@ struct AreaOperator {
 		if (!gser) {
 			return 0;
 		}
-		auto area = Geometry::GeometryArea(gser);
+		auto area = Geometry::GeometryArea(gser, false);
 		Geometry::DestroyGeometry(gser);
 		return area;
 	}
@@ -2541,7 +2550,7 @@ struct PerimeterUnaryOperator {
 			throw ConversionException("Failure in geometry get perimeter: could not getting perimeter from geom");
 			return 0.0;
 		}
-		auto perimeter = Geometry::GeometryPerimeter(gser);
+		auto perimeter = Geometry::GeometryPerimeter(gser, false);
 		Geometry::DestroyGeometry(gser);
 		return perimeter;
 	}
@@ -2638,7 +2647,7 @@ struct LengthUnaryOperator {
 		if (!gser) {
 			return 0.0;
 		}
-		auto length = Geometry::GeometryLength(gser);
+		auto length = Geometry::GeometryLength(gser, false);
 		Geometry::DestroyGeometry(gser);
 		return length;
 	}
@@ -2815,6 +2824,7 @@ void GeoFunctions::GeometryExtentFunction(DataChunk &args, ExpressionState &stat
 			for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {
 				Geometry::DestroyGeometry(gserArray[child_idx]);
 			}
+			result_entries[i] = string_t();
 			continue;
 		}
 		idx_t rv_size = Geometry::GetGeometrySize(gserExtent);

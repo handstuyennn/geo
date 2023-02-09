@@ -26,9 +26,9 @@ void GeoExtension::Load(DuckDB &db) {
 	auto &catalog = Catalog::GetSystemCatalog(*con.context);
 
 	auto geo_type = LogicalType(LogicalTypeId::BLOB);
-	geo_type.SetAlias("GEOMETRY");
+	geo_type.SetAlias("GEOGRAPHY");
 
-	CreateTypeInfo info("Geometry", geo_type);
+	CreateTypeInfo info("Geography", geo_type);
 	info.temporary = true;
 	info.internal = true;
 	catalog.CreateType(*con.context, &info);
