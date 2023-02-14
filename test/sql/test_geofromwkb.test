@@ -9,13 +9,13 @@ statement ok
 PRAGMA enable_verification
 
 statement ok
-CREATE TABLE geometries(g Geometry)
+CREATE TABLE geographies(g Geography)
 
 statement ok
-INSERT INTO geometries VALUES(ST_GEOGFROMWKB('\x01\x01\x00\x00\x00)\x5C\x8F\xC2\xF5(\x14@\xE1z\x14\xAEG\xE1%@'::BLOB)),(ST_GEOGFROMWKB('\x01\x02\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\x00@\x00\x00\x00\x00\x00\x00\x00@\x00\x00\x00\x00\x00\x00\x08@\x00\x00\x00\x00\x00\x00\x08@\x00\x00\x00\x00\x00\x00\x10@\x00\x00\x00\x00\x00\x00\x10@'::BLOB)),(ST_GEOGFROMWKB(NULL))
+INSERT INTO geographies VALUES(ST_GEOGFROMWKB('\x01\x01\x00\x00\x00)\x5C\x8F\xC2\xF5(\x14@\xE1z\x14\xAEG\xE1%@'::BLOB)),(ST_GEOGFROMWKB('\x01\x02\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\xF0?\x00\x00\x00\x00\x00\x00\x00@\x00\x00\x00\x00\x00\x00\x00@\x00\x00\x00\x00\x00\x00\x08@\x00\x00\x00\x00\x00\x00\x08@\x00\x00\x00\x00\x00\x00\x10@\x00\x00\x00\x00\x00\x00\x10@'::BLOB)),(ST_GEOGFROMWKB(NULL))
 
 query R
-select ST_ASTEXT(g) from geometries
+select ST_ASTEXT(g) from geographies
 ----
 POINT(5.04 10.94)
 LINESTRING(1 1,2 2,3 3,4 4)
@@ -23,13 +23,13 @@ NULL
 
 # test with null and empty
 statement ok
-DELETE FROM geometries
+DELETE FROM geographies
 
 statement ok
-INSERT INTO geometries VALUES(ST_GEOGFROMWKB(''::BLOB)), (ST_GEOMFROMWKB(NULL))
+INSERT INTO geographies VALUES(ST_GEOGFROMWKB(''::BLOB)), (ST_GEOMFROMWKB(NULL))
 
 query R
-select ST_ASTEXT(g) from geometries
+select ST_ASTEXT(g) from geographies
 ----
 (empty)
 NULL

@@ -280,9 +280,14 @@ double Geometry::GeometryArea(GSERIALIZED *geom, bool use_spheroid) {
 	return postgis.geography_area(geom, use_spheroid);
 }
 
-double Geometry::GeometryAngle(GSERIALIZED *geom1, GSERIALIZED *geom2, GSERIALIZED *geom3) {
+double Geometry::GeometryAngle(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	Postgis postgis;
-	return postgis.LWGEOM_angle(geom1, geom2, geom3);
+	return postgis.LWGEOM_angle(geom1, geom2);
+}
+
+double Geometry::GeometryAngle(std::vector<GSERIALIZED *> geom_vec) {
+	Postgis postgis;
+	return postgis.LWGEOM_angle(geom_vec);
 }
 
 double Geometry::GeometryPerimeter(GSERIALIZED *geom) {

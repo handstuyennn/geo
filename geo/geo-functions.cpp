@@ -103,12 +103,19 @@ struct MakeLineBinaryOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA point1, TB point2) {
 		if (point1.GetSize() == 0 || point2.GetSize() == 0) {
-			return NULL;
+			return string_t();
 		}
 		auto gser1 = Geometry::GetGserialized(point1);
 		auto gser2 = Geometry::GetGserialized(point2);
 		if (!gser1 || !gser2) {
-			throw ConversionException("Failure in geometry distance: could not calculate distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get make line: could not getting make line from geom");
+			return string_t();
 		}
 		auto gser = Geometry::MakeLine(gser1, gser2);
 		if (!gser) {
@@ -485,26 +492,27 @@ struct GeoHashUnaryOperator {
 	}
 };
 
-struct GeoHashBinaryOperator {
-	template <class TA, class TB, class TR>
-	static inline TR Operation(TA geom, TB m_chars) {
-		if (geom.GetSize() == 0) {
-			return string_t();
-		}
-		auto gser = Geometry::GetGserialized(geom);
-		if (!gser) {
-			throw ConversionException("Failure in geometry geohash");
-		}
-		auto geojson = Geometry::GeoHash(gser, m_chars);
-		if (!geojson) {
-			Geometry::DestroyGeometry(gser);
-			return string_t();
-		}
-		std::string geoText = std::string(geojson->data);
-		Geometry::DestroyGeometry(gser);
-		return string_t(geoText.c_str(), geoText.size());
+template <typename TA, typename TB, typename TR>
+static TR GeoHashScalarFunction(Vector &result, TA geom, TB m_chars) {
+	if (geom.GetSize() == 0) {
+		return geom;
 	}
-};
+	auto gser = Geometry::GetGserialized(geom);
+	if (!gser) {
+		throw ConversionException("Failure in geometry geohash");
+	}
+	auto geojson = Geometry::GeoHash(gser, m_chars);
+	if (!geojson) {
+		Geometry::DestroyGeometry(gser);
+		return string_t();
+	}
+	std::string geoText = std::string(geojson->data);
+	auto result_str = StringVector::EmptyString(result, geoText.size());
+	memcpy(result_str.GetDataWriteable(), geoText.c_str(), geoText.size());
+	result_str.Finalize();
+	Geometry::DestroyGeometry(gser);
+	return result_str;
+}
 
 template <typename TA, typename TR>
 static void GeometryGeoHashUnaryExecutor(Vector &text, Vector &result, idx_t count) {
@@ -512,8 +520,10 @@ static void GeometryGeoHashUnaryExecutor(Vector &text, Vector &result, idx_t cou
 }
 
 template <typename TA, typename TB, typename TR>
-static void GeometryGeoHashBinaryExecutor(Vector &geom, Vector &m_chars, Vector &result, idx_t count) {
-	BinaryExecutor::ExecuteStandard<TA, TB, TR, GeoHashBinaryOperator>(geom, m_chars, result, count);
+static void GeometryGeoHashBinaryExecutor(Vector &geoms, Vector &m_chars_vec, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geoms, m_chars_vec, result, count, [&](TA geom, TB m_chars) {
+		return GeoHashScalarFunction<TA, TB, TR>(result, geom, m_chars);
+	});
 }
 
 void GeoFunctions::GeometryGeoHashFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -597,9 +607,16 @@ struct GeometryDistanceBinaryOperator {
 		auto gser1 = Geometry::GetGserialized(geom1);
 		auto gser2 = Geometry::GetGserialized(geom2);
 		if (!gser1 || !gser2) {
-			throw ConversionException("Failure in geometry distance: could not calculate distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get distance: could not getting distance from geom");
+			return dis;
 		}
-		dis = Geometry::Distance(gser1, gser2);
+		dis = Geometry::Distance(gser1, gser2, false);
 		Geometry::DestroyGeometry(gser1);
 		Geometry::DestroyGeometry(gser2);
 		return dis;
@@ -616,7 +633,14 @@ struct GeometryDistanceTernaryOperator {
 		auto gser1 = Geometry::GetGserialized(geom1);
 		auto gser2 = Geometry::GetGserialized(geom2);
 		if (!gser1 || !gser2) {
-			throw ConversionException("Failure in geometry distance: could not calculate distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get distance: could not getting distance from geom");
+			return dis;
 		}
 		dis = Geometry::Distance(gser1, gser2, use_spheroid);
 		Geometry::DestroyGeometry(gser1);
@@ -658,8 +682,17 @@ struct CentroidUnaryOperator {
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry centroid: could not calculate centroid from geometry");
+			return string_t();
 		}
-		auto gserCentroid = Geometry::Centroid(gser);
+		auto gserCentroid = Geometry::Centroid(gser, false);
+		if (!gserCentroid) {
+			Geometry::DestroyGeometry(gser);
+			throw ConversionException("Failure in geometry asgeojson");
+			return string_t();
+		} else if (gserCentroid == gser) {
+			Geometry::DestroyGeometry(gser);
+			return geom;
+		}
 		idx_t rv_size = Geometry::GetGeometrySize(gserCentroid);
 		auto base = Geometry::GetBase(gserCentroid);
 		auto result_str = StringVector::EmptyString(result, rv_size);
@@ -1314,12 +1347,12 @@ struct NPointsUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE geom) {
 		if (geom.GetSize() == 0) {
-			return true;
+			return 0;
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
-			return true;
+			return 0;
 		}
 		auto nPoints = Geometry::NPoints(gser);
 		Geometry::DestroyGeometry(gser);
@@ -1341,12 +1374,12 @@ struct NumGeometriesUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE geom) {
 		if (geom.GetSize() == 0) {
-			return true;
+			return 0;
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
-			return true;
+			return 0;
 		}
 		auto numGeometries = Geometry::NumGeometries(gser);
 		Geometry::DestroyGeometry(gser);
@@ -1368,16 +1401,16 @@ struct NumPointsUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE geom) {
 		if (geom.GetSize() == 0) {
-			return true;
+			return 0;
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry is ring: could not getting ring from geom");
-			return true;
+			return 0;
 		}
-		auto numGeometries = Geometry::NumPoints(gser);
+		auto numPoints = Geometry::NumPoints(gser);
 		Geometry::DestroyGeometry(gser);
-		return numGeometries;
+		return numPoints;
 	}
 };
 
@@ -1392,7 +1425,7 @@ void GeoFunctions::GeometryNumPointsFunction(DataChunk &args, ExpressionState &s
 }
 
 template <typename TA, typename TB, typename TR>
-static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
+static TR PointNScalarFunction(Vector &result, TA geom, TB index, ValidityMask &mask, idx_t idx) {
 	if (geom.GetSize() == 0) {
 		return string_t();
 	}
@@ -1402,6 +1435,10 @@ static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
 		return string_t();
 	}
 	auto gserPointN = Geometry::PointN(gser, index);
+	if (!gserPointN) {
+		mask.SetInvalid(idx);
+		return string_t();
+	}
 	idx_t rv_size = Geometry::GetGeometrySize(gserPointN);
 	auto base = Geometry::GetBase(gserPointN);
 	auto result_str = StringVector::EmptyString(result, rv_size);
@@ -1414,9 +1451,10 @@ static TR PointNScalarFunction(Vector &result, TA geom, TB index) {
 
 template <typename TA, typename TB, typename TR>
 static void GeometryPointNBinaryExecutor(Vector &geom_vec, Vector &index_vec, Vector &result, idx_t count) {
-	BinaryExecutor::Execute<TA, TB, TR>(geom_vec, index_vec, result, count, [&](TA geom, TB index) {
-		return PointNScalarFunction<TA, TB, TR>(result, geom, index);
-	});
+	BinaryExecutor::ExecuteWithNulls<TA, TB, TR>(
+	    geom_vec, index_vec, result, count, [&](TA geom, TB index, ValidityMask &mask, idx_t idx) {
+		    return PointNScalarFunction<TA, TB, TR>(result, geom, index, mask, idx);
+	    });
 }
 
 void GeoFunctions::GeometryPointNFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -1427,7 +1465,7 @@ void GeoFunctions::GeometryPointNFunction(DataChunk &args, ExpressionState &stat
 
 struct StartPointUnaryOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
-	static RESULT_TYPE Operation(INPUT_TYPE geom, Vector &result) {
+	static inline RESULT_TYPE Operation(INPUT_TYPE geom, ValidityMask &result_mask, idx_t i, void *dataptr) {
 		if (geom.GetSize() == 0) {
 			return string_t();
 		}
@@ -1437,20 +1475,22 @@ struct StartPointUnaryOperator {
 			return string_t();
 		}
 		auto gserStartPoint = Geometry::StartPoint(gser);
+		if (!gserStartPoint) {
+			result_mask.SetInvalid(i);
+			return string_t();
+		}
 		idx_t rv_size = Geometry::GetGeometrySize(gserStartPoint);
 		auto base = Geometry::GetBase(gserStartPoint);
-		auto result_str = StringVector::EmptyString(result, rv_size);
-		memcpy(result_str.GetDataWriteable(), base, rv_size);
-		result_str.Finalize();
 		Geometry::DestroyGeometry(gser);
 		Geometry::DestroyGeometry(gserStartPoint);
-		return result_str;
+		return string_t((const char *)base, rv_size);
+		;
 	}
 };
 
 template <typename TA, typename TR>
 static void GeometryStartPointUnaryExecutor(Vector &geom, Vector &result, idx_t count) {
-	UnaryExecutor::ExecuteString<TA, TR, StartPointUnaryOperator>(geom, result, count);
+	UnaryExecutor::GenericExecute<TA, TR, StartPointUnaryOperator>(geom, result, count, (void *)&result);
 }
 
 void GeoFunctions::GeometryStartPointFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -1529,6 +1569,12 @@ static TR DifferenceScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
 		throw ConversionException("Failure in geometry get difference: could not getting difference from geom");
 		return string_t();
 	}
@@ -1565,6 +1611,12 @@ static TR ClosestPointScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
 		throw ConversionException("Failure in geometry get closest point: could not getting closest point from geom");
 		return string_t();
 	}
@@ -1601,6 +1653,12 @@ static TR UnionScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
 		throw ConversionException("Failure in geometry get union: could not getting union from geom");
 		return string_t();
 	}
@@ -1704,7 +1762,13 @@ static TR IntersectionScalarFunction(Vector &result, TA geom1, TB geom2) {
 	auto gser1 = Geometry::GetGserialized(geom1);
 	auto gser2 = Geometry::GetGserialized(geom2);
 	if (!gser1 || !gser2) {
-		throw ConversionException("Failure in geometry get intersection: could not getting intersection from geom");
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get intersection: could not getting intersecion from geom");
 		return string_t();
 	}
 	auto gserIntersection = Geometry::GeometryIntersection(gser1, gser2);
@@ -2301,7 +2365,7 @@ struct AreaOperator {
 		if (!gser) {
 			return 0;
 		}
-		auto area = Geometry::GeometryArea(gser);
+		auto area = Geometry::GeometryArea(gser, false);
 		Geometry::DestroyGeometry(gser);
 		return area;
 	}
@@ -2344,6 +2408,34 @@ void GeoFunctions::GeometryAreaFunction(DataChunk &args, ExpressionState &state,
 	}
 }
 
+struct AngleBinaryOperator {
+	template <class TA, class TB, class TR>
+	static inline TR Operation(TA geom1, TB geom2) {
+		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
+			return 0.0;
+		}
+		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+			return 0.0;
+		}
+		auto gser1 = Geometry::GetGserialized(geom1);
+		auto gser2 = Geometry::GetGserialized(geom2);
+		if (!gser1 || !gser2) {
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
+			return 0.0;
+		}
+		auto angle = Geometry::GeometryAngle(gser1, gser2);
+		Geometry::DestroyGeometry(gser1);
+		Geometry::DestroyGeometry(gser2);
+		return angle;
+	}
+};
+
 struct AngleTernaryOperator {
 	template <class TA, class TB, class TC, class TR>
 	static inline TR Operation(TA geom1, TB geom2, TC geom3) {
@@ -2367,9 +2459,9 @@ struct AngleTernaryOperator {
 				Geometry::DestroyGeometry(gser3);
 			}
 			throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
-			return false;
+			return 0.0;
 		}
-		auto angle = Geometry::GeometryAngle(gser1, gser2, gser3);
+		auto angle = Geometry::GeometryAngle(std::vector<GSERIALIZED *> {gser1, gser2, gser3});
 		Geometry::DestroyGeometry(gser1);
 		Geometry::DestroyGeometry(gser2);
 		Geometry::DestroyGeometry(gser3);
@@ -2377,18 +2469,74 @@ struct AngleTernaryOperator {
 	}
 };
 
+template <typename TA, typename TB, typename TR>
+static void GeometryAngleBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
+	BinaryExecutor::Execute<TA, TB, TR>(geom1, geom2, result, count, AngleBinaryOperator::Operation<TA, TB, TR>);
+}
+
 template <typename TA, typename TB, typename TC, typename TR>
 static void GeometryAngleTernaryExecutor(Vector &geom1, Vector &geom2, Vector &geom3, Vector &result, idx_t count) {
 	TernaryExecutor::Execute<TA, TB, TC, TR>(geom1, geom2, geom3, result, count,
 	                                         AngleTernaryOperator::Operation<TA, TB, TC, TR>);
 }
 
+static double AngleQuaternaryScalarFunction(string_t geom1, string_t geom2, string_t geom3, string_t geom4) {
+	if (geom1.GetSize() == 0 && geom2.GetSize() == 0 && geom3.GetSize() == 0 && geom4.GetSize() == 0) {
+		return 0.0;
+	}
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0 || geom3.GetSize() == 0 || geom4.GetSize() == 0) {
+		return 0.0;
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	auto gser3 = Geometry::GetGserialized(geom3);
+	auto gser4 = Geometry::GetGserialized(geom4);
+	if (!gser1 || !gser2 || !gser3 || !gser4) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		if (gser3) {
+			Geometry::DestroyGeometry(gser3);
+		}
+		if (gser4) {
+			Geometry::DestroyGeometry(gser4);
+		}
+		throw ConversionException("Failure in geometry get angle: could not getting angle from geom");
+		return 0.0;
+	}
+	auto angle = Geometry::GeometryAngle(std::vector<GSERIALIZED *> {gser1, gser2, gser3, gser4});
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	Geometry::DestroyGeometry(gser3);
+	Geometry::DestroyGeometry(gser4);
+	return angle;
+}
+
 void GeoFunctions::GeometryAngleFunction(DataChunk &args, ExpressionState &state, Vector &result) {
 	auto &geom1_arg = args.data[0];
 	auto &geom2_arg = args.data[1];
-	auto &geom3_arg = args.data[2];
-	GeometryAngleTernaryExecutor<string_t, string_t, string_t, double>(geom1_arg, geom2_arg, geom3_arg, result,
-	                                                                   args.size());
+
+	if (args.data.size() == 2) {
+		GeometryAngleBinaryExecutor<string_t, string_t, double>(geom1_arg, geom2_arg, result, args.size());
+	} else if (args.data.size() > 2) {
+		auto &geom3_arg = args.data[2];
+		if (args.data.size() == 3) {
+			GeometryAngleTernaryExecutor<string_t, string_t, string_t, double>(geom1_arg, geom2_arg, geom3_arg, result,
+			                                                                   args.size());
+		} else {
+			auto &geom4_arg = args.data[3];
+			GenericExecutor::ExecuteQuaternary<PrimitiveType<string_t>, PrimitiveType<string_t>,
+			                                   PrimitiveType<string_t>, PrimitiveType<string_t>, PrimitiveType<double>>(
+			    geom1_arg, geom2_arg, geom3_arg, geom4_arg, result, args.size(),
+			    [&](PrimitiveType<string_t> geom1, PrimitiveType<string_t> geom2, PrimitiveType<string_t> geom3,
+			        PrimitiveType<string_t> geom4) {
+				    return AngleQuaternaryScalarFunction(geom1.val, geom2.val, geom3.val, geom4.val);
+			    });
+		}
+	}
 }
 
 struct PerimeterUnaryOperator {
@@ -2399,9 +2547,10 @@ struct PerimeterUnaryOperator {
 		}
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
+			throw ConversionException("Failure in geometry get perimeter: could not getting perimeter from geom");
 			return 0.0;
 		}
-		auto perimeter = Geometry::GeometryPerimeter(gser);
+		auto perimeter = Geometry::GeometryPerimeter(gser, false);
 		Geometry::DestroyGeometry(gser);
 		return perimeter;
 	}
@@ -2416,7 +2565,7 @@ struct PerimeterBinaryOperator {
 		auto gser = Geometry::GetGserialized(geom);
 		if (!gser) {
 			throw ConversionException("Failure in geometry get perimeter: could not getting perimeter from geom");
-			return false;
+			return 0;
 		}
 		auto perimeter = Geometry::GeometryPerimeter(gser, use_spheroid);
 		Geometry::DestroyGeometry(gser);
@@ -2444,37 +2593,42 @@ void GeoFunctions::GeometryPerimeterFunction(DataChunk &args, ExpressionState &s
 	}
 }
 
-struct AzimuthBinaryOperator {
-	template <class TA, class TB, class TR>
-	static inline TR Operation(TA geom1, TB geom2) {
-		if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
-			return true;
-		}
-		if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
-			return false;
-		}
-		auto gser1 = Geometry::GetGserialized(geom1);
-		auto gser2 = Geometry::GetGserialized(geom2);
-		if (!gser1 || !gser2) {
-			if (gser1) {
-				Geometry::DestroyGeometry(gser1);
-			}
-			if (gser2) {
-				Geometry::DestroyGeometry(gser2);
-			}
-			throw ConversionException("Failure in geometry get azimuth: could not getting azimuth from geom");
-			return false;
-		}
-		auto azimuthRv = Geometry::GeometryAzimuth(gser1, gser2);
-		Geometry::DestroyGeometry(gser1);
-		Geometry::DestroyGeometry(gser2);
-		return azimuthRv;
+template <typename TA, typename TB, typename TR>
+static TR AzimuthScalarFunction(Vector &result, TA geom1, TB geom2, ValidityMask &mask, idx_t idx) {
+	if (geom1.GetSize() == 0 && geom2.GetSize() == 0) {
+		return 0.0;
 	}
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+		return 0.0;
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	if (!gser1 || !gser2) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get azimuth: could not getting azimuth from geom");
+		return 0.0;
+	}
+	auto azimuthRv = Geometry::GeometryAzimuth(gser1, gser2);
+	if (isnan(azimuthRv)) {
+		mask.SetInvalid(idx);
+		return 0.0;
+	}
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	return azimuthRv;
 };
 
 template <typename TA, typename TB, typename TR>
-static void GeometryAzimuthBinaryExecutor(Vector &geom1, Vector &geom2, Vector &result, idx_t count) {
-	BinaryExecutor::ExecuteStandard<TA, TB, TR, AzimuthBinaryOperator>(geom1, geom2, result, count);
+static void GeometryAzimuthBinaryExecutor(Vector &geom1_vec, Vector &geom2_vec, Vector &result, idx_t count) {
+	BinaryExecutor::ExecuteWithNulls<TA, TB, TR>(
+	    geom1_vec, geom2_vec, result, count, [&](TA geom1, TB geom2, ValidityMask &mask, idx_t idx) {
+		    return AzimuthScalarFunction<TA, TB, TR>(result, geom1, geom2, mask, idx);
+	    });
 }
 
 void GeoFunctions::GeometryAzimuthFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -2493,7 +2647,7 @@ struct LengthUnaryOperator {
 		if (!gser) {
 			return 0.0;
 		}
-		auto length = Geometry::GeometryLength(gser);
+		auto length = Geometry::GeometryLength(gser, false);
 		Geometry::DestroyGeometry(gser);
 		return length;
 	}
@@ -2548,6 +2702,11 @@ struct BoundingBoxUnaryOperator {
 			return string_t();
 		}
 		auto gserBoundingBox = Geometry::GeometryBoundingBox(gser);
+		if (!gserBoundingBox) {
+			Geometry::DestroyGeometry(gser);
+			throw ConversionException("Failure in geometry get bounding box: could not getting bounding box from geom");
+			return string_t();
+		}
 		if (gser == gserBoundingBox) {
 			Geometry::DestroyGeometry(gser);
 			return geom;
@@ -2583,8 +2742,14 @@ struct GeometryMaxDistanceBinaryOperator {
 		auto gser1 = Geometry::GetGserialized(geom1);
 		auto gser2 = Geometry::GetGserialized(geom2);
 		if (!gser1 || !gser2) {
-			throw ConversionException(
-			    "Failure in geometry maximum distance: could not calculate maximum distance from geometries");
+			if (gser1) {
+				Geometry::DestroyGeometry(gser1);
+			}
+			if (gser2) {
+				Geometry::DestroyGeometry(gser2);
+			}
+			throw ConversionException("Failure in geometry get max distance: could not getting max distance from geom");
+			return dis;
 		}
 		dis = Geometry::MaxDistance(gser1, gser2);
 		Geometry::DestroyGeometry(gser1);
@@ -2659,6 +2824,7 @@ void GeoFunctions::GeometryExtentFunction(DataChunk &args, ExpressionState &stat
 			for (idx_t child_idx = 0; child_idx < list_entry.length; child_idx++) {
 				Geometry::DestroyGeometry(gserArray[child_idx]);
 			}
+			result_entries[i] = string_t();
 			continue;
 		}
 		idx_t rv_size = Geometry::GetGeometrySize(gserExtent);

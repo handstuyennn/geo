@@ -15,7 +15,7 @@ int main()
 	// rv_ext->Print();
 	con.Query("LOAD '../../build/release/extension/geo/geo.duckdb_extension';");
 
-	auto rv1 = con.Query("CREATE TABLE integers(i INTEGER, g Geometry)");
+	auto rv1 = con.Query("CREATE TABLE integers(i INTEGER, g Geography)");
 	rv1->Print();
 	con.Query("INSERT INTO integers VALUES (1, 'POINT(100 0 100)')");
 	con.Query("INSERT INTO integers VALUES (2, 'LINE(1 0)')");
@@ -44,12 +44,12 @@ int main()
 	// auto rv7 = con.Query("SELECT '\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x14@'::BYTEA;");
 	// rv7->Print();
 
-	// con.Query("CREATE TABLE geometries (g Geometry);");
-	// con.Query("INSERT INTO geometries VALUES('{\"type\":\"Point\",\"coordinates\":[30,10.2323]}'), ('{\"type\":\"Point\",\"coordinates\":[-71.064544,10.2323]}'), ('{\"type\":\"Point\",\"coordinates\":[30,43.28787]}');");
-	// // con.Query("INSERT INTO geometries VALUES(''::GEOMETRY), (NULL::GEOMETRY), ('POINT(10 54)');");
-	// auto rv8 = con.Query("SELECT g::VARCHAR FROM geometries;");
+	// con.Query("CREATE TABLE geographies (g Geography);");
+	// con.Query("INSERT INTO geographies VALUES('{\"type\":\"Point\",\"coordinates\":[30,10.2323]}'), ('{\"type\":\"Point\",\"coordinates\":[-71.064544,10.2323]}'), ('{\"type\":\"Point\",\"coordinates\":[30,43.28787]}');");
+	// // con.Query("INSERT INTO geographies VALUES(''::GEOGRAPHY), (NULL::GEOGRAPHY), ('POINT(10 54)');");
+	// auto rv8 = con.Query("SELECT g::VARCHAR FROM geographies;");
 	// rv8->Print();
 
-	// auto rv9 = con.Query("SELECT ''::GEOMETRY;");
+	// auto rv9 = con.Query("SELECT ''::GEOGRAPHY;");
 	// rv9->Print();
 }

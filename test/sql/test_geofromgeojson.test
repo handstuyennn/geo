@@ -9,13 +9,13 @@ statement ok
 PRAGMA enable_verification
 
 statement ok
-CREATE TABLE geometries(g Geometry)
+CREATE TABLE geographies(g Geography)
 
 statement ok
-INSERT INTO geometries VALUES(ST_GEOGFROMGEOJSON('{"type":"Point","coordinates":[-71.064544,10.2323]}')), (ST_GEOMFROMGEOJSON('{"type":"Polygon","coordinates":[[[0,0],[0,150],[150,150],[150,0],[0,0]],[[20,20],[50,20],[50,50],[20,50],[20,20]]]}')),(ST_GEOMFROMGEOJSON(NULL))
+INSERT INTO geographies VALUES(ST_GEOGFROMGEOJSON('{"type":"Point","coordinates":[-71.064544,10.2323]}')), (ST_GEOMFROMGEOJSON('{"type":"Polygon","coordinates":[[[0,0],[0,150],[150,150],[150,0],[0,0]],[[20,20],[50,20],[50,50],[20,50],[20,20]]]}')),(ST_GEOMFROMGEOJSON(NULL))
 
 query R
-select ST_ASTEXT(g) from geometries
+select ST_ASTEXT(g) from geographies
 ----
 POINT(-71.064544 10.2323)
 POLYGON((0 0,0 150,150 150,150 0,0 0),(20 20,50 20,50 50,20 50,20 20))
@@ -23,13 +23,13 @@ NULL
 
 # test with null and empty
 statement ok
-DELETE FROM geometries
+DELETE FROM geographies
 
 statement ok
-INSERT INTO geometries VALUES(ST_GEOGFROMGEOJSON('')), (ST_GEOGFROMGEOJSON(NULL))
+INSERT INTO geographies VALUES(ST_GEOGFROMGEOJSON('')), (ST_GEOGFROMGEOJSON(NULL))
 
 query R
-select ST_ASTEXT(g) from geometries
+select ST_ASTEXT(g) from geographies
 ----
 (empty)
 NULL

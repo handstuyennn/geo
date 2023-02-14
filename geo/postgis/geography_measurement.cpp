@@ -249,8 +249,8 @@ double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2) {
 	type1 = gserialized_get_type(g1);
 	type2 = gserialized_get_type(g2);
 	if (type1 != POINTTYPE || type2 != POINTTYPE) {
-		throw "ST_Azimuth(geography, geography) is only valid for point inputs";
-		return 0.0;
+		// throw "ST_Azimuth(geography, geography) is only valid for point inputs";
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	lwgeom1 = lwgeom_from_gserialized(g1);
@@ -260,8 +260,8 @@ double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2) {
 	if (lwgeom_is_empty(lwgeom1) || lwgeom_is_empty(lwgeom2)) {
 		lwgeom_free(lwgeom1);
 		lwgeom_free(lwgeom2);
-		throw "ST_Azimuth(geography, geography) cannot work with empty points";
-		return 0.0;
+		// throw "ST_Azimuth(geography, geography) cannot work with empty points";
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	/* Initialize spheroid */
@@ -276,7 +276,7 @@ double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2) {
 
 	/* Return NULL for unknown (same point) azimuth */
 	if (isnan(azimuth)) {
-		return 0.0;
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	return azimuth;

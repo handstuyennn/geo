@@ -18,6 +18,7 @@
 #include <geos/export.hpp>
 #include <geos/geom/Coordinate.hpp> // for applyCoordinateFilter
 #include <geos/geom/CoordinateSequenceIterator.hpp>
+#include <memory>
 
 // Forward declarations
 namespace geos {

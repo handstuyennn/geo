@@ -9,13 +9,13 @@ statement ok
 PRAGMA enable_verification
 
 statement ok
-CREATE TABLE geometries(g Geometry)
+CREATE TABLE geographies(g Geography)
 
 statement ok
-INSERT INTO geometries VALUES('{"type":"Point","coordinates":[30,10.2323]}'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('{"type":"Point","coordinates":[30,43.28787]}')
+INSERT INTO geographies VALUES('{"type":"Point","coordinates":[30,10.2323]}'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('{"type":"Point","coordinates":[30,43.28787]}')
 
 query R
-select ST_ASTEXT(g) from geometries
+select ST_ASTEXT(g) from geographies
 ----
 POINT(30 10.2323)
 POINT(-71.064544 10.2323)
@@ -23,13 +23,13 @@ POINT(30 43.28787)
 
 # test with null and empty
 statement ok
-DELETE FROM geometries
+DELETE FROM geographies
 
 statement ok
-INSERT INTO geometries VALUES(''), (NULL)
+INSERT INTO geographies VALUES(''), (NULL)
 
 query R
-select ST_ASTEXT(g) from geometries
+select ST_ASTEXT(g) from geographies
 ----
 (empty)
 NULL

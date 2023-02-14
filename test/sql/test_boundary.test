@@ -24,7 +24,7 @@ SELECT ST_AsText(ST_Boundary(ST_GeomFromText('POLYGON((1 1,0 0, -1 1, 1 1))')))
 LINESTRING(1 1,0 0,-1 1,1 1)
 
 query I
-SELECT ST_astext(ST_boundary('POLYGON((0 0, 0 10, 10 10, 10 0, 0 0),(2 2, 2 4, 4 4, 4 2, 2 2))'::geometry))
+SELECT ST_astext(ST_boundary('POLYGON((0 0, 0 10, 10 10, 10 0, 0 0),(2 2, 2 4, 4 4, 4 2, 2 2))'::GEOGRAPHY))
 ----
 MULTILINESTRING((0 0,0 10,10 10,10 0,0 0),(2 2,2 4,4 4,4 2,2 2))
 
@@ -40,13 +40,13 @@ statement error
 SELECT ST_boundary(22)
 
 statement ok
-CREATE TABLE geometries(g Geometry)
+CREATE TABLE geographies(g Geography)
 
 statement ok
-INSERT INTO geometries VALUES('0101000000295C8FC2F5281440E17A14AE47E12540'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('POLYGON((-71.040878 42.285678,-71.040943 42.2856,-71.04096 42.285752,-71.040878 42.285678))'),(NULL)
+INSERT INTO geographies VALUES('0101000000295C8FC2F5281440E17A14AE47E12540'), ('{"type":"Point","coordinates":[-71.064544,10.2323]}'), ('POLYGON((-71.040878 42.285678,-71.040943 42.2856,-71.04096 42.285752,-71.040878 42.285678))'),(NULL)
 
 query R
-select ST_ASTEXT(ST_boundary(g)) from geometries
+select ST_ASTEXT(ST_boundary(g)) from geographies
 ----
 GEOMETRYCOLLECTION EMPTY
 GEOMETRYCOLLECTION EMPTY
@@ -55,13 +55,13 @@ NULL
 
 # test with null and empty
 statement ok
-DELETE FROM geometries
+DELETE FROM geographies
 
 statement ok
-INSERT INTO geometries VALUES(''), (NULL)
+INSERT INTO geographies VALUES(''), (NULL)
 
 query R
-select ST_ASTEXT(ST_boundary(g)) from geometries
+select ST_ASTEXT(ST_boundary(g)) from geographies
 ----
 (empty)
 NULL
