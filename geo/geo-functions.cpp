@@ -1066,7 +1066,7 @@ void GeometryDumpOperator(string_t geom, idx_t idx, LogicalType child_type, Vect
 		auto base = Geometry::GetBase(gserChild);
 		Geometry::DestroyGeometry(gserChild);
 		auto value = Value::BLOB((const_data_ptr_t)base, rv_size);
-		value.type().CopyAuxInfo(child_type);
+		value.GetTypeMutable().CopyAuxInfo(child_type);
 		geom_values.emplace_back(value);
 	}
 	auto val = Value::LIST(child_type, geom_values);
