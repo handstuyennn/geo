@@ -31,21 +31,25 @@ clean:
 
 debug_bundled: pull
 	mkdir -p build/debug && \
+	CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) \
 	cmake $(GENERATOR) $(FORCE_COLOR) -DCMAKE_BUILD_TYPE=Debug ${BUILD_FLAGS} -S ./ -B build/debug   && \
 	cmake --build build/debug  --target unittest
 
 release_bundled: pull
 	mkdir -p build/release && \
+	CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) \
 	cmake $(GENERATOR) $(FORCE_COLOR) -DCMAKE_BUILD_TYPE=RelWithDebInfo ${BUILD_FLAGS} -S ./ -B build/release   && \
 	cmake --build build/release  --target unittest
 
 debug: pull
 	mkdir -p build/debug && \
+	CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) \
 	cmake $(GENERATOR) $(FORCE_COLOR) ./duckdb/CMakeLists.txt -DEXTERNAL_EXTENSION_DIRECTORIES=../geo -DCMAKE_BUILD_TYPE=Debug ${BUILD_FLAGS}  -B build/debug   && \
 	cmake --build build/debug
 
 release: pull
 	mkdir -p build/release && \
+	CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) \
 	cmake $(GENERATOR) $(FORCE_COLOR) ./duckdb/CMakeLists.txt -DEXTERNAL_EXTENSION_DIRECTORIES=../geo -DCMAKE_BUILD_TYPE=RelWithDebInfo ${BUILD_FLAGS}  -B build/release   && \
 	cmake --build build/release
 
