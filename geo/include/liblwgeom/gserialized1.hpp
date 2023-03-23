@@ -53,6 +53,16 @@ int gserialized1_has_bbox(const GSERIALIZED *gser);
 int gserialized1_has_z(const GSERIALIZED *gser);
 
 /**
+ * Check if a #GSERIALIZED has an M ordinate.
+ */
+int gserialized1_has_m(const GSERIALIZED *gser);
+
+/**
+ * Check if a #GSERIALIZED is a geography.
+ */
+int gserialized1_is_geodetic(const GSERIALIZED *gser);
+
+/**
  * Extract the SRID from the serialized form (it is packed into
  * three bytes so this is a handy function).
  */

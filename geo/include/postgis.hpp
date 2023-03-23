@@ -15,7 +15,7 @@ public:
 	~Postgis();
 
 public:
-	GSERIALIZED *LWGEOM_in(char *input);
+	GSERIALIZED *geography_in(char *input);
 	GSERIALIZED *LWGEOM_getGserialized(const void *base, size_t size);
 	idx_t LWGEOM_size(GSERIALIZED *gser);
 	char *LWGEOM_base(GSERIALIZED *gser);
@@ -33,8 +33,8 @@ public:
 	GSERIALIZED *LWGEOM_makeline_garray(GSERIALIZED *gserArray[], int nelems);
 	GSERIALIZED *LWGEOM_makepoly(GSERIALIZED *geom, GSERIALIZED *gserArray[] = {}, int nelems = 0);
 	GSERIALIZED *geom_from_geojson(char *input);
-	GSERIALIZED *LWGEOM_from_text(char *text, int srid = 0);
-	GSERIALIZED *LWGEOM_from_WKB(const char *bytea_wkb, size_t byte_size, int srid = 0);
+	GSERIALIZED *geography_from_text(char *text);
+	GSERIALIZED *geography_from_binary(const char *bytea_wkb, size_t byte_size);
 	GSERIALIZED *LWGEOM_from_GeoHash(char *input, int precision = -1);
 
 	GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);

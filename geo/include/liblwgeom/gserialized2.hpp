@@ -110,6 +110,16 @@ int gserialized2_has_extended(const GSERIALIZED *g);
 int gserialized2_has_z(const GSERIALIZED *gser);
 
 /**
+ * Check if a #GSERIALIZED has an M ordinate.
+ */
+int gserialized2_has_m(const GSERIALIZED *gser);
+
+/**
+ * Check if a #GSERIALIZED is a geography.
+ */
+int gserialized2_is_geodetic(const GSERIALIZED *gser);
+
+/**
  * Point into the float box area of the serialization
  */
 const float *gserialized2_get_float_box_p(const GSERIALIZED *g, size_t *ndims);

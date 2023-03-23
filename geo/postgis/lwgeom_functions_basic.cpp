@@ -29,6 +29,7 @@
 #include "liblwgeom/liblwgeom.hpp"
 #include "liblwgeom/lwinline.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
+#include "postgis/geography_inout.hpp"
 #include "postgis/lwgeom_inout.hpp"
 #include "postgis/lwgeom_ogc.hpp"
 
@@ -37,30 +38,33 @@
 namespace duckdb {
 
 GSERIALIZED *LWGEOM_makepoint(double x, double y) {
+	int32_t geog_typmod = -1;
 	LWPOINT *point;
 	GSERIALIZED *result;
 
 	point = lwpoint_make2d(SRID_UNKNOWN, x, y);
 
-	result = geometry_serialize((LWGEOM *)point);
+	result = gserialized_geography_from_lwgeom((LWGEOM *)point, geog_typmod);
 	lwgeom_free((LWGEOM *)point);
 
 	return result;
 }
 
 GSERIALIZED *LWGEOM_makepoint(double x, double y, double z) {
+	int32_t geog_typmod = -1;
 	LWPOINT *point;
 	GSERIALIZED *result;
 
 	point = lwpoint_make3dz(SRID_UNKNOWN, x, y, z);
 
-	result = geometry_serialize((LWGEOM *)point);
+	result = gserialized_geography_from_lwgeom((LWGEOM *)point, geog_typmod);
 	lwgeom_free((LWGEOM *)point);
 
 	return result;
 }
 
 GSERIALIZED *LWGEOM_makeline(GSERIALIZED *geom1, GSERIALIZED *geom2) {
+	int32_t geog_typmod = -1;
 	LWGEOM *lwgeoms[2];
 	GSERIALIZED *result = NULL;
 	LWLINE *outline;
@@ -78,15 +82,17 @@ GSERIALIZED *LWGEOM_makeline(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 
 	outline = lwline_from_lwgeom_array(lwgeoms[0]->srid, 2, lwgeoms);
 
-	result = geometry_serialize((LWGEOM *)outline);
+	result = gserialized_geography_from_lwgeom((LWGEOM *)outline, geog_typmod);
 
 	lwgeom_free(lwgeoms[0]);
 	lwgeom_free(lwgeoms[1]);
+	lwline_free(outline);
 
 	return result;
 }
 
 GSERIALIZED *LWGEOM_makeline_garray(GSERIALIZED *gserArray[], int nelems) {
+	int32_t geog_typmod = -1;
 	GSERIALIZED *result = NULL;
 	LWGEOM **geoms;
 	LWGEOM *outlwg;
@@ -131,13 +137,14 @@ GSERIALIZED *LWGEOM_makeline_garray(GSERIALIZED *gserArray[], int nelems) {
 
 	outlwg = (LWGEOM *)lwline_from_lwgeom_array(srid, ngeoms, geoms);
 
-	result = geometry_serialize(outlwg);
+	result = gserialized_geography_from_lwgeom(outlwg, geog_typmod);
 	lwgeom_free(outlwg);
 
 	return result;
 }
 
 GSERIALIZED *LWGEOM_makepoly(GSERIALIZED *pglwg1, GSERIALIZED *gserArray[], int nholes) {
+	int32_t geog_typmod = -1;
 	GSERIALIZED *result = NULL;
 	const LWLINE *shell = NULL;
 	const LWLINE **holes = NULL;
@@ -167,13 +174,14 @@ GSERIALIZED *LWGEOM_makepoly(GSERIALIZED *pglwg1, GSERIALIZED *gserArray[], int 
 	}
 
 	outpoly = lwpoly_from_lwlines(shell, nholes, holes);
-	result = geometry_serialize((LWGEOM *)outpoly);
+	result = gserialized_geography_from_lwgeom((LWGEOM *)outpoly, geog_typmod);
 
 	lwline_free((LWLINE *)shell);
 
 	for (i = 0; i < (size_t)nholes; i++) {
 		lwline_free((LWLINE *)holes[i]);
 	}
+	lwpoly_free(outpoly);
 
 	return result;
 }

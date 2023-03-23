@@ -101,6 +101,8 @@ double ptarray_area_sphere(const POINTARRAY *pa);
 double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s);
 int ptarray_contains_point_sphere(const POINTARRAY *pa, const POINT2D *pt_outside, const POINT2D *pt_to_test);
 int lwpoly_covers_point2d(const LWPOLY *poly, const POINT2D *pt_to_test);
+double latitude_degrees_normalize(double lat);
+double longitude_degrees_normalize(double lon);
 
 /*
 ** Prototypes for spheroid functions.

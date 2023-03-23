@@ -18,7 +18,7 @@
  *
  **********************************************************************
  *
- * Copyright 2001-2005 Refractions Research Inc.
+ * Copyright 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
  **********************************************************************/
 
@@ -28,16 +28,10 @@
 
 namespace duckdb {
 
-GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);
-int LWGEOM_dimension(GSERIALIZED *geom);
-GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);
-std::string geometry_geometrytype(GSERIALIZED *geom);
-bool LWGEOM_isclosed(GSERIALIZED *geom);
-int LWGEOM_numgeometries_collection(GSERIALIZED *geom);
-int LWGEOM_numpoints_linestring(GSERIALIZED *geom);
-GSERIALIZED *LWGEOM_pointn_linestring(GSERIALIZED *geom, int where);
-GSERIALIZED *LWGEOM_startpoint_linestring(GSERIALIZED *geom);
-double LWGEOM_x_point(GSERIALIZED *geom);
-double LWGEOM_y_point(GSERIALIZED *geom);
+/* Check that the typmod matches the flags on the lwgeom */
+GSERIALIZED *postgis_valid_typmod(GSERIALIZED *gser, int32_t typmod);
+
+/* Check that the type is legal in geography (no curves please!) */
+void geography_valid_type(uint8_t type);
 
 } // namespace duckdb

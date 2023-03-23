@@ -763,32 +763,9 @@ struct FromTextUnaryOperator {
 	}
 };
 
-struct FromTextBinaryOperator {
-	template <class TA, class TB, class TR>
-	static inline TR Operation(TA text, TB srid) {
-		if (text.GetSize() == 0) {
-			return text;
-		}
-		auto gser = Geometry::FromText(&text.GetString()[0], srid);
-		if (!gser) {
-			throw ConversionException("Failure in geometry from text: could not convert text to geometry");
-			return string_t();
-		}
-		idx_t size = Geometry::GetGeometrySize(gser);
-		auto base = Geometry::GetBase(gser);
-		Geometry::DestroyGeometry(gser);
-		return string_t((const char *)base, size);
-	}
-};
-
 template <typename TA, typename TR>
 static void GeometryFromTextUnaryExecutor(Vector &text, Vector &result, idx_t count) {
 	UnaryExecutor::Execute<TA, TR, FromTextUnaryOperator>(text, result, count);
-}
-
-template <typename TA, typename TB, typename TR>
-static void GeometryFromTextBinaryExecutor(Vector &text, Vector &srid, Vector &result, idx_t count) {
-	BinaryExecutor::ExecuteStandard<TA, TB, TR, FromTextBinaryOperator>(text, srid, result, count);
 }
 
 void GeoFunctions::GeometryFromTextFunction(DataChunk &args, ExpressionState &state, Vector &result) {
@@ -800,12 +777,7 @@ void GeoFunctions::GeometryFromTextFunction(DataChunk &args, ExpressionState &st
 	}
 	try {
 		auto &text_arg = args.data[0];
-		if (args.data.size() == 1) {
-			GeometryFromTextUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
-		} else if (args.data.size() == 2) {
-			auto &srid_arg = args.data[1];
-			GeometryFromTextBinaryExecutor<string_t, int32_t, string_t>(text_arg, srid_arg, result, args.size());
-		}
+		GeometryFromTextUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
 	} catch (const std::exception &e) {
 		queue.erase(queue.begin());
 		throw Exception(e.what());
@@ -831,41 +803,14 @@ struct FromWKBUnaryOperator {
 	}
 };
 
-struct FromWKBBinaryOperator {
-	template <class TA, class TB, class TR>
-	static inline TR Operation(TA text, TB srid) {
-		if (text.GetSize() == 0) {
-			return text;
-		}
-		auto gser = Geometry::FromWKB(text.GetDataUnsafe(), text.GetSize(), srid);
-		if (!gser) {
-			throw ConversionException("Failure in geometry from WKB: could not convert WKB to geometry");
-		}
-		idx_t size = Geometry::GetGeometrySize(gser);
-		auto base = Geometry::GetBase(gser);
-		Geometry::DestroyGeometry(gser);
-		return string_t((const char *)base, size);
-	}
-};
-
 template <typename TA, typename TR>
 static void GeometryFromWKBUnaryExecutor(Vector &text, Vector &result, idx_t count) {
 	UnaryExecutor::GenericExecute<TA, TR, FromWKBUnaryOperator>(text, result, count, (void *)&result);
 }
 
-template <typename TA, typename TB, typename TR>
-static void GeometryFromWKBBinaryExecutor(Vector &text, Vector &srid, Vector &result, idx_t count) {
-	BinaryExecutor::ExecuteStandard<TA, TB, TR, FromWKBBinaryOperator>(text, srid, result, count);
-}
-
 void GeoFunctions::GeometryFromWKBFunction(DataChunk &args, ExpressionState &state, Vector &result) {
 	auto &text_arg = args.data[0];
-	if (args.data.size() == 1) {
-		GeometryFromWKBUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
-	} else if (args.data.size() == 2) {
-		auto &srid_arg = args.data[1];
-		GeometryFromWKBBinaryExecutor<string_t, int32_t, string_t>(text_arg, srid_arg, result, args.size());
-	}
+	GeometryFromWKBUnaryExecutor<string_t, string_t>(text_arg, result, args.size());
 }
 
 struct FromGeoHashUnaryOperator {

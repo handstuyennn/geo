@@ -80,6 +80,16 @@ extern uint32_t gserialized_get_type(const GSERIALIZED *g);
 extern int gserialized_has_z(const GSERIALIZED *gser);
 
 /**
+ * Check if a #GSERIALIZED has an M ordinate.
+ */
+extern int gserialized_has_m(const GSERIALIZED *gser);
+
+/**
+ * Check if a #GSERIALIZED is a geography.
+ */
+extern int gserialized_is_geodetic(const GSERIALIZED *gser);
+
+/**
  * Pull the first point values of a #GSERIALIZED. Only works for POINTTYPE
  */
 int gserialized_peek_first_point(const GSERIALIZED *g, POINT4D *out_point);

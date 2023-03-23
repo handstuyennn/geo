@@ -25,6 +25,7 @@
 
 #include "liblwgeom/lwgeodetic.hpp"
 
+#include "liblwgeom/liblwgeom.hpp"
 #include "liblwgeom/liblwgeom_internal.hpp"
 #include "liblwgeom/lwinline.hpp"
 
@@ -2109,6 +2110,226 @@ int ptarray_contains_point_sphere(const POINTARRAY *pa, const POINT2D *pt_outsid
 	}
 
 	return LW_FALSE;
+}
+
+/**
+ * When features are snapped or sometimes they are just this way, they are very close to
+ * the geodetic bounds but slightly over. This routine nudges those points, and only
+ * those points, back over to the bounds.
+ * http://trac.osgeo.org/postgis/ticket/1292
+ */
+static int ptarray_nudge_geodetic(POINTARRAY *pa) {
+
+	uint32_t i;
+	POINT4D p;
+	int altered = LW_FALSE;
+	int rv = LW_FALSE;
+	static double tolerance = 1e-10;
+
+	if (!pa)
+		throw "ptarray_nudge_geodetic called with null input";
+
+	for (i = 0; i < pa->npoints; i++) {
+		getPoint4d_p(pa, i, &p);
+		if (p.x < -180.0 && (-180.0 - p.x < tolerance)) {
+			p.x = -180.0;
+			altered = LW_TRUE;
+		}
+		if (p.x > 180.0 && (p.x - 180.0 < tolerance)) {
+			p.x = 180.0;
+			altered = LW_TRUE;
+		}
+		if (p.y < -90.0 && (-90.0 - p.y < tolerance)) {
+			p.y = -90.0;
+			altered = LW_TRUE;
+		}
+		if (p.y > 90.0 && (p.y - 90.0 < tolerance)) {
+			p.y = 90.0;
+			altered = LW_TRUE;
+		}
+		if (altered == LW_TRUE) {
+			ptarray_set_point4d(pa, i, &p);
+			altered = LW_FALSE;
+			rv = LW_TRUE;
+		}
+	}
+	return rv;
+}
+
+/**
+ * Convert a longitude to the range of -180,180
+ * @param lon longitude in degrees
+ */
+double longitude_degrees_normalize(double lon) {
+	if (lon > 360.0)
+		lon = remainder(lon, 360.0);
+
+	if (lon < -360.0)
+		lon = remainder(lon, -360.0);
+
+	if (lon > 180.0)
+		lon = -360.0 + lon;
+
+	if (lon < -180.0)
+		lon = 360 + lon;
+
+	if (lon == -180.0)
+		return 180.0;
+
+	if (lon == -360.0)
+		return 0.0;
+
+	return lon;
+}
+
+/**
+ * Convert a latitude to the range of -90,90
+ * @param lat latitude in degrees
+ */
+double latitude_degrees_normalize(double lat) {
+
+	if (lat > 360.0)
+		lat = remainder(lat, 360.0);
+
+	if (lat < -360.0)
+		lat = remainder(lat, -360.0);
+
+	if (lat > 180.0)
+		lat = 180.0 - lat;
+
+	if (lat < -180.0)
+		lat = -180.0 - lat;
+
+	if (lat > 90.0)
+		lat = 180.0 - lat;
+
+	if (lat < -90.0)
+		lat = -180.0 - lat;
+
+	return lat;
+}
+
+static int ptarray_force_geodetic(POINTARRAY *pa) {
+	uint32_t t;
+	int changed = LW_FALSE;
+	POINT4D pt;
+
+	assert(pa);
+
+	for (t = 0; t < pa->npoints; t++) {
+		getPoint4d_p(pa, t, &pt);
+		if (pt.x < -180.0 || pt.x > 180.0 || pt.y < -90.0 || pt.y > 90.0) {
+			pt.x = longitude_degrees_normalize(pt.x);
+			pt.y = latitude_degrees_normalize(pt.y);
+			ptarray_set_point4d(pa, t, &pt);
+			changed = LW_TRUE;
+		}
+	}
+	return changed;
+}
+
+static int lwpoint_force_geodetic(LWPOINT *point) {
+	assert(point);
+	return ptarray_force_geodetic(point->point);
+}
+
+static int lwline_force_geodetic(LWLINE *line) {
+	assert(line);
+	return ptarray_force_geodetic(line->points);
+}
+
+static int lwpoly_force_geodetic(LWPOLY *poly) {
+	uint32_t i = 0;
+	int changed = LW_FALSE;
+	assert(poly);
+
+	for (i = 0; i < poly->nrings; i++) {
+		if (ptarray_force_geodetic(poly->rings[i]) == LW_TRUE)
+			changed = LW_TRUE;
+	}
+	return changed;
+}
+
+static int lwcollection_force_geodetic(LWCOLLECTION *col) {
+	uint32_t i = 0;
+	int changed = LW_FALSE;
+	assert(col);
+
+	for (i = 0; i < col->ngeoms; i++) {
+		if (lwgeom_force_geodetic(col->geoms[i]) == LW_TRUE)
+			changed = LW_TRUE;
+	}
+	return changed;
+}
+
+int lwgeom_force_geodetic(LWGEOM *geom) {
+	switch (lwgeom_get_type(geom)) {
+	case POINTTYPE:
+		return lwpoint_force_geodetic((LWPOINT *)geom);
+	case LINETYPE:
+		return lwline_force_geodetic((LWLINE *)geom);
+	case POLYGONTYPE:
+		return lwpoly_force_geodetic((LWPOLY *)geom);
+	case MULTIPOINTTYPE:
+	case MULTILINETYPE:
+	case MULTIPOLYGONTYPE:
+	case COLLECTIONTYPE:
+		return lwcollection_force_geodetic((LWCOLLECTION *)geom);
+	default:
+		throw("unsupported input geometry type: " + lwgeom_get_type(geom));
+	}
+	return LW_FALSE;
+}
+
+/**
+ * When features are snapped or sometimes they are just this way, they are very close to
+ * the geodetic bounds but slightly over. This routine nudges those points, and only
+ * those points, back over to the bounds.
+ * http://trac.osgeo.org/postgis/ticket/1292
+ */
+int lwgeom_nudge_geodetic(LWGEOM *geom) {
+	int type;
+	uint32_t i = 0;
+	int rv = LW_FALSE;
+
+	assert(geom);
+
+	/* No points in nothing */
+	if (lwgeom_is_empty(geom))
+		return LW_FALSE;
+
+	type = geom->type;
+
+	if (type == POINTTYPE)
+		return ptarray_nudge_geodetic(((LWPOINT *)geom)->point);
+
+	if (type == LINETYPE)
+		return ptarray_nudge_geodetic(((LWLINE *)geom)->points);
+
+	if (type == POLYGONTYPE) {
+		LWPOLY *poly = (LWPOLY *)geom;
+		for (i = 0; i < poly->nrings; i++) {
+			int n = ptarray_nudge_geodetic(poly->rings[i]);
+			rv = (rv == LW_TRUE ? rv : n);
+		}
+		return rv;
+	}
+
+	if (type == TRIANGLETYPE)
+		return ptarray_nudge_geodetic(((LWTRIANGLE *)geom)->points);
+
+	if (lwtype_is_collection(type)) {
+		LWCOLLECTION *col = (LWCOLLECTION *)geom;
+
+		for (i = 0; i < col->ngeoms; i++) {
+			int n = lwgeom_nudge_geodetic(col->geoms[i]);
+			rv = (rv == LW_TRUE ? rv : n);
+		}
+		return rv;
+	}
+
+	throw("unsupported type (" + std::string(lwtype_name(type)) + ") passed to lwgeom_nudge_geodetic");
+	return rv;
 }
 
 } // namespace duckdb

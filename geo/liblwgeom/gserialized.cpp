@@ -130,6 +130,26 @@ int gserialized_has_z(const GSERIALIZED *g) {
 }
 
 /**
+ * Check if a #GSERIALIZED has an M ordinate.
+ */
+int gserialized_has_m(const GSERIALIZED *g) {
+	if (GFLAGS_GET_VERSION(g->gflags))
+		return gserialized2_has_m(g);
+	else
+		return gserialized1_has_m(g);
+}
+
+/**
+ * Check if a #GSERIALIZED is a geography.
+ */
+int gserialized_is_geodetic(const GSERIALIZED *g) {
+	if (GFLAGS_GET_VERSION(g->gflags))
+		return gserialized2_is_geodetic(g);
+	else
+		return gserialized1_is_geodetic(g);
+}
+
+/**
  * Read the box from the #GSERIALIZED or calculate it if necessary.
  * Return #LWFAILURE if box cannot be calculated (NULL or EMPTY
  * input).

@@ -757,4 +757,21 @@ LWGEOM *lwgeom_from_wkb_state(wkb_parse_state *s) {
 	return NULL;
 }
 
+LWGEOM *lwgeom_from_hexwkb(const char *hexwkb, const char check) {
+	int hexwkb_len;
+	uint8_t *wkb;
+	LWGEOM *lwgeom;
+
+	if (!hexwkb) {
+		lwerror("lwgeom_from_hexwkb: null input");
+		return NULL;
+	}
+
+	hexwkb_len = strlen(hexwkb);
+	wkb = bytes_from_hexbytes(hexwkb, hexwkb_len);
+	lwgeom = lwgeom_from_wkb(wkb, hexwkb_len / 2, check);
+	lwfree(wkb);
+	return lwgeom;
+}
+
 } // namespace duckdb

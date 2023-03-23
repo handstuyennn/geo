@@ -70,6 +70,14 @@ int gserialized1_has_z(const GSERIALIZED *gser) {
 	return G1FLAGS_GET_Z(gser->gflags);
 }
 
+int gserialized1_has_m(const GSERIALIZED *gser) {
+	return G1FLAGS_GET_M(gser->gflags);
+}
+
+int gserialized1_is_geodetic(const GSERIALIZED *gser) {
+	return G1FLAGS_GET_GEODETIC(gser->gflags);
+}
+
 static size_t gserialized1_box_size(const GSERIALIZED *g) {
 	if (G1FLAGS_GET_GEODETIC(g->gflags))
 		return 6 * sizeof(float);

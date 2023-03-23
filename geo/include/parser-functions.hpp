@@ -35,12 +35,8 @@ static const std::vector<ScalarFunctionSet> GetParserScalarFunctions(LogicalType
 	ScalarFunctionSet geogfromtext("st_geogfromtext");
 
 	auto fromtextunary = ScalarFunction({LogicalType::VARCHAR}, geo_type, GeoFunctions::GeometryFromTextFunction);
-	auto fromtextbinary =
-	    ScalarFunction({LogicalType::VARCHAR, LogicalType::INTEGER}, geo_type, GeoFunctions::GeometryFromTextFunction);
 	geomfromtext.AddFunction(fromtextunary);
-	geomfromtext.AddFunction(fromtextbinary);
 	geogfromtext.AddFunction(fromtextunary);
-	geogfromtext.AddFunction(fromtextbinary);
 	func_set.push_back(geomfromtext);
 	func_set.push_back(geogfromtext);
 
@@ -48,12 +44,8 @@ static const std::vector<ScalarFunctionSet> GetParserScalarFunctions(LogicalType
 	ScalarFunctionSet geomfromwkb("st_geomfromwkb");
 	ScalarFunctionSet geogfromwkb("st_geogfromwkb");
 	auto fromwkbunary = ScalarFunction({LogicalType::BLOB}, geo_type, GeoFunctions::GeometryFromWKBFunction);
-	auto fromwkbbinary =
-	    ScalarFunction({LogicalType::BLOB, LogicalType::INTEGER}, geo_type, GeoFunctions::GeometryFromWKBFunction);
 	geomfromwkb.AddFunction(fromwkbunary);
-	geomfromwkb.AddFunction(fromwkbbinary);
 	geogfromwkb.AddFunction(fromwkbunary);
-	geogfromwkb.AddFunction(fromwkbbinary);
 	func_set.push_back(geomfromwkb);
 	func_set.push_back(geogfromwkb);
 

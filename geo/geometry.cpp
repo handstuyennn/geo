@@ -78,7 +78,7 @@ GSERIALIZED *Geometry::GetGserialized(string_t geom) {
 
 GSERIALIZED *Geometry::ToGserialized(string_t str) {
 	Postgis postgis;
-	auto ger = postgis.LWGEOM_in(&str.GetString()[0]);
+	auto ger = postgis.geography_in(&str.GetString()[0]);
 	return ger;
 }
 
@@ -152,22 +152,12 @@ GSERIALIZED *Geometry::GeomFromGeoJson(string_t json) {
 
 GSERIALIZED *Geometry::FromText(char *text) {
 	Postgis postgis;
-	return postgis.LWGEOM_from_text(text);
-}
-
-GSERIALIZED *Geometry::FromText(char *text, int srid) {
-	Postgis postgis;
-	return postgis.LWGEOM_from_text(text, srid);
+	return postgis.geography_from_text(text);
 }
 
 GSERIALIZED *Geometry::FromWKB(const char *text, size_t byte_size) {
 	Postgis postgis;
-	return postgis.LWGEOM_from_WKB(text, byte_size);
-}
-
-GSERIALIZED *Geometry::FromWKB(const char *text, size_t byte_size, int srid) {
-	Postgis postgis;
-	return postgis.LWGEOM_from_WKB(text, byte_size, srid);
+	return postgis.geography_from_binary(text, byte_size);
 }
 
 GSERIALIZED *Geometry::FromGeoHash(string_t hash, int precision) {

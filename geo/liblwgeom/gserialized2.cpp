@@ -233,6 +233,14 @@ int gserialized2_has_z(const GSERIALIZED *g) {
 	return G2FLAGS_GET_Z(g->gflags);
 }
 
+int gserialized2_has_m(const GSERIALIZED *g) {
+	return G2FLAGS_GET_M(g->gflags);
+}
+
+int gserialized2_is_geodetic(const GSERIALIZED *g) {
+	return G2FLAGS_GET_GEODETIC(g->gflags);
+}
+
 /* Public function */
 GSERIALIZED *gserialized2_from_lwgeom(LWGEOM *geom, size_t *size) {
 	size_t expected_size = 0;

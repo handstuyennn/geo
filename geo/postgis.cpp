@@ -1,6 +1,7 @@
 #include "postgis.hpp"
 
 #include "postgis/geography_centroid.hpp"
+#include "postgis/geography_inout.hpp"
 #include "postgis/geography_measurement.hpp"
 #include "postgis/lwgeom_dump.hpp"
 #include "postgis/lwgeom_export.hpp"
@@ -19,8 +20,8 @@ Postgis::Postgis() {
 Postgis::~Postgis() {
 }
 
-GSERIALIZED *Postgis::LWGEOM_in(char *input) {
-	return duckdb::LWGEOM_in(input);
+GSERIALIZED *Postgis::geography_in(char *input) {
+	return duckdb::geography_in(input);
 }
 
 GSERIALIZED *Postgis::LWGEOM_getGserialized(const void *base, size_t size) {
@@ -87,12 +88,12 @@ GSERIALIZED *Postgis::geom_from_geojson(char *json) {
 	return duckdb::geom_from_geojson(json);
 }
 
-GSERIALIZED *Postgis::LWGEOM_from_text(char *text, int srid) {
-	return duckdb::LWGEOM_from_text(text, srid);
+GSERIALIZED *Postgis::geography_from_text(char *text) {
+	return duckdb::geography_from_text(text);
 }
 
-GSERIALIZED *Postgis::LWGEOM_from_WKB(const char *bytea_wkb, size_t byte_size, int srid) {
-	return duckdb::LWGEOM_from_WKB(bytea_wkb, byte_size, srid);
+GSERIALIZED *Postgis::geography_from_binary(const char *bytea_wkb, size_t byte_size) {
+	return duckdb::geography_from_binary(bytea_wkb, byte_size);
 }
 
 GSERIALIZED *Postgis::LWGEOM_from_GeoHash(char *hash, int precision) {

@@ -18,26 +18,19 @@
  *
  **********************************************************************
  *
- * Copyright 2001-2005 Refractions Research Inc.
+ * Copyright 2009-2011 Paul Ramsey <pramsey@cleverelephant.ca>
  *
  **********************************************************************/
 
 #pragma once
 #include "duckdb.hpp"
-#include "liblwgeom/liblwgeom.hpp"
+#include "liblwgeom/liblwgeom_internal.hpp"
 
 namespace duckdb {
 
-GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);
-int LWGEOM_dimension(GSERIALIZED *geom);
-GSERIALIZED *LWGEOM_endpoint_linestring(GSERIALIZED *geom);
-std::string geometry_geometrytype(GSERIALIZED *geom);
-bool LWGEOM_isclosed(GSERIALIZED *geom);
-int LWGEOM_numgeometries_collection(GSERIALIZED *geom);
-int LWGEOM_numpoints_linestring(GSERIALIZED *geom);
-GSERIALIZED *LWGEOM_pointn_linestring(GSERIALIZED *geom, int where);
-GSERIALIZED *LWGEOM_startpoint_linestring(GSERIALIZED *geom);
-double LWGEOM_x_point(GSERIALIZED *geom);
-double LWGEOM_y_point(GSERIALIZED *geom);
+GSERIALIZED *gserialized_geography_from_lwgeom(LWGEOM *lwgeom, int32_t geog_typmod);
+GSERIALIZED *geography_from_text(char *input);
+GSERIALIZED *geography_from_binary(const char *bytea_wkb, size_t byte_size);
+GSERIALIZED *geography_in(char *input);
 
 } // namespace duckdb

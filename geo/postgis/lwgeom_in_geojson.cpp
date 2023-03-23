@@ -24,6 +24,7 @@
 
 #include "liblwgeom/gserialized.hpp"
 #include "libpgcommon/lwgeom_pg.hpp"
+#include "postgis/geography_inout.hpp"
 #include "postgis/lwgeom_inout.hpp"
 
 #include <cstring>
@@ -32,10 +33,10 @@
 namespace duckdb {
 
 GSERIALIZED *geom_from_geojson(char *geojson) {
+	int32_t geog_typmod = -1;
 	GSERIALIZED *geom;
 	LWGEOM *lwgeom;
 	char *srs = NULL;
-	int32_t srid = WGS84_SRID;
 
 	lwgeom = lwgeom_from_geojson(geojson, &srs);
 	if (!lwgeom) {
@@ -44,13 +45,7 @@ GSERIALIZED *geom_from_geojson(char *geojson) {
 		return nullptr;
 	}
 
-	// if (srs) {
-	// 	srid = GetSRIDCacheBySRS(fcinfo, srs);
-	// 	lwfree(srs);
-	// }
-
-	lwgeom_set_srid(lwgeom, srid);
-	geom = geometry_serialize(lwgeom);
+	geom = gserialized_geography_from_lwgeom(lwgeom, geog_typmod);
 	lwgeom_free(lwgeom);
 
 	return geom;

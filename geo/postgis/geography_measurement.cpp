@@ -275,7 +275,7 @@ double geography_azimuth(GSERIALIZED *g1, GSERIALIZED *g2) {
 	lwgeom_free(lwgeom2);
 
 	/* Return NULL for unknown (same point) azimuth */
-	if (isnan(azimuth)) {
+	if (std::isnan(azimuth)) {
 		return std::numeric_limits<double>::quiet_NaN();
 	}
 

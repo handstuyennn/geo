@@ -145,6 +145,25 @@ typedef struct pg_varlena bytea;
 #define FLAGS_NDIMS_BOX(flags) (FLAGS_GET_GEODETIC(flags) ? 3 : FLAGS_NDIMS(flags))
 
 /**
+ * Macros for manipulating the 'typemod' int. An int32_t used as follows:
+ * Plus/minus = Top bit.
+ * Spare bits = Next 2 bits.
+ * SRID = Next 21 bits.
+ * TYPE = Next 6 bits.
+ * ZM Flags = Bottom 2 bits.
+ */
+
+#define TYPMOD_GET_SRID(typmod)       ((((typmod)&0x0FFFFF00) - ((typmod)&0x10000000)) >> 8)
+#define TYPMOD_SET_SRID(typmod, srid) ((typmod) = (((typmod)&0xE00000FF) | ((srid & 0x001FFFFF) << 8)))
+#define TYPMOD_GET_TYPE(typmod)       ((typmod & 0x000000FC) >> 2)
+#define TYPMOD_SET_TYPE(typmod, type) ((typmod) = (typmod & 0xFFFFFF03) | ((type & 0x0000003F) << 2))
+#define TYPMOD_GET_Z(typmod)          ((typmod & 0x00000002) >> 1)
+#define TYPMOD_SET_Z(typmod)          ((typmod) = typmod | 0x00000002)
+#define TYPMOD_GET_M(typmod)          (typmod & 0x00000001)
+#define TYPMOD_SET_M(typmod)          ((typmod) = typmod | 0x00000001)
+#define TYPMOD_GET_NDIMS(typmod)      (2 + TYPMOD_GET_Z(typmod) + TYPMOD_GET_M(typmod))
+
+/**
  * Maximum allowed SRID value in serialized geometry.
  * Currently we are using 21 bits (2097152) of storage for SRID.
  */
@@ -1166,6 +1185,16 @@ extern uint8_t *bytes_from_hexbytes(const char *hexbuf, size_t hexsize);
 extern int lwgeom_check_geodetic(const LWGEOM *geom);
 
 /**
+ * Gently move coordinates of LWGEOM if they are close enough into geodetic range.
+ */
+extern int lwgeom_nudge_geodetic(LWGEOM *geom);
+
+/**
+ * Force coordinates of LWGEOM into geodetic range (-180, -90, 180, 90)
+ */
+extern int lwgeom_force_geodetic(LWGEOM *geom);
+
+/**
  * Set the FLAGS geodetic bit on geometry an all sub-geometries and pointlists
  */
 extern void lwgeom_set_geodetic(LWGEOM *geom, int value);
@@ -1207,6 +1236,11 @@ extern int ptarray_calculate_gbox_cartesian(const POINTARRAY *pa, GBOX *gbox);
  * @param check parser check flags, see LW_PARSER_CHECK_* macros
  */
 extern LWGEOM *lwgeom_from_wkb(const uint8_t *wkb, const size_t wkb_size, const char check);
+
+/**
+ * @param check parser check flags, see LW_PARSER_CHECK_* macros
+ */
+extern LWGEOM *lwgeom_from_hexwkb(const char *hexwkb, const char check);
 
 /**
  * Create a new gbox with the dimensionality indicated by the flags. Caller

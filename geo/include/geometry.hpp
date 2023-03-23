@@ -55,9 +55,7 @@ public:
 
 	static GSERIALIZED *GeomFromGeoJson(string_t json);
 	static GSERIALIZED *FromText(char *text);
-	static GSERIALIZED *FromText(char *text, int srid);
 	static GSERIALIZED *FromWKB(const char *text, size_t byte_size);
-	static GSERIALIZED *FromWKB(const char *text, size_t byte_size, int srid);
 	static GSERIALIZED *FromGeoHash(string_t hash, int precision = -1);
 
 	static GSERIALIZED *LWGEOM_boundary(GSERIALIZED *geom);

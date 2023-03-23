@@ -28,6 +28,8 @@ set(GEO_EXTENSION_FILES
     postgis/lwgeom_box.cpp
     postgis/lwgeom_dump.cpp
     postgis/lwgeom_window.cpp
+    postgis/geography_inout.cpp
+    postgis/gserialized_typmod.cpp
     liblwgeom/lwin_wkt.cpp
     liblwgeom/lwin_wkb.cpp
     liblwgeom/lwutil.cpp
