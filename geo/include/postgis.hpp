@@ -56,7 +56,7 @@ public:
 	bool covers(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	bool coveredby(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	bool disjoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
-	bool LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance);
+	bool geography_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance, bool use_spheroid);
 
 	double ST_Area(GSERIALIZED *geom);
 	double geography_area(GSERIALIZED *geom, bool use_spheroid);

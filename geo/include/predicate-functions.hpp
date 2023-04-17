@@ -43,6 +43,8 @@ static const std::vector<ScalarFunctionSet> GetPredicateScalarFunctions(LogicalT
 	ScalarFunctionSet dwithin("st_dwithin");
 	dwithin.AddFunction(ScalarFunction({geo_type, geo_type, LogicalType::DOUBLE}, LogicalType::BOOLEAN,
 	                                   GeoFunctions::GeometryDWithinFunction));
+	dwithin.AddFunction(ScalarFunction({geo_type, geo_type, LogicalType::DOUBLE, LogicalType::BOOLEAN},
+	                                   LogicalType::DOUBLE, GeoFunctions::GeometryLengthFunction));
 	func_set.push_back(dwithin);
 
 	// ST_EQUALS

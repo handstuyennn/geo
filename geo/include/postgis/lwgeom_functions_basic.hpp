@@ -40,7 +40,6 @@ bool ST_IsCollection(GSERIALIZED *geom);
 bool LWGEOM_isempty(GSERIALIZED *geom);
 int LWGEOM_npoints(GSERIALIZED *geom);
 GSERIALIZED *LWGEOM_closestpoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
-bool LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double tolerance);
 double ST_Area(GSERIALIZED *geom);
 double LWGEOM_angle(GSERIALIZED *geom1, GSERIALIZED *geom2);
 double LWGEOM_angle(std::vector<GSERIALIZED *> geom_vec);

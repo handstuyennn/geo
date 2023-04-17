@@ -172,8 +172,8 @@ bool Postgis::disjoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return duckdb::disjoint(geom1, geom2);
 }
 
-bool Postgis::LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance) {
-	return duckdb::LWGEOM_dwithin(geom1, geom2, distance);
+bool Postgis::geography_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance, bool use_sphroid) {
+	return duckdb::geography_dwithin(geom1, geom2, distance, use_sphroid);
 }
 
 double Postgis::ST_Area(GSERIALIZED *geom) {

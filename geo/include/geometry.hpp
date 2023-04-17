@@ -80,7 +80,7 @@ public:
 	static bool GeometryCovers(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static bool GeometryCoveredby(GSERIALIZED *geom1, GSERIALIZED *geom2);
 	static bool GeometryDisjoint(GSERIALIZED *geom1, GSERIALIZED *geom2);
-	static bool GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance);
+	static bool GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance, bool use_spheroid);
 
 	static double GeometryArea(GSERIALIZED *geom);
 	static double GeometryArea(GSERIALIZED *geom, bool use_spheroid);

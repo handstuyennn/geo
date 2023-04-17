@@ -29,12 +29,12 @@ query III
 SELECT id, ST_ASTEXT(geo) as geom_text, ST_CLUSTERDBSCAN(geo, 1e5, 1) over () as m from dbscan_inputs
 ----
 0	POINT EMPTY	NULL
-1	POINT(0 0)	0
-2	POINT(1 1)	1
-3	POINT(-0.5 0.5)	2
-4	POINT(1 0)	3
-5	POINT(0 1)	4
-6	POINT(1 0.5)	5
+1	POINT(0 0)	NULL
+2	POINT(1 1)	NULL
+3	POINT(-0.5 0.5)	NULL
+4	POINT(1 0)	NULL
+5	POINT(0 1)	NULL
+6	POINT(1 0.5)	NULL
 
 
 query II
@@ -55,17 +55,17 @@ query III
 SELECT id, ST_ASTEXT(geo) as geom_text, ST_CLUSTERDBSCAN(geo, 1e5, 1) over () as m from dbscan_inputs
 ----
 0	POINT EMPTY	NULL
-1	POINT(0 0)	0
-2	POINT(1 1)	1
-3	POINT(-0.5 0.5)	2
-4	POINT(1 0)	3
-5	POINT(0 1)	4
-6	POINT(1 0.5)	5
+1	POINT(0 0)	NULL
+2	POINT(1 1)	NULL
+3	POINT(-0.5 0.5)	NULL
+4	POINT(1 0)	NULL
+5	POINT(0 1)	NULL
+6	POINT(1 0.5)	NULL
 7	POINT EMPTY	NULL
-8	MULTIPOINT(1 1,2 2,4 4,5 2)	1
-9	POINT(14 15)	6
-10	LINESTRING(40 1,42 34,44 39)	7
-11	POLYGON((40 2,40 1,41 2,40 2))	7
+8	MULTIPOINT(1 1,2 2,4 4,5 2)	NULL
+9	POINT(14 15)	NULL
+10	LINESTRING(40 1,42 34,44 39)	NULL
+11	POLYGON((40 2,40 1,41 2,40 2))	NULL
 
 query II
 SELECT id, ST_CLUSTERDBSCAN(geo, 0.6, 1) over (order by id desc rows between 3 preceding and current row) as m from dbscan_inputs

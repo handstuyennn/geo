@@ -267,30 +267,6 @@ GSERIALIZED *LWGEOM_closestpoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 }
 
 /**
-Returns boolean describing if
-mininimum 2d distance between objects in
-geom1 and geom2 is shorter than tolerance
-*/
-bool LWGEOM_dwithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double tolerance) {
-	double mindist;
-	LWGEOM *lwgeom1 = lwgeom_from_gserialized(geom1);
-	LWGEOM *lwgeom2 = lwgeom_from_gserialized(geom2);
-
-	if (tolerance < 0) {
-		throw "Tolerance cannot be less than zero\n";
-		return false;
-	}
-
-	gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
-
-	mindist = lwgeom_mindistance2d_tolerance(lwgeom1, lwgeom2, tolerance);
-
-	/*empty geometries cases should be right handled since return from underlying
-	 functions should be FLT_MAX which causes false as answer*/
-	return tolerance >= mindist;
-}
-
-/**
  * @brief Calculate the area of all the subobj in a polygon
  * 		area(point) = 0
  * 		area (line) = 0

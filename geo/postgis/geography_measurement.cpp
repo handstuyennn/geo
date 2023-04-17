@@ -322,4 +322,39 @@ double geography_length(GSERIALIZED *g, bool use_spheroid) {
 	return length;
 }
 
+/*
+** geography_dwithin(GSERIALIZED *g1, GSERIALIZED *g2, double tolerance, boolean use_spheroid)
+** returns double distance in meters
+*/
+bool geography_dwithin(GSERIALIZED *g1, GSERIALIZED *g2, double tolerance, bool use_spheroid) {
+	SPHEROID s;
+	double distance;
+	int dwithin = LW_FALSE;
+
+	gserialized_error_if_srid_mismatch(g1, g2, __func__);
+
+	/* Initialize spheroid */
+	spheroid_init_from_srid(gserialized_get_srid(g1), &s);
+
+	/* Set to sphere if requested */
+	if (!use_spheroid)
+		s.a = s.b = s.radius;
+
+	/* Return FALSE on empty arguments. */
+	if (gserialized_is_empty(g1) || gserialized_is_empty(g2))
+		return false;
+
+	LWGEOM *lwgeom1 = lwgeom_from_gserialized(g1);
+	LWGEOM *lwgeom2 = lwgeom_from_gserialized(g2);
+	distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s, tolerance);
+	/* Something went wrong... */
+	if (distance < 0.0)
+		return false;
+	dwithin = (distance <= tolerance);
+	lwgeom_free(lwgeom1);
+	lwgeom_free(lwgeom2);
+
+	return dwithin;
+}
+
 } // namespace duckdb

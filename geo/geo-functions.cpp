@@ -2280,7 +2280,7 @@ struct DWithinTernaryOperator {
 			throw ConversionException("Failure in geometry get dwithin: could not getting dwithin from geom");
 			return false;
 		}
-		auto dWithinRv = Geometry::GeometryDWithin(gser1, gser2, distance);
+		auto dWithinRv = Geometry::GeometryDWithin(gser1, gser2, distance, false);
 		Geometry::DestroyGeometry(gser1);
 		Geometry::DestroyGeometry(gser2);
 		return dWithinRv;
@@ -2294,12 +2294,45 @@ static void GeometryDWithinTernaryExecutor(Vector &geom1, Vector &geom2, Vector 
 	                                         DWithinTernaryOperator::Operation<TA, TB, TC, TR>);
 }
 
+static bool DWithinQuaternaryScalarFunction(string_t geom1, string_t geom2, double distance, bool use_spheroid) {
+	if (geom1.GetSize() == 0 || geom2.GetSize() == 0) {
+		return false;
+	}
+	auto gser1 = Geometry::GetGserialized(geom1);
+	auto gser2 = Geometry::GetGserialized(geom2);
+	if (!gser1 || !gser2) {
+		if (gser1) {
+			Geometry::DestroyGeometry(gser1);
+		}
+		if (gser2) {
+			Geometry::DestroyGeometry(gser2);
+		}
+		throw ConversionException("Failure in geometry get dwithin: could not getting dwithin from geoms");
+		return false;
+	}
+	auto dWithinRv = Geometry::GeometryDWithin(gser1, gser2, distance, use_spheroid);
+	Geometry::DestroyGeometry(gser1);
+	Geometry::DestroyGeometry(gser2);
+	return dWithinRv;
+}
+
 void GeoFunctions::GeometryDWithinFunction(DataChunk &args, ExpressionState &state, Vector &result) {
 	auto &geom1_arg = args.data[0];
 	auto &geom2_arg = args.data[1];
 	auto &distance_arg = args.data[2];
-	GeometryDWithinTernaryExecutor<string_t, string_t, double, bool>(geom1_arg, geom2_arg, distance_arg, result,
-	                                                                 args.size());
+	if (args.data.size() == 3) {
+		GeometryDWithinTernaryExecutor<string_t, string_t, double, bool>(geom1_arg, geom2_arg, distance_arg, result,
+		                                                                 args.size());
+	} else {
+		auto &use_spheroid_arg = args.data[3];
+		GenericExecutor::ExecuteQuaternary<PrimitiveType<string_t>, PrimitiveType<string_t>, PrimitiveType<double>,
+		                                   PrimitiveType<bool>, PrimitiveType<bool>>(
+		    geom1_arg, geom2_arg, distance_arg, use_spheroid_arg, result, args.size(),
+		    [&](PrimitiveType<string_t> geom1, PrimitiveType<string_t> geom2, PrimitiveType<double> distance,
+		        PrimitiveType<bool> use_spheroid) {
+			    return DWithinQuaternaryScalarFunction(geom1.val, geom2.val, distance.val, use_spheroid.val);
+		    });
+	}
 }
 
 struct AreaOperator {

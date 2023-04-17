@@ -255,9 +255,9 @@ bool Geometry::GeometryDisjoint(GSERIALIZED *geom1, GSERIALIZED *geom2) {
 	return postgis.disjoint(geom1, geom2);
 }
 
-bool Geometry::GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance) {
+bool Geometry::GeometryDWithin(GSERIALIZED *geom1, GSERIALIZED *geom2, double distance, bool use_spheroid) {
 	Postgis postgis;
-	return postgis.LWGEOM_dwithin(geom1, geom2, distance);
+	return postgis.geography_dwithin(geom1, geom2, distance, use_spheroid);
 }
 
 double Geometry::GeometryArea(GSERIALIZED *geom) {

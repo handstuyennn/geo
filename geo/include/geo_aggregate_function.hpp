@@ -51,7 +51,7 @@ private:
 				if (avalidity.RowIsValid(aidx) && bvalidity.RowIsValid(bidx) && cvalidity.RowIsValid(cidx)) {
 					OP::template Operation<A_TYPE, B_TYPE, C_TYPE, STATE_TYPE, OP>(states[sidx], aggr_input_data, adata,
 					                                                               bdata, cdata, avalidity, bvalidity,
-					                                                               cvalidity, aidx, bidx, cidx);
+					                                                               cvalidity, aidx, bidx, cidx, count);
 				}
 			}
 		} else {
@@ -63,7 +63,7 @@ private:
 				auto sidx = ssel.get_index(i);
 				OP::template Operation<A_TYPE, B_TYPE, C_TYPE, STATE_TYPE, OP>(states[sidx], aggr_input_data, adata,
 				                                                               bdata, cdata, avalidity, bvalidity,
-				                                                               cvalidity, aidx, bidx, cidx);
+				                                                               cvalidity, aidx, bidx, cidx, count);
 			}
 		}
 	}
@@ -81,8 +81,9 @@ private:
 				auto bidx = bsel.get_index(i);
 				auto cidx = csel.get_index(i);
 				if (avalidity.RowIsValid(aidx) && bvalidity.RowIsValid(bidx) && cvalidity.RowIsValid(cidx)) {
-					OP::template Operation<A_TYPE, B_TYPE, C_TYPE, STATE_TYPE, OP>(
-					    state, aggr_input_data, adata, bdata, cdata, avalidity, bvalidity, cvalidity, aidx, bidx, cidx);
+					OP::template Operation<A_TYPE, B_TYPE, C_TYPE, STATE_TYPE, OP>(state, aggr_input_data, adata, bdata,
+					                                                               cdata, avalidity, bvalidity,
+					                                                               cvalidity, aidx, bidx, cidx, count);
 				}
 			}
 		} else {
@@ -91,8 +92,9 @@ private:
 				auto aidx = asel.get_index(i);
 				auto bidx = bsel.get_index(i);
 				auto cidx = csel.get_index(i);
-				OP::template Operation<A_TYPE, B_TYPE, C_TYPE, STATE_TYPE, OP>(
-				    state, aggr_input_data, adata, bdata, cdata, avalidity, bvalidity, cvalidity, aidx, bidx, cidx);
+				OP::template Operation<A_TYPE, B_TYPE, C_TYPE, STATE_TYPE, OP>(state, aggr_input_data, adata, bdata,
+				                                                               cdata, avalidity, bvalidity, cvalidity,
+				                                                               aidx, bidx, cidx, count);
 			}
 		}
 	}
@@ -149,12 +151,14 @@ struct ClusterDBScanState {
 	bool isset;
 	double epsilon;
 	int minpoints;
+	idx_t count;
 	std::vector<int> clusters;
 
 	void Initialize() {
 		this->isset = false;
 		this->epsilon = 0;
 		this->minpoints = 0;
+		this->count = 0;
 		this->clusters = {};
 	}
 
@@ -162,6 +166,7 @@ struct ClusterDBScanState {
 		this->isset = other.isset || this->isset;
 		this->epsilon = other.epsilon;
 		this->minpoints = other.minpoints;
+		this->count = other.count;
 		this->clusters.insert(this->clusters.end(), other.clusters.begin(), other.clusters.end());
 	}
 };
@@ -172,6 +177,7 @@ struct ClusterDBScanOperation {
 		state->clusters = {};
 		state->epsilon = 0;
 		state->minpoints = 0;
+		state->count = 0;
 	}
 
 	template <class STATE, class OP>
@@ -182,10 +188,63 @@ struct ClusterDBScanOperation {
 	template <class A_TYPE, class B_TYPE, class C_TYPE, class STATE, class OP>
 	static void Operation(STATE *state, AggregateInputData &, A_TYPE *x_data, B_TYPE *y_data, C_TYPE *z_data,
 	                      ValidityMask &amask, ValidityMask &bmask, ValidityMask &cmask, idx_t xidx, idx_t yidx,
-	                      idx_t zidx) {
-		// state->isset = true;
-		// state->epsilon = y_data[yidx];
-		// state->minpoints = z_data[zidx];
+	                      idx_t zidx, idx_t count) {
+		ClusterDBScanIncluded include(amask, amask, bmask, cmask, 0);
+
+		double epsilon = y_data[xidx] / MS_PER_RADIAN;
+		int minpoints = z_data[xidx];
+		if (!state->isset) {
+			state->isset = true;
+			state->epsilon = epsilon;
+			state->minpoints = minpoints;
+			state->count = count;
+			size_t asize = amask.ValidityMaskSize();
+			std::vector<GSERIALIZED *> gserArray {};
+			std::vector<int> indexVec(asize, -1);
+			int idx = 0;
+
+			for (size_t i = 0; i < count; i++) {
+				if (include(i)) {
+					auto gser = Geometry::GetGserialized(x_data[i]);
+					if (!Geometry::IsEmpty(gser)) {
+						gserArray.push_back(gser);
+						indexVec[i] = idx++;
+					} else {
+						Geometry::DestroyGeometry(gser);
+					}
+				}
+			}
+
+			// Doing cluster db scan
+			auto clusters = Geometry::GeometryClusterDBScan(&gserArray[0], gserArray.size(), epsilon, minpoints);
+
+			state->clusters = {};
+
+			for (idx_t i = 0; i < asize; i++) {
+				if (indexVec[i] == -1) {
+					state->clusters.push_back(-1);
+				} else {
+					state->clusters.push_back(clusters[indexVec[i]]);
+				}
+			}
+
+			// Free memory
+			for (idx_t child_idx = 0; child_idx < gserArray.size(); child_idx++) {
+				Geometry::DestroyGeometry(gserArray[child_idx]);
+			}
+
+			// if (state->clusters[ridx - frame.first] == -1) {
+			// 	rmask.SetInvalid(ridx);
+			// } else {
+			// 	rdata[ridx] = state->clusters[ridx - frame.first];
+			// }
+		} else {
+			// if (state->clusters[ridx - frame.first] == -1) {
+			// 	rmask.SetInvalid(ridx);
+			// } else {
+			// 	rdata[ridx] = state->clusters[ridx - frame.first];
+			// }
+		}
 	}
 
 	template <class A_TYPE, class B_TYPE, class C_TYPE, class STATE, class OP>
@@ -204,10 +263,12 @@ struct ClusterDBScanOperation {
 
 	template <class T, class STATE>
 	static void Finalize(Vector &result, AggregateInputData &, STATE *state, T *target, ValidityMask &mask, idx_t idx) {
-		// if (!state->isset) {
-		// 	mask.SetInvalid(idx);
-		// } else {
-		// }
+		if (state->clusters[idx] == -1) {
+			mask.SetInvalid(idx);
+		} else {
+			// mask.SetValid(i);
+			target[idx] = state->clusters[idx];
+		}
 	}
 
 	template <class STATE, class A_TYPE, class B_TYPE, class C_TYPE, class RESULT_TYPE>
@@ -276,7 +337,7 @@ struct ClusterDBScanOperation {
 	}
 
 	template <class STATE>
-	static void Destroy(STATE *state) {
+	static void Destroy(AggregateInputData &aggr_input_data, STATE *state) {
 	}
 };
 
@@ -314,7 +375,7 @@ unique_ptr<FunctionData> BindGeometryClusterDBScan(ClientContext &context, Aggre
 	                      AggregateFunction::StateInitialize<ClusterDBScanState, ClusterDBScanOperation>,
 	                      TernaryScatterUpdate<ClusterDBScanState, string_t, double, int, ClusterDBScanOperation>,
 	                      AggregateFunction::StateCombine<ClusterDBScanState, ClusterDBScanOperation>,
-	                      AggregateFunction::StateFinalize<ClusterDBScanState, double, ClusterDBScanOperation>,
+	                      AggregateFunction::StateFinalize<ClusterDBScanState, int, ClusterDBScanOperation>,
 	                      FunctionNullHandling::DEFAULT_NULL_HANDLING,
 	                      TernaryUpdate<ClusterDBScanState, string_t, double, int, ClusterDBScanOperation>, nullptr,
 	                      AggregateFunction::StateDestroy<ClusterDBScanState, ClusterDBScanOperation>, nullptr,
