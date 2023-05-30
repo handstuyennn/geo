@@ -6,7 +6,6 @@
 #include "constructor-functions.hpp"
 #include "duckdb.hpp"
 #include "duckdb/catalog/catalog.hpp"
-#include "duckdb/function/aggregate/sum_helpers.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_type_info.hpp"
@@ -31,7 +30,7 @@ void GeoExtension::Load(DuckDB &db) {
 	CreateTypeInfo info("Geography", geo_type);
 	info.temporary = true;
 	info.internal = true;
-	catalog.CreateType(*con.context, &info);
+	catalog.CreateType(*con.context, info);
 
 	// add geo casts
 	auto &config = DBConfig::GetConfig(*con.context);
@@ -66,12 +65,12 @@ void GeoExtension::Load(DuckDB &db) {
 
 	for (auto func_set : geo_function_set) {
 		CreateScalarFunctionInfo func_info(func_set);
-		catalog.AddFunction(*con.context, &func_info);
+		catalog.AddFunction(*con.context, func_info);
 	}
 
 	auto cluster_db_scan = GetClusterDBScanAggregateFunction(geo_type);
 	CreateAggregateFunctionInfo cluster_db_scan_func_info(move(cluster_db_scan));
-	catalog.CreateFunction(*con.context, &cluster_db_scan_func_info);
+	catalog.CreateFunction(*con.context, cluster_db_scan_func_info);
 
 	con.Commit();
 }

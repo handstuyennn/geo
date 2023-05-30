@@ -173,16 +173,13 @@ struct ClusterDBScanState {
 
 struct ClusterDBScanOperation {
 	template <class STATE>
-	static void Initialize(STATE *state) {
-		state->clusters = {};
-		state->epsilon = 0;
-		state->minpoints = 0;
-		state->count = 0;
+	static void Initialize(STATE &state) {
+		state.Initialize();
 	}
 
 	template <class STATE, class OP>
-	static void Combine(const STATE &source, STATE *target, AggregateInputData &aggr_input_data) {
-		target->Combine(source);
+	static void Combine(const STATE &source, STATE &target, AggregateInputData &aggr_input_data) {
+		target.Combine(source);
 	}
 
 	template <class A_TYPE, class B_TYPE, class C_TYPE, class STATE, class OP>
@@ -262,13 +259,13 @@ struct ClusterDBScanOperation {
 	}
 
 	template <class T, class STATE>
-	static void Finalize(Vector &result, AggregateInputData &, STATE *state, T *target, ValidityMask &mask, idx_t idx) {
-		if (state->clusters[idx] == -1) {
-			mask.SetInvalid(idx);
-		} else {
-			// mask.SetValid(i);
-			target[idx] = state->clusters[idx];
-		}
+	static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
+		// if (state->clusters[idx] == -1) {
+		// 	mask.SetInvalid(idx);
+		// } else {
+		// 	// mask.SetValid(i);
+		// 	target[idx] = state->clusters[idx];
+		// }
 	}
 
 	template <class STATE, class A_TYPE, class B_TYPE, class C_TYPE, class RESULT_TYPE>
@@ -337,7 +334,7 @@ struct ClusterDBScanOperation {
 	}
 
 	template <class STATE>
-	static void Destroy(AggregateInputData &aggr_input_data, STATE *state) {
+	static void Destroy(STATE &state, AggregateInputData &aggr_input_data) {
 	}
 };
 
